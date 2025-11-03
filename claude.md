@@ -7,7 +7,9 @@ This is the main code workspace containing multiple projects related to Amazon a
 Major Architecture Rebuild - Amazon Placement Optimization System
 - Multi-agent collaboration completed: specification, API integration plan, database schema design
 - MCP servers configured and operational (n8n, Amazon Ads API, Supabase)
-- Ready for Phase 1 implementation: Database setup
+- Plain English database documentation completed (DATABASE_SCHEMA_EXPLAINED.md)
+- GitHub SSH authentication configured and working
+- Ready for Phase 1 implementation: Database setup in Supabase
 
 ## Active Projects
 
@@ -33,6 +35,7 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - `placement_report_specification.md` - Comprehensive specification for placement reporting (42KB)
 - `api_integration_plan.md` - API integration architecture and workflow design (66KB)
 - `new_database_schema_design.md` - Complete Supabase database schema v2.0 (50KB)
+- `DATABASE_SCHEMA_EXPLAINED.md` - Plain English walkthrough of database schema (20KB)
 - `database_schema.sql` - SQL DDL for database implementation (15KB)
 - `IMPLEMENTATION_PLAN.md` - 5-phase implementation roadmap (13KB)
 - `supabase_architecture.md` - Supabase architecture documentation (92KB)
@@ -134,6 +137,20 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - amazon-ads-api-mcp: Running on Docker at localhost:3001
 - supabase: Using hosted OAuth at https://mcp.supabase.com/mcp
 - Agents can leverage specialized MCP tools for their domains
+
+### 2024-11-03: GitHub Authentication Method Switch
+**Decision:** Switched from HTTPS with Personal Access Token to SSH key authentication
+**Reasoning:**
+- SSH keys more secure than tokens (no expiration, no scope limitations)
+- Better integration with WSL2 environment
+- Industry standard for git authentication
+- Eliminates need to manage token expiration
+**Impact:**
+- Generated ED25519 SSH key pair in WSL2
+- Added public key to GitHub account
+- Repository remote updated to use SSH URL (git@github.com:eastboundjoe/code-workspace.git)
+- All future pushes use SSH authentication
+- More seamless git workflow
 
 ## Next Steps
 
