@@ -4,7 +4,10 @@
 This is the main code workspace containing multiple projects related to Amazon advertising, FBA operations, automation workflows, and integrations.
 
 ## Current Phase
-Active development across multiple projects
+Major Architecture Rebuild - Amazon Placement Optimization System
+- Multi-agent collaboration completed: specification, API integration plan, database schema design
+- MCP servers configured and operational (n8n, Amazon Ads API, Supabase)
+- Ready for Phase 1 implementation: Database setup
 
 ## Active Projects
 
@@ -27,10 +30,14 @@ Active development across multiple projects
 ## Key Files
 
 ### Documentation
-- `placement_report_specification.md` - Specifications for placement reporting system
+- `placement_report_specification.md` - Comprehensive specification for placement reporting (42KB)
+- `api_integration_plan.md` - API integration architecture and workflow design (66KB)
+- `new_database_schema_design.md` - Complete Supabase database schema v2.0 (50KB)
+- `database_schema.sql` - SQL DDL for database implementation (15KB)
+- `IMPLEMENTATION_PLAN.md` - 5-phase implementation roadmap (13KB)
+- `supabase_architecture.md` - Supabase architecture documentation (92KB)
 - `PLACEMENT_REPORT_RESEARCH_SUMMARY.md` - Research summary on placement reports
 - `QUICK_REFERENCE_DATA_POINTS.md` - Quick reference for data points
-- `api_integration_plan.md` - API integration planning and architecture
 
 ### Code Projects
 - `bidflow/` - Bid flow management system
@@ -42,6 +49,13 @@ Active development across multiple projects
 ### Analysis Tools
 - `analyze_placement_files.py` - Python script for analyzing placement data
 - `analyze_docs.py` - Document analysis utilities
+
+### Agent Configurations
+- `.claude/agents/session-closer.md` - Session management and documentation agent
+- `.claude/agents/amazon-placement-report-assistant.md` - Placement report specialist
+- `.claude/agents/amazon-ads-api-expert.md` - Amazon Ads API integration expert
+- `.claude/agents/supabase-architect.md` - Database architecture specialist
+- `.claude/agents/n8n-flow-analyzer.md` - N8N workflow analysis expert
 
 ## Decisions Made
 
@@ -82,14 +96,71 @@ Active development across multiple projects
 - No need to re-explain project context
 - Historical record of decisions and progress
 
+### 2024-11-03: Multi-Agent Architecture Approach
+**Decision:** Use specialized domain agents for complex system design
+**Reasoning:**
+- Amazon Placement Optimization system requires expertise across 3 domains (reporting, API, database)
+- Single-agent approach would lack depth in specialized areas
+- Multi-agent collaboration produces comprehensive specifications
+- Each agent focuses on their domain strength
+**Impact:**
+- Created 3 comprehensive specification documents (42KB + 66KB + 50KB)
+- Better architecture decisions from domain expertise
+- Clear separation of concerns (data layer, API layer, presentation layer)
+- Reproducible process for future projects
+
+### 2024-11-03: Supabase Architecture Decisions
+**Decision:** Full Supabase stack - Vault + Edge Functions + PostgreSQL
+**Reasoning:**
+- Supabase Vault for secrets (NOT Google Cloud KMS) - simpler, free, scalable to multiple users
+- Regular views (NOT materialized) - 2-5 second query time acceptable for weekly reports
+- TypeScript Edge Functions (NOT N8N workflows) - better version control, testing, debugging
+- Direct cutover (NOT parallel run) - N8N on different account, clean separation
+**Impact:**
+- Simpler architecture with fewer external dependencies
+- All infrastructure in one platform (Supabase)
+- Better developer experience with TypeScript
+- Ready for Phase 1: Database implementation
+
+### 2024-11-03: MCP Server Strategy
+**Decision:** Configure and use 3 MCP servers for development workflow
+**Reasoning:**
+- n8n-mcp provides workflow analysis capabilities
+- amazon-ads-api-mcp gives API expertise and real-time data
+- supabase-mcp enables database operations and OAuth
+- MCP servers provide specialized context for agents
+**Impact:**
+- n8n-mcp: Running on Docker at localhost:3000
+- amazon-ads-api-mcp: Running on Docker at localhost:3001
+- supabase: Using hosted OAuth at https://mcp.supabase.com/mcp
+- Agents can leverage specialized MCP tools for their domains
+
 ## Next Steps
-1. Continue development on active projects:
-   - Amazon Ads API integration and placement reporting
-   - Ramen Bomb FBA operations and automation
-   - MCP server development (Supabase, n8n, Amazon Ads)
-2. Use @session-closer at end of each work session
-3. Consider committing other agent configurations and project files
-4. Evaluate and refine session-closer workflow based on usage
+
+### Immediate Priority: Phase 1 Implementation
+1. Database Setup (following IMPLEMENTATION_PLAN.md):
+   - Create 8 database tables with RLS policies in Supabase
+   - Create indexes on foreign keys, query columns, and date fields
+   - Create view_placement_optimization_report view
+   - Generate TypeScript types from database schema
+   - Test database operations
+
+2. Configure Supabase Vault:
+   - Store Amazon Ads API credentials (client_id, client_secret, refresh_token)
+   - Set up access policies for Edge Functions
+   - Test credential retrieval
+
+3. Begin Phase 2: Edge Functions Development
+   - Set up local Supabase dev environment
+   - Create 3 Edge Functions (workflow executor, report collector, report generator)
+   - Implement OAuth token management
+   - Test API integration
+
+### Ongoing Tasks
+- Use @session-closer at end of each work session
+- Document major decisions and learnings in claude.md
+- Maintain session-summary.md for historical context
+- Keep MCP servers updated and operational
 
 ## Reference Documents
 - Agent configurations in `.claude/agents/`

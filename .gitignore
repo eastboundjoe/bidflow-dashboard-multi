@@ -1,0 +1,120 @@
+# Amazon FBA Business Sensitive Data
+*.env
+.env.*
+config.json
+secrets.json
+credentials.json
+api-keys.txt
+mws-credentials.*
+sp-api-credentials.*
+
+# Amazon API Credentials
+**/amazon-credentials/**
+**/mws-auth/**
+**/sp-api-auth/**
+seller-central-creds.*
+amazon-advertising-api.*
+
+# Business Data (Keep Private)
+sales-data/
+inventory-reports/
+financial-reports/
+customer-data/
+competitor-analysis/
+profit-margins.*
+cost-analysis.*
+supplier-info.*
+**/business-metrics/**
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+database.json
+local-db/
+
+# Log Files
+*.log
+logs/
+error.log
+debug.log
+api-calls.log
+
+# Temporary Files
+temp/
+tmp/
+cache/
+*.tmp
+*.temp
+*~
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE/Editor Files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Node.js (if using JavaScript/Node)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.node_repl_history
+
+# Python (if using Python)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Package Files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Backup Files
+*.bak
+*.backup
+backup/
+backups/
+
+# Brand Specific (Ramen Bomb & InnerIcons)
+ramen-bomb-internal/
+innericons-internal/
+brand-assets-private/
+marketing-spend.*
+ad-campaign-data/
+
+# Testing
+test-data/
+mock-data/
+sandbox-results/
+
+# Documentation with Sensitive Info
+business-plan.*
+financial-projections.*
+supplier-contracts/
+nda-documents/
