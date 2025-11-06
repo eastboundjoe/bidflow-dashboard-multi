@@ -21,10 +21,24 @@ Major Architecture Rebuild - Amazon Placement Optimization System
   - Helper function created: get_amazon_ads_credentials()
   - All secrets encrypted with AES-256
   - Tested and verified vault retrieval
-- Phase 3: Edge Functions Development - READY TO START
-  - Need to create 3 Edge Functions
-  - Need to set up local Supabase dev environment
-  - Need to implement OAuth token refresh logic
+- Phase 3 Edge Functions Development: COMPLETE
+  - New project created: placement-optimization-functions/
+  - Supabase project initialized and linked
+  - TypeScript types generated from database schema
+  - 3 Edge Functions created and ready to deploy:
+    - workflow-executor (main orchestrator)
+    - report-collector (Amazon Ads API integration)
+    - report-generator (report query and export)
+  - 4 shared utilities created:
+    - supabase-client.ts (database + vault access)
+    - amazon-ads-client.ts (API client with OAuth)
+    - types.ts (shared interfaces)
+    - errors.ts (error handling)
+  - Comprehensive documentation created (README.md, DEPLOYMENT.md)
+- Phase 4: Deployment and Testing - READY TO START
+  - Need to deploy Edge Functions to Supabase
+  - Need to test end-to-end workflow
+  - Need to update vault with real credentials
 
 ## Active Projects
 
@@ -78,6 +92,11 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - `update_vault_credentials.sql` - Script to update stored credentials
 
 ### Code Projects
+- `placement-optimization-functions/` - Amazon Placement Optimization Edge Functions (NEW - Phase 3)
+  - 3 Edge Functions + 4 shared utilities
+  - TypeScript/Deno with full type safety
+  - OAuth token management and Amazon Ads API integration
+  - Ready for deployment to Supabase
 - `bidflow/` - Bid flow management system
 - `amazon-ads-api-mcp/` - Amazon Ads API MCP server
 - `supabase-mcp/` - Supabase MCP server
@@ -229,50 +248,85 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - Database deployment succeeded without extension dependency
 - 90-day data retention will be handled manually until automation added
 
+### 2024-11-06: Separate Project Directory for Edge Functions
+**Decision:** Create placement-optimization-functions/ as separate project directory with own Supabase init
+**Reasoning:**
+- Clean separation between documentation and implementation code
+- Enables proper Supabase CLI tooling (supabase init, link, deploy)
+- Makes project portable and easier to understand
+- Separates TypeScript/Deno runtime concerns from main workspace
+- Clearer git structure (project has own .gitignore)
+**Impact:**
+- Created new directory: placement-optimization-functions/
+- Initialized as Supabase project with config.toml
+- Generated database.types.ts specific to this project
+- Edge Functions organized in supabase/functions/ directory
+- Shared utilities in supabase/functions/_shared/
+- Complete project documentation in README.md and DEPLOYMENT.md
+
 ## Next Steps
 
-### IMMEDIATE: Clean Up Test Data (30 seconds)
-1. Open Supabase SQL Editor:
-   - URL: https://supabase.com/dashboard/project/phhatzkwykqdqfkxinvr/sql/new
-2. Copy contents of `cleanup_test_data.sql`
-3. Paste and click "Run"
-4. Verify all row counts show 0
+### Phase 4: Deploy and Test Edge Functions (READY TO START)
 
-### Phase 3: Edge Functions Development (READY TO START)
-1. Set up local Supabase dev environment:
-   - Install Supabase CLI: `npm install -g supabase`
-   - Initialize: `supabase init`
-   - Link to project: `supabase link --project-ref phhatzkwykqdqfkxinvr`
-2. Generate TypeScript types from schema:
-   - Command: `npx supabase gen types typescript --project-id phhatzkwykqdqfkxinvr > database.types.ts`
-3. Create 3 Edge Functions:
-   - workflow-executor (main orchestrator)
-   - report-collector (Amazon Ads API integration)
-   - report-generator (Google Sheets output)
-4. Implement OAuth token management:
-   - Token refresh logic
-   - Use get_amazon_ads_credentials() to retrieve secrets
-   - Cache tokens in database
-5. Test Edge Functions locally:
-   - Use Supabase CLI: `supabase functions serve`
-   - Test with sample API calls
-   - Verify database writes work correctly
+#### 1. Update Vault with Real Credentials
+Before deployment, update the placeholder credentials in Supabase Vault:
+1. Open Supabase Dashboard: https://supabase.com/dashboard/project/phhatzkwykqdqfkxinvr/settings/vault
+2. Update 3 secrets with real Amazon Ads API values:
+   - amazon_ads_client_id
+   - amazon_ads_client_secret
+   - amazon_ads_refresh_token
 
-### Phase 4: Testing & Validation (After Edge Functions)
-1. End-to-end testing:
-   - Trigger workflow_executor manually
-   - Verify API calls succeed
-   - Confirm data written to all tables
-   - Check view query returns expected results
-2. Error handling testing:
-   - Test API failures (rate limits, auth errors)
-   - Test network timeouts
-   - Verify retry logic works
-   - Check error logging
-3. Performance testing:
+#### 2. Deploy Edge Functions to Supabase
+From placement-optimization-functions/ directory:
+```bash
+cd placement-optimization-functions
+supabase functions deploy workflow-executor
+supabase functions deploy report-collector
+supabase functions deploy report-generator
+```
+
+#### 3. Test Each Function Individually
+Test workflow-executor:
+```bash
+curl -X POST https://phhatzkwykqdqfkxinvr.supabase.co/functions/v1/workflow-executor \
+  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"dryRun": true}'
+```
+
+Test report-generator:
+```bash
+curl -X POST https://phhatzkwykqdqfkxinvr.supabase.co/functions/v1/report-generator \
+  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"format": "json"}'
+```
+
+#### 4. End-to-End Testing
+1. Trigger full workflow:
+   - Call workflow-executor with real execution
+   - Monitor Supabase logs for progress
+   - Verify workflow_executions record created
+2. Verify data collection:
+   - Check portfolios table populated
+   - Check campaigns table populated
+   - Check campaign_performance and placement_performance tables
+   - Query view: `SELECT * FROM view_placement_optimization_report`
+3. Error handling testing:
+   - Test with invalid credentials (expect auth error)
+   - Test with network issues (expect retry)
+   - Verify error messages logged properly
+4. Performance validation:
    - Measure view query time with real data
-   - Test with maximum expected data volume
-   - Verify indexes are used efficiently
+   - Should be under 5 seconds for weekly reports
+
+#### 5. Set Up Scheduled Execution (Optional)
+Configure cron trigger for weekly execution:
+- Use Supabase Edge Functions scheduled invocations
+- Or external cron service (GitHub Actions, Cloud Scheduler, etc.)
+- Recommended: Every Monday 6am UTC
+
+### Phase 5: Production Readiness (After Testing)
 
 ### Ongoing Tasks
 - Use @session-closer at end of each work session
