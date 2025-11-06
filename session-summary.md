@@ -4,6 +4,342 @@ This file tracks all work sessions in this project. Each session is logged by th
 
 ---
 
+## Session: 2024-11-06 - Phase 1 & 2 Complete: Database Deployment and Vault Configuration
+
+**Date:** November 6, 2024
+**Duration:** ~3 hours
+**Session Type:** Database deployment, vault setup, and comprehensive testing
+
+### Accomplishments
+
+#### Phase 1: Database Deployment - COMPLETE
+- Modified `create_database.sql` to skip pg_cron extension (not enabled by default)
+- Successfully deployed database schema to Supabase project phhatzkwykqdqfkxinvr
+- Created 6 tables with full RLS policies, indexes, and foreign keys:
+  - workflow_executions
+  - report_requests
+  - portfolios
+  - campaigns
+  - campaign_performance
+  - placement_performance
+- Created 1 view: view_placement_optimization_report (25 columns)
+- Created helper function: truncate_performance_data()
+- Tested with sample data (`test_sample_data.sql` - 9 rows across 3 campaigns)
+- Verified all database objects created successfully
+
+#### Phase 2: Vault Configuration - COMPLETE
+- Enabled pgsodium extension via Supabase Dashboard
+- Created 3 encrypted secrets in Vault via UI:
+  - amazon_ads_client_id (placeholder value)
+  - amazon_ads_client_secret (placeholder value)
+  - amazon_ads_refresh_token (placeholder value)
+- Created helper function: get_amazon_ads_credentials() with SECURITY DEFINER
+- Tested vault retrieval and confirmed all 3 secrets accessible
+- All credentials encrypted with AES-256
+- Created comprehensive vault documentation (VAULT_SETUP_GUIDE.md - 28KB)
+
+#### View Optimization
+- Updated view sort order for placements (custom sort instead of alphabetical)
+- New order: Top of Search, Rest of Search, Product Pages
+- More intuitive for business users analyzing placement performance
+
+#### Documentation Created
+- `VAULT_SETUP_GUIDE.md` (28KB) - Complete vault configuration guide
+- `VAULT_QUICKSTART.md` (3KB) - Quick reference for common vault operations
+- `cleanup_test_data.sql` - Script to remove sample data before production
+- Multiple SQL scripts for vault setup and testing
+
+### Files Created
+
+**SQL Scripts:**
+- `test_sample_data.sql` - Sample data for testing (3 campaigns, 3 placements each)
+- `cleanup_test_data.sql` - Remove test data before production
+- `update_view_sort_order.sql` - Custom placement sorting
+- `enable_vault_extensions.sql` - Enable pgsodium extension
+- `create_vault_helper_function.sql` - Credential retrieval function
+- `test_vault_setup.sql` - Vault verification tests
+- `setup_vault.sql` - Complete vault setup (combined script)
+- `update_vault_credentials.sql` - Update stored credentials
+- `verify_vault.sql` - Vault verification queries
+
+**Documentation:**
+- `VAULT_SETUP_GUIDE.md` - Comprehensive vault guide (28KB)
+- `VAULT_QUICKSTART.md` - Quick reference (3KB)
+
+**Other:**
+- `Supabase Snippet Amazon Placement Optimization Sample Data.csv` - Sample data export
+
+### Files Modified
+
+- `create_database.sql` - Removed pg_cron scheduled job creation (extension not enabled)
+- `verify_deployment.sql` - Removed cron job verification check
+- `CLAUDE.md` - Updated current phase to reflect Phase 1 & 2 completion, added new decisions
+- `session-summary.md` - This entry
+
+### Decisions Made
+
+#### Vault Configuration via Dashboard UI (NOT SQL)
+**Decision:** Configure secrets through Supabase Dashboard UI instead of SQL INSERT statements
+**Reasoning:**
+- Vault requires special security context for encryption
+- UI provides secure encrypted input forms
+- SQL approach would expose secrets in query history and logs
+- Dashboard UI is the officially documented method
+- More secure credential management
+**Impact:**
+- All 3 secrets stored via UI (amazon_ads_client_id, client_secret, refresh_token)
+- No credentials exposed in SQL files or git history
+- Helper function get_amazon_ads_credentials() safely retrieves secrets at runtime
+- Edge Functions can access credentials securely
+
+#### Skip pg_cron Extension in Initial Deployment
+**Decision:** Deploy database without pg_cron scheduled jobs
+**Reasoning:**
+- pg_cron extension not enabled by default in Supabase
+- Manual enablement required in Dashboard
+- Not critical for MVP functionality
+- Reduces deployment complexity and failure points
+- Can add later when automated cleanup needed
+- Manual cleanup available via truncate_performance_data() function
+**Impact:**
+- Simplified database deployment (no extension dependency)
+- Deployment succeeded without issues
+- Added clear comments in SQL on how to enable pg_cron later
+- 90-day data retention will be manual until automation added
+
+#### Custom Placement Sort Order in View
+**Decision:** Use custom CASE statement for placement sorting instead of alphabetical
+**Reasoning:**
+- Business users expect logical order: Top, Rest of Search, Product Pages
+- Alphabetical order (Product Pages, Rest of Search, Top) is counter-intuitive
+- Custom sort makes reports easier to read and analyze
+- Minimal performance impact (CASE in ORDER BY)
+**Impact:**
+- View updated with custom sort order
+- More user-friendly placement analysis
+- Consistent with expected business logic flow
+
+### Current Database State
+
+**Supabase Project:** phhatzkwykqdqfkxinvr (Amazon Placement Optimization)
+
+**Deployed Objects:**
+- 6 tables (all with RLS policies, indexes, foreign keys)
+- 1 view (view_placement_optimization_report - 25 columns)
+- 2 helper functions (truncate_performance_data, get_amazon_ads_credentials)
+- ~20 indexes for query performance
+- 6 RLS policies (service role only access)
+- 4 foreign key constraints
+
+**Test Data:** Currently contains sample data (9 rows)
+- 3 portfolios
+- 3 campaigns
+- 9 placement_performance records (3 campaigns x 3 placements)
+- Should be cleaned up before production with `cleanup_test_data.sql`
+
+**Vault Status:**
+- 3 secrets stored and encrypted
+- Placeholder values (to be updated with real credentials later)
+- Helper function tested and working
+
+### Key Learnings
+
+**Supabase Extensions Require Manual Enablement:**
+- Extensions like pg_cron and pgsodium not enabled by default
+- Must enable via Dashboard → Database → Extensions
+- Check extension availability before including in deployment scripts
+- Better to make extensions optional for simpler deployment
+
+**Vault Security Best Practices:**
+- Never store secrets in SQL files
+- Use Dashboard UI for secret management
+- Helper functions with SECURITY DEFINER for secure retrieval
+- AES-256 encryption automatically applied
+- Access control via function permissions
+
+**View Sorting Matters for Usability:**
+- Custom sort orders make reports more intuitive
+- Consider business user perspective, not just technical efficiency
+- CASE statements in ORDER BY are performant for small result sets
+- Document sort logic in view definition comments
+
+**Testing with Sample Data is Critical:**
+- Sample data validates schema design before production
+- Tests all foreign key relationships
+- Confirms view aggregations work correctly
+- Reveals usability issues (like sort order)
+
+### Challenges & Solutions
+
+**Challenge 1:** pg_cron extension not enabled, deployment failed
+**Solution:** Modified create_database.sql to skip cron job, added comments on enabling later
+
+**Challenge 2:** Vault secrets can't be created via SQL INSERT
+**Solution:** Used Supabase Dashboard UI to create secrets securely, documented process
+
+**Challenge 3:** View sorted placements alphabetically (wrong order for users)
+**Solution:** Added custom CASE statement in ORDER BY clause for logical placement order
+
+**Challenge 4:** Needed way to clean up test data without affecting schema
+**Solution:** Created cleanup_test_data.sql script with DELETE statements in correct order
+
+### Testing Performed
+
+**Database Deployment Verification:**
+- All 6 tables created with correct columns
+- All RLS policies active and configured
+- All indexes created successfully
+- All foreign keys enforcing referential integrity
+- View returns 25 columns as specified
+- Helper function truncate_performance_data() works
+
+**Vault Configuration Verification:**
+- pgsodium extension enabled and active
+- All 3 secrets stored in vault.secrets table
+- get_amazon_ads_credentials() function returns all 3 values
+- Secrets properly encrypted (not visible in raw table query)
+- Function callable with service role permissions
+
+**View Functionality Testing:**
+- Queried view with sample data (9 rows returned)
+- Verified all 25 columns present with correct data types
+- Confirmed placement sort order (Top → Rest → Product)
+- Query performance acceptable (<2 seconds)
+- Aggregations (COALESCE, ROUND) working correctly
+
+### In Progress
+
+None - Phase 1 and Phase 2 are complete
+
+### Blockers/Issues
+
+None - Ready to proceed to Phase 3
+
+### Next Session Priorities
+
+#### 1. Clean Up Test Data (30 seconds)
+- Run `cleanup_test_data.sql` in Supabase SQL Editor
+- Verify all tables empty (row count = 0)
+- Database ready for production Edge Functions
+
+#### 2. Set Up Local Supabase Development Environment
+- Install Supabase CLI: `npm install -g supabase`
+- Initialize local project: `supabase init`
+- Link to remote: `supabase link --project-ref phhatzkwykqdqfkxinvr`
+- Pull schema: `supabase db pull`
+- Generate TypeScript types: `supabase gen types typescript > database.types.ts`
+
+#### 3. Begin Phase 3: Edge Functions Development
+- Create Edge Functions directory structure
+- Scaffold 3 functions:
+  - workflow-executor (main orchestrator, triggered by cron)
+  - report-collector (Amazon Ads API integration, fetch reports)
+  - report-generator (Google Sheets export, create final output)
+- Set up shared utilities:
+  - OAuth token management (refresh, cache)
+  - Amazon Ads API client wrapper
+  - Database client with TypeScript types
+  - Error handling and logging
+
+#### 4. Implement OAuth Token Management
+- Create token refresh logic
+- Use get_amazon_ads_credentials() to retrieve secrets from Vault
+- Store access tokens in database with expiration
+- Handle token refresh before API calls
+- Implement retry logic for auth failures
+
+#### 5. Build Amazon Ads API Integration
+- Implement GET /v2/portfolios endpoint call
+- Implement POST /reporting/reports (campaign data)
+- Implement POST /sp/reports (placement data)
+- Handle report polling (check status, download when ready)
+- Parse gzipped JSON responses
+- Write data to database tables
+
+### Context for Next Session
+
+**Project Status:**
+- Phase 1: Database Deployment - COMPLETE
+- Phase 2: Vault Configuration - COMPLETE
+- Phase 3: Edge Functions Development - READY TO START
+- Phase 4: Testing & Validation - NOT STARTED
+- Phase 5: Production Deployment - NOT STARTED
+
+**Database Status:**
+- Fully deployed and tested on Supabase
+- Contains test data (needs cleanup before production)
+- All objects working as designed
+- Vault configured with placeholder credentials
+
+**What to Do First:**
+1. Run cleanup_test_data.sql to remove sample data
+2. Install Supabase CLI locally
+3. Link local environment to remote project
+4. Generate TypeScript types from schema
+5. Start building Edge Functions
+
+**Important Files for Phase 3:**
+- `api_integration_plan.md` - Detailed API integration guide (66KB)
+- `placement_report_specification.md` - Report requirements (42KB)
+- `IMPLEMENTATION_PLAN.md` - Phase 3 tasks and checklist (13KB)
+- `database.types.ts` - Generated TypeScript types (after setup)
+- `VAULT_QUICKSTART.md` - How to retrieve credentials in Edge Functions
+
+**Key Technical Details:**
+- Supabase Project ID: phhatzkwykqdqfkxinvr
+- Supabase Project URL: https://phhatzkwykqdqfkxinvr.supabase.co
+- Database has 6 tables + 1 view + 2 helper functions
+- Vault has 3 secrets: client_id, client_secret, refresh_token
+- View name: view_placement_optimization_report
+- Credential function: get_amazon_ads_credentials()
+
+**Architecture Reminder:**
+- Edge Functions use service role key (bypass RLS)
+- OAuth tokens cached in database (token_cache table - NOT IMPLEMENTED YET)
+- Reports pulled weekly (cron schedule TBD)
+- Data retention: 90 days (manual cleanup for now)
+- Output format: Google Sheets (25 columns)
+
+### Technical Notes
+
+**Database Schema Highlights:**
+- All timestamps use TIMESTAMPTZ for proper timezone handling
+- JSON columns for flexible API response storage
+- Indexes on all foreign keys and commonly queried fields
+- RLS policies enforce service role only access
+- Helper functions use SECURITY DEFINER for privilege escalation
+
+**Vault Implementation:**
+- pgsodium extension provides encryption
+- Secrets stored in vault.secrets table (managed by Supabase)
+- AES-256 encryption automatically applied
+- Helper function wraps vault.decrypted_secrets view
+- Service role required to execute helper function
+
+**View Performance:**
+- Tested with 9 rows: <2 seconds
+- Expected with production data (2000-3000 rows): 2-5 seconds
+- Acceptable for weekly report generation
+- Indexes support JOIN operations efficiently
+- Custom sort adds minimal overhead
+
+**Edge Function Architecture (Next Phase):**
+- TypeScript with Deno runtime
+- Deployed to Supabase Edge (globally distributed)
+- Cron trigger for weekly execution
+- Error handling with retries
+- Logging to Supabase logs
+- Service role key for database access
+
+### Commit
+
+**Hash:** [To be added after commit]
+**Message:** Session 2024-11-06: Phase 1 & 2 Complete - Database Deployment and Vault Configuration
+**Files Changed:** 13 created, 4 modified
+**Repository:** https://github.com/eastboundjoe/code-workspace
+
+---
+
 ## Session: 2024-11-05 - Database Deployment Preparation & Documentation
 
 **Date:** November 5, 2024

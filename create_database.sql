@@ -387,15 +387,11 @@ COMMENT ON FUNCTION truncate_performance_data IS 'Clears all performance tables 
 -- 9. SCHEDULED CLEANUP (pg_cron)
 -- =====================================================
 
--- Clean up old workflow executions (90 days retention)
-SELECT cron.schedule(
-  'cleanup-old-workflow-executions',
-  '0 3 * * 1',  -- Monday at 3 AM UTC
-  $$
-  DELETE FROM workflow_executions
-  WHERE started_at < NOW() - INTERVAL '90 days';
-  $$
-);
+-- NOTE: Scheduled job skipped - pg_cron extension not enabled
+-- To enable later:
+-- 1. Enable pg_cron extension in Dashboard → Database → Extensions
+-- 2. Run: SELECT cron.schedule('cleanup-old-workflow-executions', '0 3 * * 1',
+--         'DELETE FROM workflow_executions WHERE started_at < NOW() - INTERVAL ''90 days'';');
 
 -- =====================================================
 -- 10. COMPLETION
@@ -420,8 +416,8 @@ BEGIN
   RAISE NOTICE 'Helper functions created:';
   RAISE NOTICE '  • truncate_performance_data()';
   RAISE NOTICE '';
-  RAISE NOTICE 'Scheduled jobs created:';
-  RAISE NOTICE '  • cleanup-old-workflow-executions (runs Mondays at 3 AM)';
+  RAISE NOTICE 'Scheduled jobs: SKIPPED (pg_cron not enabled)';
+  RAISE NOTICE '  • To add later: Enable pg_cron extension';
   RAISE NOTICE '';
   RAISE NOTICE 'Next steps:';
   RAISE NOTICE '  1. Test view: SELECT * FROM view_placement_optimization_report LIMIT 10;';

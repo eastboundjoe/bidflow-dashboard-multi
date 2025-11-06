@@ -82,16 +82,9 @@ WHERE routine_schema = 'public'
 AND routine_name = 'truncate_performance_data';
 
 -- VERIFICATION 8: Verify Cron Jobs
--- Expected: 1 cron job
+-- Expected: 0 cron jobs (pg_cron not enabled)
 SELECT '=== CRON JOBS ===' AS section;
-SELECT
-  jobid,
-  schedule,
-  command,
-  active,
-  jobname
-FROM cron.job
-WHERE jobname = 'cleanup-old-workflow-executions';
+SELECT 'pg_cron extension not enabled - skipping cron job verification' AS status;
 
 -- VERIFICATION 9: Verify Table Row Counts (Should All Be 0)
 -- Expected: All 0s

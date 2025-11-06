@@ -9,11 +9,22 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - MCP servers configured and operational (n8n, Amazon Ads API, Supabase)
 - Plain English database documentation completed (DATABASE_SCHEMA_EXPLAINED.md)
 - GitHub SSH authentication configured and working
-- Phase 1 Database Deployment: READY TO EXECUTE
-  - SQL deployment file prepared (create_database.sql - 431 lines)
-  - Supabase project prepared (phhatzkwykqdqfkxinvr)
-  - Comprehensive deployment documentation created (106KB, 9 files)
-  - Awaiting manual SQL execution in Supabase Dashboard
+- Phase 1 Database Deployment: COMPLETE
+  - Database deployed successfully to Supabase (project: phhatzkwykqdqfkxinvr)
+  - 6 tables created with RLS policies, indexes, and foreign keys
+  - 1 view created: view_placement_optimization_report
+  - Helper function created: truncate_performance_data()
+  - Tested with sample data and verified all functionality
+- Phase 2 Vault Configuration: COMPLETE
+  - pgsodium extension enabled for encryption
+  - 3 secrets stored in Vault (client_id, client_secret, refresh_token)
+  - Helper function created: get_amazon_ads_credentials()
+  - All secrets encrypted with AES-256
+  - Tested and verified vault retrieval
+- Phase 3: Edge Functions Development - READY TO START
+  - Need to create 3 Edge Functions
+  - Need to set up local Supabase dev environment
+  - Need to implement OAuth token refresh logic
 
 ## Active Projects
 
@@ -49,12 +60,22 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 ### Database Deployment Documentation (Created 2024-11-05)
 - `create_database.sql` - Production-ready SQL deployment script (431 lines, 15KB)
 - `verify_deployment.sql` - Verification queries for testing deployment (129 lines, 4KB)
+- `test_sample_data.sql` - Sample data for testing the view (9 rows)
+- `cleanup_test_data.sql` - Script to remove test data before production
 - `DEPLOYMENT_QUICKSTART.md` - 1-minute deployment guide (3KB)
 - `DATABASE_DEPLOYMENT_INDEX.md` - Navigation hub for all deployment docs (12KB)
 - `DEPLOYMENT_INSTRUCTIONS.md` - Detailed step-by-step deployment guide (8KB)
 - `DATABASE_VISUAL_SUMMARY.md` - ER diagrams and architecture overview (17KB)
 - `DEPLOYMENT_SUMMARY.md` - Complete deployment overview (15KB)
 - `TROUBLESHOOTING_GUIDE.md` - Common issues and solutions (12KB)
+
+### Vault Configuration Documentation (Created 2024-11-06)
+- `VAULT_SETUP_GUIDE.md` - Comprehensive vault configuration guide (28KB)
+- `VAULT_QUICKSTART.md` - Quick reference for vault operations (3KB)
+- `enable_vault_extensions.sql` - Script to enable pgsodium extension
+- `create_vault_helper_function.sql` - Helper function for credential retrieval
+- `test_vault_setup.sql` - Verification tests for vault configuration
+- `update_vault_credentials.sql` - Script to update stored credentials
 
 ### Code Projects
 - `bidflow/` - Bid flow management system
@@ -180,36 +201,78 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - Reduces technical dependencies
 - Clear step-by-step instructions ensure success
 
+### 2024-11-06: Vault Configuration via UI Instead of SQL
+**Decision:** Configure Supabase Vault secrets through Dashboard UI instead of SQL commands
+**Reasoning:**
+- Vault secrets management requires special security context
+- Supabase Dashboard UI provides secure, encrypted input forms
+- SQL approach would expose secrets in query history
+- UI method is the officially documented approach
+- Simpler and more secure for credential management
+**Impact:**
+- All 3 Amazon Ads API secrets stored securely via UI
+- No credentials exposed in SQL files or git history
+- Created helper function get_amazon_ads_credentials() for retrieval
+- Edge Functions can access credentials securely at runtime
+
+### 2024-11-06: Skip pg_cron Scheduled Jobs in Initial Deployment
+**Decision:** Deploy database without pg_cron extension and scheduled cleanup job
+**Reasoning:**
+- pg_cron extension requires manual enablement in Supabase Dashboard
+- Not critical for MVP functionality (cleanup can be manual)
+- Simplified initial deployment reduces failure points
+- Can add pg_cron later when needed for automation
+- Database still has truncate_performance_data() function for manual cleanup
+**Impact:**
+- Modified create_database.sql to skip cron job creation
+- Added clear comments on how to enable pg_cron later
+- Database deployment succeeded without extension dependency
+- 90-day data retention will be handled manually until automation added
+
 ## Next Steps
 
-### IMMEDIATE: Execute Database Deployment (2 minutes)
+### IMMEDIATE: Clean Up Test Data (30 seconds)
 1. Open Supabase SQL Editor:
    - URL: https://supabase.com/dashboard/project/phhatzkwykqdqfkxinvr/sql/new
-2. Copy contents of `create_database.sql`
-3. Paste into SQL Editor and click "Run"
-4. Verify success message appears
-5. Run `verify_deployment.sql` queries to confirm all objects created
+2. Copy contents of `cleanup_test_data.sql`
+3. Paste and click "Run"
+4. Verify all row counts show 0
 
-### After Deployment: Phase 1 Completion
-1. Generate TypeScript types from schema:
-   - Command: `npx supabase gen types typescript --project-id phhatzkwykqdqfkxinvr > database.types.ts`
-2. Test the view query performance:
-   - Run: `SELECT * FROM view_placement_optimization_report`
-   - Expected: Empty result set (no data yet), query completes in <5 seconds
-
-### Then: Phase 2 - Edge Functions Development
-1. Configure Supabase Vault:
-   - Store Amazon Ads API credentials (client_id, client_secret, refresh_token)
-   - Set up access policies for Edge Functions
-   - Test credential retrieval
-2. Set up local Supabase dev environment:
+### Phase 3: Edge Functions Development (READY TO START)
+1. Set up local Supabase dev environment:
    - Install Supabase CLI: `npm install -g supabase`
    - Initialize: `supabase init`
    - Link to project: `supabase link --project-ref phhatzkwykqdqfkxinvr`
+2. Generate TypeScript types from schema:
+   - Command: `npx supabase gen types typescript --project-id phhatzkwykqdqfkxinvr > database.types.ts`
 3. Create 3 Edge Functions:
    - workflow-executor (main orchestrator)
    - report-collector (Amazon Ads API integration)
    - report-generator (Google Sheets output)
+4. Implement OAuth token management:
+   - Token refresh logic
+   - Use get_amazon_ads_credentials() to retrieve secrets
+   - Cache tokens in database
+5. Test Edge Functions locally:
+   - Use Supabase CLI: `supabase functions serve`
+   - Test with sample API calls
+   - Verify database writes work correctly
+
+### Phase 4: Testing & Validation (After Edge Functions)
+1. End-to-end testing:
+   - Trigger workflow_executor manually
+   - Verify API calls succeed
+   - Confirm data written to all tables
+   - Check view query returns expected results
+2. Error handling testing:
+   - Test API failures (rate limits, auth errors)
+   - Test network timeouts
+   - Verify retry logic works
+   - Check error logging
+3. Performance testing:
+   - Measure view query time with real data
+   - Test with maximum expected data volume
+   - Verify indexes are used efficiently
 
 ### Ongoing Tasks
 - Use @session-closer at end of each work session
