@@ -5,6 +5,8 @@ This is the main code workspace containing multiple projects related to Amazon a
 
 ## Current Phase
 Major Architecture Rebuild - Amazon Placement Optimization System
+
+### Single-Tenant System (COMPLETE AND OPERATIONAL)
 - Multi-agent collaboration completed: specification, API integration plan, database schema design
 - MCP servers configured and operational (n8n, Amazon Ads API, Supabase)
 - Plain English database documentation completed (DATABASE_SCHEMA_EXPLAINED.md)
@@ -49,6 +51,24 @@ Major Architecture Rebuild - Amazon Placement Optimization System
     - View showing complete optimization data with all placements
   - All functions operational and accessible at https://phhatzkwykqdqfkxinvr.supabase.co/functions/v1/
   - System FULLY OPERATIONAL for production use
+
+### Multi-Tenant SaaS Migration (IN PROGRESS - Phase 1 Files Created)
+- Architecture Planning: COMPLETE
+  - Used supabase-architect agent to analyze current single-tenant system
+  - Analyzed reference multi-tenant system for best practices
+  - Created comprehensive 4-phase migration plan
+- User Configuration Decisions: COMPLETE
+  - Credentials: Encrypted in database with pgcrypto (not Vault)
+  - Onboarding: Supabase Auth with automatic tenant creation (not invite-only)
+  - Existing Data: Migrate to proper "Ramen Bomb LLC" tenant
+  - Approach: Phased rollout (backward compatible, non-destructive)
+- Phase 1 Migration Files: COMPLETE (Not Yet Executed)
+  - 5 SQL migration files created (001-005)
+  - 5 rollback scripts created for safe migration
+  - 2 comprehensive documentation guides created
+  - Tenant-per-user model with RLS policies on all tables
+  - Backward compatible with existing single-tenant system
+  - Ready to execute when needed
 
 ## Active Projects
 
@@ -108,6 +128,16 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - `verify_collected_data.sql` - Queries to verify portfolio and report data
 - `DEPLOY_FIXED_REPORT_COLLECTOR.md` - Instructions for deploying fixed collector
 - `SETUP_CRON_SCHEDULER.md` - Instructions for automated report processing with pg_cron
+
+### Multi-Tenant Migration Files (Created 2024-11-08)
+- `MULTI_TENANT_MIGRATION_GUIDE.md` - Complete 4-phase migration overview (7.8KB)
+- `PHASE_1_EXECUTION_GUIDE.md` - Detailed 30-page execution guide with verification (15.2KB)
+- `migrations/001_add_multi_tenant_tables.sql` - Creates tenants, users, amazon_ads_accounts tables (2.7KB)
+- `migrations/002_add_tenant_id_columns.sql` - Adds tenant_id to existing tables, backfills data (9.1KB)
+- `migrations/003_update_view.sql` - Updates view for multi-tenant support (4.8KB)
+- `migrations/004_encryption_functions.sql` - Credential encryption/decryption functions (6.2KB)
+- `migrations/005_auth_trigger.sql` - Auto-create tenant on user signup (8.5KB)
+- `migrations/rollback_001.sql` through `rollback_005.sql` - Rollback scripts for safe migration (8.2KB total)
 
 ### Code Projects
 - `placement-optimization-functions/` - Amazon Placement Optimization Edge Functions (DEPLOYED - FULLY OPERATIONAL)
@@ -402,9 +432,75 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - View is predictable and consistent (17 campaigns × 3 placements = 51 rows expected)
 - Easier for users to compare performance across all placement types
 
+### 2024-11-08: Multi-Tenant SaaS Architecture Planning
+**Decision:** Transform single-tenant system into multi-tenant SaaS using phased migration approach
+**Reasoning:**
+- User wants to offer Amazon Placement Optimization as a service to other Amazon sellers
+- Need to support multiple independent tenants with isolated data
+- Must maintain backward compatibility with existing single-tenant production system
+- Phased approach reduces risk and allows incremental testing
+- Multi-agent planning (supabase-architect) ensures comprehensive architecture
+**Impact:**
+- Analyzed current single-tenant system and reference multi-tenant implementation
+- Created 4-phase migration plan (Database → Edge Functions → Testing → Production)
+- Designed tenant-per-user model with automatic tenant creation on signup
+- Each tenant gets isolated data via RLS policies
+- Existing "Ramen Bomb LLC" data migrated to first tenant
+- Clear path to SaaS productization
+
+### 2024-11-08: Credential Storage Strategy for Multi-Tenant
+**Decision:** Use pgcrypto database encryption instead of Supabase Vault for multi-tenant credentials
+**Reasoning:**
+- Vault is single-tenant (3 global secrets: client_id, client_secret, refresh_token)
+- Multi-tenant needs per-account credential storage (different Amazon Ads accounts)
+- pgcrypto provides AES-256 encryption at row level
+- Encryption key stored in Edge Function environment (not in database)
+- Each amazon_ads_accounts row has encrypted credentials
+- More scalable than Vault for multiple tenants
+**Impact:**
+- Created 4 helper functions: set_credentials, get_credentials, has_credentials, clear_credentials
+- Only service_role can encrypt/decrypt (enforced by SECURITY DEFINER)
+- Credentials encrypted before storage, decrypted on retrieval
+- Each tenant can have multiple Amazon Ads accounts
+- Maintains security while supporting unlimited scale
+
+### 2024-11-08: Tenant Onboarding Flow Decision
+**Decision:** Automatic tenant creation via Supabase Auth signup (not invite-only)
+**Reasoning:**
+- User wants to offer service to any Amazon seller (public SaaS)
+- Invite-only approach would limit growth and require manual provisioning
+- Supabase Auth provides production-ready user management
+- Database trigger automatically creates tenant on signup
+- User becomes admin of their own tenant immediately
+- Reduces operational overhead
+**Impact:**
+- Created auth trigger function to auto-create tenant + user record
+- Trigger fires on auth.users INSERT (after email confirmation)
+- Tenant slug generated from email (e.g., john@example.com → john-example-com)
+- User assigned 'admin' role in users table
+- Self-service onboarding enables rapid user acquisition
+- No manual provisioning required
+
+### 2024-11-08: Backward Compatible Migration Approach
+**Decision:** Design Phase 1 migration to be fully backward compatible with existing single-tenant system
+**Reasoning:**
+- Production system is operational and collecting data
+- Cannot afford downtime or data loss
+- Existing Edge Functions should continue working during migration
+- Need ability to rollback if issues arise
+- Gradual migration reduces risk
+**Impact:**
+- Migration adds tenant_id columns with default value (Ramen Bomb LLC tenant)
+- Existing data backfilled with tenant_id automatically
+- View updated but maintains same output structure
+- Edge Functions continue working (Phase 2 will make them multi-tenant aware)
+- Zero downtime migration
+- Full rollback scripts provided for safety
+- Can test extensively before switching to multi-tenant Edge Functions
+
 ## Next Steps
 
-### Phase 4: COMPLETE - System Fully Operational
+### Single-Tenant System: COMPLETE AND OPERATIONAL
 
 All core functionality working:
 - Portfolio collection: 7 portfolios with names and budgets
@@ -413,7 +509,64 @@ All core functionality working:
 - Report processing: 149 rows of placement performance data
 - View generation: Complete optimization report showing all placements
 
-### Phase 5: Production Automation (READY TO START)
+### Multi-Tenant SaaS Migration: Phase 1 Ready to Execute
+
+#### Phase 1: Database Migration (READY - Files Created, Awaiting Execution)
+**Current Status:** All migration files created and documented, not yet executed
+
+**Migration Files Ready:**
+- 5 SQL migration scripts (001-005) totaling ~1,500 lines
+- 5 rollback scripts for safe migration
+- 2 comprehensive documentation guides (MULTI_TENANT_MIGRATION_GUIDE.md, PHASE_1_EXECUTION_GUIDE.md)
+
+**When Ready to Migrate:**
+1. Review PHASE_1_EXECUTION_GUIDE.md (30-page step-by-step guide)
+2. Create database backup
+3. Execute 5 migration scripts in order
+4. Run verification queries
+5. Existing system continues working (backward compatible)
+
+**What Phase 1 Adds:**
+- 3 new tables: tenants, users, amazon_ads_accounts
+- tenant_id column added to all 6 existing tables
+- Existing data migrated to "Ramen Bomb LLC" tenant
+- RLS policies on all 9 tables for data isolation
+- Credential encryption functions (pgcrypto)
+- Auto-tenant-creation trigger on Supabase Auth signup
+- View updated to show "Tenant Name" and "Amazon Account" columns
+
+**Estimated Time:** 30-45 minutes
+**Downtime:** Zero (backward compatible)
+**Reversible:** Yes (full rollback scripts)
+
+#### Phase 2: Edge Functions (NOT YET STARTED - Pending Phase 1 Execution)
+**What Needs to Be Created:**
+- 6 multi-tenant TypeScript Edge Functions:
+  - report-collector-multitenant.ts
+  - report-processor-multitenant.ts
+  - workflow-executor-multitenant.ts
+  - scheduled-workflow-runner.ts
+  - get-user-context.ts
+  - add-amazon-account.ts
+- Modify functions to accept tenant_id + amazon_ads_account_id
+- Update credential fetching for per-account encryption
+- Deploy to Supabase
+
+**Dependencies:** Phase 1 must be executed first
+
+#### Phase 3: Testing (NOT YET STARTED - Pending Phase 2)
+- Create integration test scripts
+- Configure Supabase Auth
+- Test signup flow end-to-end
+- Verify data isolation between tenants
+
+#### Phase 4: Production Launch (NOT YET STARTED - Pending Phase 3)
+- Execute Phase 1 migrations in production
+- Deploy Phase 2 multi-tenant Edge Functions
+- Onboard first external tenant (test user)
+- Monitor and optimize
+
+### Single-Tenant Production Automation (READY TO START - Independent of Multi-Tenant)
 
 #### 1. Set Up Weekly Scheduled Execution (HIGH PRIORITY)
 Configure automated weekly workflow execution:
@@ -432,19 +585,11 @@ Enable pg_cron for automatic report processing every 5 minutes:
 4. Monitor first few executions in Supabase logs
 5. Benefits: Automatically downloads reports when ready, no manual triggering needed
 
-### Phase 6: Enhancements and Integrations
-
-#### 1. Google Sheets Integration (Optional)
-Connect report output to Google Sheets:
-- Set up Google Sheets API credentials
-- Create new report-generator export function
-- Test automated sheet updates
-
-### Future Enhancements
+### Future Enhancements (Both Systems)
 - Add email notifications on workflow completion
 - Implement data retention automation (pg_cron)
 - Add dashboard for visualizing trends
-- Multi-profile support for multiple Amazon accounts
+- Google Sheets integration for report export
 
 ### Ongoing Tasks
 - Use @session-closer at end of each work session
