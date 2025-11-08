@@ -229,6 +229,70 @@ serve(async (req) => {
       console.log(`Inserted ${enabledPortfolios.length} enabled portfolios`);
     }
 
+    // Step 3: Fetch campaign details (portfolio associations and placement bids)
+    console.log('Fetching campaign details...');
+    const campaignsResponse = await amazonClient.post(
+      'https://advertising-api.amazon.com/sp/campaigns/list',
+      {
+        stateFilter: { include: ['ENABLED'] },
+        includeExtendedDataFields: true
+      },
+      {
+        'Amazon-Advertising-API-Scope': targetProfileId,
+        'Accept': 'application/vnd.spcampaign.v3+json',
+        'Content-Type': 'application/vnd.spcampaign.v3+json'
+      }
+    );
+
+    const campaignsList = campaignsResponse.campaigns || [];
+    console.log(`Found ${campaignsList.length} enabled campaigns`);
+
+    // Debug: Log first campaign to see structure
+    if (campaignsList.length > 0) {
+      console.log('Sample campaign data:', JSON.stringify(campaignsList[0], null, 2));
+    }
+
+    // Update campaigns table with full details
+    if (!dry_run && campaignsList.length > 0) {
+      const campaignRecords = campaignsList.map((c: any) => {
+        // Extract placement bid adjustments
+        let bidTop = 0;
+        let bidRest = 0;
+        let bidProduct = 0;
+
+        if (c.dynamicBidding?.placementBidding) {
+          for (const pb of c.dynamicBidding.placementBidding) {
+            if (pb.placement === 'PLACEMENT_TOP') bidTop = pb.percentage || 0;
+            if (pb.placement === 'PLACEMENT_REST_OF_SEARCH') bidRest = pb.percentage || 0;
+            if (pb.placement === 'PLACEMENT_PRODUCT_PAGE') bidProduct = pb.percentage || 0;
+          }
+        }
+
+        return {
+          campaign_id: String(c.campaignId),
+          campaign_name: c.name || `Campaign ${c.campaignId}`,
+          campaign_status: c.state || 'UNKNOWN',
+          portfolio_id: c.portfolioId ? String(c.portfolioId) : null,
+          daily_budget: c.budget?.budget || 0,
+          bid_top_of_search: bidTop,
+          bid_rest_of_search: bidRest,
+          bid_product_page: bidProduct,
+          targeting_type: c.targetingType || null,
+          start_date: c.startDate || null
+        };
+      });
+
+      const { error: campaignError } = await supabase
+        .from('campaigns')
+        .upsert(campaignRecords, { onConflict: 'campaign_id' });
+
+      if (campaignError) {
+        throw new Error(`Failed to insert campaigns: ${campaignError.message}`);
+      }
+
+      console.log(`Upserted ${campaignRecords.length} campaigns with placement bids`);
+    }
+
     console.log('Requesting reports...');
 
     const today = new Date().toISOString().split('T')[0];

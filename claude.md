@@ -35,13 +35,20 @@ Major Architecture Rebuild - Amazon Placement Optimization System
     - types.ts (shared interfaces)
     - errors.ts (error handling)
   - Comprehensive documentation created (README.md, DEPLOYMENT.md)
-- Phase 4: Deployment and Testing - COMPLETE
+- Phase 4: Deployment and Testing - COMPLETE AND FULLY OPERATIONAL
   - Created 3 standalone deployment versions in deploy/ directory
-  - Deployed all 3 Edge Functions to Supabase (report-generator, report-collector, workflow-executor)
-  - Tested end-to-end workflow with placeholder credentials
-  - Validated authentication flow (vault retrieval, OAuth attempt)
+  - Deployed all 4 Edge Functions to Supabase (report-generator, report-collector, workflow-executor, report-processor)
+  - CRITICAL FIXES (Session 2024-11-08):
+    - Fixed report-collector: Rebuilt with correct Amazon Ads API endpoints (was stub code)
+    - Fixed report-processor: Removed upsertCampaigns() that was overwriting campaign data with NULLs
+    - Fixed view: Modified view_placement_optimization_report to show all 3 placements per campaign
+  - PRODUCTION DATA COLLECTION SUCCESS:
+    - 7 portfolios collected with correct names and budgets
+    - 17 campaigns collected with full details (portfolio_id, bid adjustments)
+    - 6 placement reports processed (149 rows of performance data)
+    - View showing complete optimization data with all placements
   - All functions operational and accessible at https://phhatzkwykqdqfkxinvr.supabase.co/functions/v1/
-  - System confirmed production-ready (pending real API credentials)
+  - System FULLY OPERATIONAL for production use
 
 ## Active Projects
 
@@ -94,14 +101,30 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - `test_vault_setup.sql` - Verification tests for vault configuration
 - `update_vault_credentials.sql` - Script to update stored credentials
 
+### Report Processing Fixes (Created 2024-11-08)
+- `report-collector-deploy.ts` - Fixed version with correct Amazon Ads API endpoints
+- `report-processor-deploy.ts` - NEW function for downloading and processing completed reports
+- `insert_pending_reports.sql` - Manual database fix for existing report requests
+- `verify_collected_data.sql` - Queries to verify portfolio and report data
+- `DEPLOY_FIXED_REPORT_COLLECTOR.md` - Instructions for deploying fixed collector
+- `SETUP_CRON_SCHEDULER.md` - Instructions for automated report processing with pg_cron
+
 ### Code Projects
-- `placement-optimization-functions/` - Amazon Placement Optimization Edge Functions (DEPLOYED - Phase 4)
-  - 3 Edge Functions deployed to Supabase production
+- `placement-optimization-functions/` - Amazon Placement Optimization Edge Functions (DEPLOYED - FULLY OPERATIONAL)
+  - 4 Edge Functions deployed to Supabase production:
+    - report-generator (deployed, working)
+    - report-collector (deployed, FIXED - collecting portfolios, campaigns, and requesting reports)
+    - workflow-executor (deployed, working)
+    - report-processor (deployed, FIXED - downloading and processing reports)
   - 4 shared utilities (supabase-client, amazon-ads-client, types, errors)
-  - 3 standalone deployment versions in deploy/ directory
+  - 4 standalone deployment versions in deploy/ directory
   - TypeScript/Deno with full type safety
   - OAuth token management and Amazon Ads API integration
-  - Production-ready (awaiting real credentials)
+  - Portfolio collection: WORKING (7 portfolios with names and budgets)
+  - Campaign collection: WORKING (17 campaigns with portfolio_id and bid adjustments)
+  - Report requesting: WORKING (6 reports requested)
+  - Report processing: WORKING (149 rows of placement performance data)
+  - View generation: WORKING (complete optimization report with all placements)
 - `bidflow/` - Bid flow management system
 - `amazon-ads-api-mcp/` - Amazon Ads API MCP server
 - `supabase-mcp/` - Supabase MCP server
@@ -285,43 +308,133 @@ Major Architecture Rebuild - Amazon Placement Optimization System
 - Successfully deployed all 3 functions to production
 - Original modular code preserved for future development
 
+### 2024-11-08: Amazon Ads API Endpoint Corrections
+**Decision:** Fix report-collector endpoints by analyzing working n8n flow instead of relying on stub code
+**Reasoning:**
+- Initial deployed report-collector was only stub code (never actually collected data)
+- Working n8n flow provided ground truth for correct API endpoints
+- Amazon Ads API documentation can be unclear, real implementation is best reference
+- Portfolios endpoint changed from GET /v2/portfolios/extended to POST /portfolios/list
+- Reporting endpoint changed from /v2/sp/reports to /reporting/reports
+**Impact:**
+- report-collector now successfully fetches portfolios (7 portfolios collected)
+- report-collector now successfully requests reports (6 report requests created)
+- Database now populated with real Amazon Ads data
+- Discovered need for separate report-processor function to handle downloads
+- System now functional for portfolio collection and report requesting
+
+### 2024-11-08: Report Processing Architecture - Separate Function
+**Decision:** Create separate report-processor function instead of polling in report-collector
+**Reasoning:**
+- Report generation can take 30-45 minutes, sometimes up to 3 hours
+- Supabase Edge Functions have timeout limits
+- Long-running poll loops would timeout or consume excessive resources
+- Better architecture: report-collector requests reports, report-processor downloads completed ones
+- Can schedule report-processor to run every 5 minutes via pg_cron
+- Separation of concerns: requesting vs processing
+**Impact:**
+- Created report-processor-deploy.ts for downloading and processing reports
+- report-collector simplified to only request reports and track workflow_executions
+- report-processor queries pending report_requests and downloads completed ones
+- Can be triggered manually or scheduled automatically
+- More resilient to Amazon's variable report generation times
+- System now ready for automated processing via cron
+
+### 2024-11-08: Manual Database Inserts for Foreign Key Issues
+**Decision:** Manually insert pending report_requests when automatic insertion fails
+**Reasoning:**
+- Foreign key constraint requires workflow_id to exist in workflow_executions
+- Initial report-collector didn't properly create workflow_executions records
+- Fixed version creates workflow_executions, but 6 reports already requested in Amazon
+- Can't re-request same reports (would duplicate data)
+- Manual SQL insert preserves existing report_request_id values from Amazon
+**Impact:**
+- Created insert_pending_reports.sql to manually link existing requests to workflow
+- Successfully inserted 6 pending report requests into database
+- Database now tracks all outstanding report requests
+- report-processor can now find and process these requests when ready
+- Temporary workaround that solved immediate problem
+
+### 2024-11-08: Campaign Details Collection in report-collector
+**Decision:** Extend report-collector to fetch campaign details including portfolio associations and bid adjustments
+**Reasoning:**
+- View requires campaign.portfolio_id to join with portfolios table
+- View requires bid adjustment percentages (bid_top_of_search, bid_rest_of_search, bid_product_page)
+- Original report-collector only created stub campaign records with NULL portfolio_id
+- Amazon Ads API provides all this data via /sp/campaigns/list endpoint
+- Need campaign details BEFORE processing reports (foreign key requirement)
+**Impact:**
+- Added campaign details collection to report-collector (lines 232-294)
+- Now collects 17 campaigns with full details from Amazon Ads API
+- Portfolio associations properly stored (portfolio_id column)
+- Bid adjustments properly stored (30%, 70%, 90%, 65%, 85%, 35%, 220%, 50%, 320%)
+- View can now display Portfolio names and "Increase bids by placement" columns
+- Database has complete campaign context before report processing
+
+### 2024-11-08: Remove Destructive upsertCampaigns from report-processor
+**Decision:** Remove upsertCampaigns() function that was overwriting campaign data during report processing
+**Reasoning:**
+- report-processor was calling upsertCampaigns() for every report row processed
+- This function only had campaign_id and campaign_name from report data
+- Missing fields were being set to NULL or 0 (portfolio_id=NULL, bid adjustments=0)
+- This overwrote the detailed campaign data collected by report-collector
+- Campaigns should be created/updated ONLY by report-collector, not report-processor
+- Report processing should only insert performance data, not modify campaigns
+**Impact:**
+- Removed entire upsertCampaigns() function from report-processor
+- Campaign data now preserved correctly (portfolio_id, bid adjustments)
+- View now shows correct Portfolio names and bid adjustment percentages
+- Clear separation of concerns: report-collector owns campaigns, report-processor owns performance
+- Database integrity maintained across multiple report processing runs
+
+### 2024-11-08: View Modification to Show All Placement Types
+**Decision:** Modify view_placement_optimization_report to always show all 3 placement types for every campaign
+**Reasoning:**
+- Original view used LEFT JOIN, only showing placements with performance data
+- Amazon may not have data for all placement types (e.g., no impressions on Product Page)
+- Users expect to see all 3 placement rows even with 0 impressions
+- Missing rows make it look like placements are being skipped
+- CROSS JOIN with placement values ensures all combinations appear
+**Impact:**
+- Modified view to use CROSS JOIN with all 3 placement types
+- Every campaign now shows exactly 3 rows (Top, Rest Of Search, Product Page)
+- Rows without data show 0 for metrics (impressions, clicks, spend, etc.)
+- View is predictable and consistent (17 campaigns × 3 placements = 51 rows expected)
+- Easier for users to compare performance across all placement types
+
 ## Next Steps
 
-### Phase 5: Production Deployment (READY TO START)
+### Phase 4: COMPLETE - System Fully Operational
 
-#### 1. Update Vault with Real Amazon Ads API Credentials (HIGH PRIORITY)
-System is fully deployed but running on placeholder credentials. To make operational:
-1. Open Supabase Dashboard: https://supabase.com/dashboard/project/phhatzkwykqdqfkxinvr/settings/vault
-2. Update 3 secrets with real Amazon Ads API values:
-   - amazon_ads_client_id (from Amazon Advertising Console)
-   - amazon_ads_client_secret (from Amazon Advertising Console)
-   - amazon_ads_refresh_token (from OAuth authorization flow)
+All core functionality working:
+- Portfolio collection: 7 portfolios with names and budgets
+- Campaign collection: 17 campaigns with portfolio associations and bid adjustments
+- Report requesting: 6 reports requested successfully
+- Report processing: 149 rows of placement performance data
+- View generation: Complete optimization report showing all placements
 
-#### 2. Test with Real Credentials
-Once credentials updated, test end-to-end workflow:
-```bash
-curl -X POST https://phhatzkwykqdqfkxinvr.supabase.co/functions/v1/workflow-executor \
-  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"dryRun": false}'
-```
+### Phase 5: Production Automation (READY TO START)
 
-#### 3. Verify Data Collection
-After successful workflow execution:
-1. Check portfolios table: `SELECT * FROM portfolios`
-2. Check campaigns table: `SELECT * FROM campaigns`
-3. Check performance tables: `SELECT * FROM placement_performance`
-4. Query report view: `SELECT * FROM view_placement_optimization_report`
-5. Verify data accuracy against Amazon Ads Console
+#### 1. Set Up Weekly Scheduled Execution (HIGH PRIORITY)
+Configure automated weekly workflow execution:
+- Decide on schedule (recommended: Monday 6:00 AM UTC)
+- Implement execution_id format: Week44, Week45, etc.
+- Options for scheduling:
+  - Option A: Supabase Edge Functions Cron (native scheduling)
+  - Option B: GitHub Actions with scheduled workflow
+  - Option C: External cron service (Cloud Scheduler, etc.)
 
-#### 4. Set Up Weekly Scheduling
-Configure automated weekly execution:
-- Option A: Supabase Edge Functions Cron (native scheduling)
-- Option B: GitHub Actions with scheduled workflow
-- Option C: External cron service (Cloud Scheduler, etc.)
-- Recommended schedule: Every Monday 6:00 AM UTC
+#### 2. Set Up Automated Report Processing (RECOMMENDED)
+Enable pg_cron for automatic report processing every 5 minutes:
+1. Follow instructions in SETUP_CRON_SCHEDULER.md
+2. Enable pg_cron extension in Supabase Dashboard
+3. Create cron job to run report-processor every 5 minutes
+4. Monitor first few executions in Supabase logs
+5. Benefits: Automatically downloads reports when ready, no manual triggering needed
 
-#### 5. Google Sheets Integration (Optional)
+### Phase 6: Enhancements and Integrations
+
+#### 1. Google Sheets Integration (Optional)
 Connect report output to Google Sheets:
 - Set up Google Sheets API credentials
 - Create new report-generator export function

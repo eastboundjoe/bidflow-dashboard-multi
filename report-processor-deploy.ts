@@ -111,13 +111,9 @@ class AmazonAdsClient {
   }
 
   async downloadReport(url) {
-    const accessToken = await this.getAccessToken();
+    // Amazon report URLs are pre-signed S3 URLs - do NOT add Authorization headers
     const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Amazon-Advertising-API-ClientId': this.config.clientId
-      }
+      method: 'GET'
     });
 
     if (!response.ok) {
@@ -132,24 +128,52 @@ class AmazonAdsClient {
 // =====================================================
 // SECTION 4: REPORT PROCESSING LOGIC
 // =====================================================
+
 async function processPlacementReport(reportData: any[], reportType: string, supabase: any) {
+  // Note: Campaigns should already exist from report-collector
+  // If they don't, the foreign key constraint will fail, which is correct behavior
+
   const records = [];
+  const today = new Date().toISOString().split('T')[0];
+
+  // Map Amazon placement values to database values
+  // Amazon uses "on-Amazon" suffix in their reporting API
+  const placementMap = {
+    'Top of Search on-Amazon': 'PLACEMENT_TOP',
+    'Detail Page on-Amazon': 'PLACEMENT_PRODUCT_PAGE',
+    'Other on-Amazon': 'PLACEMENT_REST_OF_SEARCH'
+  };
+
+  console.log(`Processing ${reportData.length} placement report rows`);
 
   for (const row of reportData) {
-    if (!row.campaignId) continue;
+    if (!row.campaignId) {
+      console.log('Skipping row: no campaignId');
+      continue;
+    }
+
+    console.log(`Campaign ${row.campaignId}: placement="${row.placementClassification}"`);
+
+    const placementValue = placementMap[row.placementClassification] || row.placementClassification;
+
+    // Skip if placement value is not valid
+    if (!['PLACEMENT_TOP', 'PLACEMENT_REST_OF_SEARCH', 'PLACEMENT_PRODUCT_PAGE'].includes(placementValue)) {
+      console.log(`Skipping invalid placement: "${row.placementClassification}" (mapped to "${placementValue}")`);
+      continue;
+    }
 
     const record = {
       campaign_id: String(row.campaignId),
-      campaign_name: row.campaignName || '',
-      placement: row.placementClassification || 'UNKNOWN',
+      placement: placementValue,
+      period_type: reportType.includes('30day') ? '30day' : '7day',
+      report_date: today,
       impressions: row.impressions || 0,
       clicks: row.clicks || 0,
-      cost: row.spend || 0,
-      conversions_7d: row.purchases7d || 0,
+      spend: row.spend || 0,
+      orders_7d: row.purchases7d || 0,
       sales_7d: row.sales7d || 0,
-      conversions_30d: row.purchases30d || 0,
-      sales_30d: row.sales30d || 0,
-      report_period: reportType.includes('30day') ? '30_DAY' : '7_DAY'
+      orders_30d: row.purchases30d || 0,
+      sales_30d: row.sales30d || 0
     };
 
     records.push(record);
@@ -159,7 +183,7 @@ async function processPlacementReport(reportData: any[], reportType: string, sup
     const { error } = await supabase
       .from('placement_performance')
       .upsert(records, {
-        onConflict: 'campaign_id,placement,report_period'
+        onConflict: 'campaign_id,placement,period_type,report_date'
       });
 
     if (error) {
@@ -171,6 +195,9 @@ async function processPlacementReport(reportData: any[], reportType: string, sup
 }
 
 async function processCampaignReport(reportData: any[], reportType: string, supabase: any) {
+  // Note: Campaigns should already exist from report-collector
+  // If they don't, the foreign key constraint will fail, which is correct behavior
+
   const records = [];
 
   for (const row of reportData) {
@@ -178,23 +205,20 @@ async function processCampaignReport(reportData: any[], reportType: string, supa
 
     const record = {
       campaign_id: String(row.campaignId),
-      campaign_name: row.campaignName || '',
-      campaign_status: row.campaignStatus || 'UNKNOWN',
-      daily_budget: row.campaignBudgetAmount || 0,
+      period_type: reportType.includes('30day') ? '30day' :
+                   reportType.includes('7day') ? '7day' :
+                   reportType.includes('yesterday') ? 'yesterday' : 'day_before',
+      report_date: row.date || new Date().toISOString().split('T')[0],
       impressions: row.impressions || 0,
       clicks: row.clicks || 0,
-      cost: row.spend || 0,
-      conversions_7d: row.purchases7d || 0,
+      spend: row.spend || 0,
+      orders_7d: row.purchases7d || 0,
       sales_7d: row.sales7d || 0,
-      conversions_14d: row.purchases14d || 0,
+      orders_14d: row.purchases14d || 0,
       sales_14d: row.sales14d || 0,
-      conversions_30d: row.purchases30d || 0,
+      orders_30d: row.purchases30d || 0,
       sales_30d: row.sales30d || 0,
-      top_of_search_impression_share: row.topOfSearchImpressionShare || 0,
-      report_date: row.date || new Date().toISOString().split('T')[0],
-      report_period: reportType.includes('30day') ? '30_DAY' :
-                     reportType.includes('7day') ? '7_DAY' :
-                     reportType.includes('yesterday') ? 'YESTERDAY' : 'DAY_BEFORE'
+      top_of_search_impression_share: row.topOfSearchImpressionShare || 0
     };
 
     records.push(record);
@@ -204,7 +228,7 @@ async function processCampaignReport(reportData: any[], reportType: string, supa
     const { error } = await supabase
       .from('campaign_performance')
       .upsert(records, {
-        onConflict: 'campaign_id,report_period,report_date'
+        onConflict: 'campaign_id,period_type,report_date'
       });
 
     if (error) {
