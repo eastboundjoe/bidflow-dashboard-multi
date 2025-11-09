@@ -179,19 +179,37 @@ COMMENT ON FUNCTION handle_new_user() IS
 'Trigger function that creates tenant + user record when someone signs up via Supabase Auth. First user becomes admin of their tenant.';
 
 -- =====================================================
--- CREATE TRIGGER
+-- CREATE TRIGGER (AS POSTGRES SUPERUSER)
 -- =====================================================
--- Attach trigger to auth.users table
+-- NOTE: This trigger creation requires postgres/supabase_admin role
+-- If you get "must be owner of relation users" error:
+-- The trigger will need to be created via Supabase Dashboard UI or CLI
+-- For now, we'll create the function and you can enable the trigger later
 
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+-- Attempt to create trigger (may fail with permission error)
+DO $$
+BEGIN
+  -- Drop existing trigger if it exists
+  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
+  -- Create new trigger
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_new_user();
 
-COMMENT ON TRIGGER on_auth_user_created ON auth.users IS
-'Automatically creates tenant and user record when new user signs up via Supabase Auth.';
+  RAISE NOTICE '✅ Trigger created successfully';
+
+EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE NOTICE '⚠️  Cannot create trigger on auth.users (insufficient privileges)';
+    RAISE NOTICE '→ Trigger function handle_new_user() is ready';
+    RAISE NOTICE '→ Create trigger via Supabase Dashboard → Database → Triggers';
+    RAISE NOTICE '→ Or use Supabase CLI: supabase db remote commit';
+  WHEN OTHERS THEN
+    RAISE NOTICE '⚠️  Error creating trigger: %', SQLERRM;
+    RAISE NOTICE '→ Trigger function handle_new_user() is ready';
+END $$;
 
 -- =====================================================
 -- OPTIONAL: INVITE USER TO EXISTING TENANT

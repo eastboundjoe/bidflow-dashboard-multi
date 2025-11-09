@@ -202,13 +202,8 @@ COMMENT ON VIEW view_placement_optimization_report IS 'Multi-tenant placement op
 GRANT SELECT ON view_placement_optimization_report TO authenticated;
 GRANT SELECT ON view_placement_optimization_report TO service_role;
 
--- Add RLS policy for the view
--- Note: Views inherit RLS from underlying tables, but we add explicit policy for clarity
-CREATE POLICY "Users access their tenant's view data"
-ON view_placement_optimization_report FOR SELECT TO authenticated
-USING (
-  "Tenant ID" IN (SELECT tenant_id FROM users WHERE id = auth.uid())
-);
+-- Note: Views cannot have RLS policies directly
+-- Data isolation is enforced through RLS policies on underlying tables (portfolios, campaigns, etc.)
 
 -- =====================================================
 -- VERIFICATION QUERIES

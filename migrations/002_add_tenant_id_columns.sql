@@ -240,23 +240,31 @@ ALTER TABLE campaign_performance ALTER COLUMN tenant_id SET NOT NULL;
 ALTER TABLE placement_performance ALTER COLUMN tenant_id SET NOT NULL;
 
 -- =====================================================
--- STEP 7: UPDATE UNIQUE CONSTRAINTS
+-- STEP 7: UPDATE UNIQUE CONSTRAINTS (WITH CASCADE)
 -- =====================================================
 -- Add tenant_id to unique constraints for proper multi-tenant isolation
+-- Use CASCADE to handle dependent foreign keys
 
--- Drop old unique constraints
-ALTER TABLE portfolios DROP CONSTRAINT IF EXISTS portfolios_portfolio_id_key;
-ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_campaign_id_key;
+-- Drop old unique constraints (CASCADE will drop dependent foreign keys)
+ALTER TABLE portfolios DROP CONSTRAINT IF EXISTS portfolios_portfolio_id_key CASCADE;
+ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_campaign_id_key CASCADE;
 
 -- Add new composite unique constraints
 ALTER TABLE portfolios ADD CONSTRAINT portfolios_tenant_portfolio_unique UNIQUE (tenant_id, portfolio_id);
 ALTER TABLE campaigns ADD CONSTRAINT campaigns_tenant_campaign_unique UNIQUE (tenant_id, campaign_id);
 
+-- Recreate the foreign key from campaigns to portfolios with the new composite constraint
+ALTER TABLE campaigns
+ADD CONSTRAINT campaigns_portfolio_fkey
+FOREIGN KEY (tenant_id, portfolio_id)
+REFERENCES portfolios(tenant_id, portfolio_id)
+ON DELETE SET NULL;
+
 -- Update composite unique constraints that include report_date
-ALTER TABLE campaign_performance DROP CONSTRAINT IF EXISTS campaign_performance_campaign_id_period_type_report_date_key;
+ALTER TABLE campaign_performance DROP CONSTRAINT IF EXISTS campaign_performance_campaign_id_period_type_report_date_key CASCADE;
 ALTER TABLE campaign_performance ADD CONSTRAINT campaign_performance_unique UNIQUE (tenant_id, campaign_id, period_type, report_date);
 
-ALTER TABLE placement_performance DROP CONSTRAINT IF EXISTS placement_performance_campaign_id_placement_period_type_re_key;
+ALTER TABLE placement_performance DROP CONSTRAINT IF EXISTS placement_performance_campaign_id_placement_period_type_re_key CASCADE;
 ALTER TABLE placement_performance ADD CONSTRAINT placement_performance_unique UNIQUE (tenant_id, campaign_id, placement, period_type, report_date);
 
 -- =====================================================
