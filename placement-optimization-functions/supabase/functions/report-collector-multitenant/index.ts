@@ -197,44 +197,61 @@ serve(async (req) => {
     const startDate30 = new Date(Date.now() - 33 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     const startDate7 = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
+    // Add timestamp to report names to ensure uniqueness (Amazon rejects duplicate report requests)
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19)
+
     const reportRequests = [
       {
-        name: 'Campaign Performance - 30 Day',
-        period_type: '30day',
-        report_type: 'campaigns',
-        metrics: 'impressions,clicks,cost,purchases30d,sales30d,kindleEditionNormalizedPagesRead14d,kindleEditionNormalizedPagesRoyalties14d,topOfSearchImpressionShare',
+        name: `Campaign Performance - 30 Day - ${timestamp}`,
+        db_report_type: 'campaign_30day',
+        groupBy: ['campaign'],
+        columns: ['campaignId', 'campaignName', 'campaignStatus', 'impressions', 'clicks', 'spend'],
+        timeUnit: 'SUMMARY',
         start_date: startDate30,
         end_date: today
       },
       {
-        name: 'Campaign Performance - 7 Day',
-        period_type: '7day',
-        report_type: 'campaigns',
-        metrics: 'impressions,clicks,cost,purchases7d,sales7d,kindleEditionNormalizedPagesRead14d,kindleEditionNormalizedPagesRoyalties14d,topOfSearchImpressionShare',
+        name: `Campaign Performance - 7 Day - ${timestamp}`,
+        db_report_type: 'campaign_7day',
+        groupBy: ['campaign'],
+        columns: ['campaignId', 'campaignName', 'campaignStatus', 'impressions', 'clicks', 'spend'],
+        timeUnit: 'SUMMARY',
         start_date: startDate7,
         end_date: today
       },
       {
-        name: 'Campaign Performance - Yesterday',
-        period_type: 'yesterday',
-        report_type: 'campaigns',
-        metrics: 'impressions,clicks,cost,topOfSearchImpressionShare',
+        name: `Campaign Performance - Yesterday - ${timestamp}`,
+        db_report_type: 'campaign_yesterday',
+        groupBy: ['campaign'],
+        columns: ['campaignId', 'campaignName', 'campaignStatus', 'date', 'spend'],
+        timeUnit: 'DAILY',
         start_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         end_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       },
       {
-        name: 'Placement Report - 30 Day',
-        period_type: '30day',
-        report_type: 'placements',
-        metrics: 'impressions,clicks,cost,purchases30d,sales30d',
+        name: `Campaign Performance - Day Before Yesterday - ${timestamp}`,
+        db_report_type: 'campaign_day_before',
+        groupBy: ['campaign'],
+        columns: ['campaignId', 'campaignName', 'campaignStatus', 'date', 'spend'],
+        timeUnit: 'DAILY',
+        start_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        end_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      },
+      {
+        name: `Placement Report - 30 Day - ${timestamp}`,
+        db_report_type: 'placement_30day',
+        groupBy: ['campaign', 'campaignPlacement'],
+        columns: ['campaignId', 'campaignName', 'campaignStatus', 'placementClassification', 'impressions', 'clicks', 'spend'],
+        timeUnit: 'SUMMARY',
         start_date: startDate30,
         end_date: today
       },
       {
-        name: 'Placement Report - 7 Day',
-        period_type: '7day',
-        report_type: 'placements',
-        metrics: 'impressions,clicks,cost,purchases7d,sales7d',
+        name: `Placement Report - 7 Day - ${timestamp}`,
+        db_report_type: 'placement_7day',
+        groupBy: ['campaign', 'campaignPlacement'],
+        columns: ['campaignId', 'campaignName', 'campaignStatus', 'placementClassification', 'impressions', 'clicks', 'spend'],
+        timeUnit: 'SUMMARY',
         start_date: startDate7,
         end_date: today
       }
@@ -246,7 +263,7 @@ serve(async (req) => {
       console.log(`Requesting: ${reportConfig.name}`)
 
       if (dry_run) {
-        console.log(`  [DRY RUN] Would request ${reportConfig.report_type} report`)
+        console.log(`  [DRY RUN] Would request ${reportConfig.api_report_type} report`)
         continue
       }
 
@@ -259,19 +276,17 @@ serve(async (req) => {
             endDate: reportConfig.end_date,
             configuration: {
               adProduct: 'SPONSORED_PRODUCTS',
-              groupBy: reportConfig.report_type === 'placements' ? ['placement'] : ['campaign'],
-              columns: reportConfig.metrics.split(','),
-              reportTypeId: reportConfig.report_type === 'placements'
-                ? 'spPlacement'
-                : 'spCampaigns',
-              timeUnit: 'SUMMARY',
+              reportTypeId: 'spCampaigns',
+              groupBy: reportConfig.groupBy,
+              columns: reportConfig.columns,
+              timeUnit: reportConfig.timeUnit,
               format: 'GZIP_JSON'
             }
           },
           {
             'Amazon-Advertising-API-Scope': profileId,
-            'Accept': 'application/vnd.createasyncreportrequest.v3+json',
-            'Content-Type': 'application/vnd.createasyncreportrequest.v3+json'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
         )
 
@@ -285,18 +300,16 @@ serve(async (req) => {
         console.log(`  ✅ Report requested: ${reportId}`)
         reportIds.push(reportId)
 
-        // Insert report_requests record
+        // Insert report_requests record with correct column names
         const { error: reportError } = await supabase
           .from('report_requests')
           .insert({
             tenant_id,
             amazon_ads_account_id,
-            workflow_id: execution_id,
-            report_request_id: reportId,
-            report_type: reportConfig.report_type,
-            period_type: reportConfig.period_type,
-            start_date: reportConfig.start_date,
-            end_date: reportConfig.end_date,
+            execution_id: execution_id,
+            report_id: reportId,
+            report_name: reportConfig.name,
+            report_type: reportConfig.db_report_type,
             status: 'PENDING'
           })
 
@@ -306,6 +319,14 @@ serve(async (req) => {
 
       } catch (reportError) {
         console.error(`  ❌ Failed to request ${reportConfig.name}:`, reportError)
+        console.error(`  Request config:`, JSON.stringify({
+          name: reportConfig.name,
+          startDate: reportConfig.start_date,
+          endDate: reportConfig.end_date,
+          groupBy: reportConfig.groupBy,
+          columns: reportConfig.columns,
+          timeUnit: reportConfig.timeUnit
+        }, null, 2))
       }
     }
 
