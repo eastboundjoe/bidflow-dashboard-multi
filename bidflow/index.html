@@ -1014,6 +1014,69 @@
                 max-height: 75vh;
             }
         }
+
+        /* Amazon Authorization Loading Overlay */
+        .amazon-auth-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .amazon-auth-loading-content {
+            text-align: center;
+            max-width: 500px;
+            padding: 2rem;
+        }
+
+        .amazon-auth-loading-content h3 {
+            color: var(--accent-primary);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .amazon-auth-loading-content p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-dark);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+            animation: progressAnimation 2s ease-in-out infinite;
+            width: 70%;
+        }
+
+        @keyframes progressAnimation {
+            0% {
+                transform: translateX(-100%);
+            }
+            50% {
+                transform: translateX(50%);
+            }
+            100% {
+                transform: translateX(150%);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1071,6 +1134,13 @@
             };
 
             useEffect(() => {
+                // Check if we're returning from Amazon authorization
+                const urlParams = new URLSearchParams(window.location.search);
+                const amzCode = urlParams.get('code');
+                if (amzCode) {
+                    setAuthorizingAmazon(true);
+                }
+
                 const checkUser = async () => {
                     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -1079,6 +1149,7 @@
                         setCredentials(null);
                         await supabase.auth.signOut();
                         setLoading(false);
+                        setAuthorizingAmazon(false);
                         return;
                     }
 
@@ -1088,8 +1159,6 @@
                     setLoading(false);
 
                     // Check for Amazon Auth Code in URL AFTER session is confirmed
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const amzCode = urlParams.get('code');
                     if (amzCode && session) {
                         handleAmazonCallback(amzCode);
                     }
@@ -1176,6 +1245,7 @@
                     console.error('Full error details:', error);
                 } finally {
                     setLoading(false);
+                    setAuthorizingAmazon(false);
                 }
             };
 
@@ -1321,9 +1391,24 @@
                 finally { setLoading(false); }
             };
 
+            // Amazon Authorization Loading Overlay
+            const AmazonAuthLoadingOverlay = () => (
+                <div className="amazon-auth-loading-overlay">
+                    <div className="amazon-auth-loading-content">
+                        <h3>🔐 Connecting to Amazon</h3>
+                        <p>Please wait while we securely connect your Amazon Advertising account...</p>
+                        <div className="progress-bar-container">
+                            <div className="progress-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+
             if (showUnsubscribePage) return (
-                <div className="auth-container">
-                    <div className="auth-card" style={{maxWidth: '600px'}}>
+                <>
+                    {authorizingAmazon && <AmazonAuthLoadingOverlay />}
+                    <div className="auth-container">
+                        <div className="auth-card" style={{maxWidth: '600px'}}>
                         <h2 style={{color: '#dc2626', marginBottom: '1.5rem'}}>⚠️ Unsubscribe from BidFlow</h2>
 
                         {successMessage && (
@@ -1389,13 +1474,16 @@
                         </div>
                     </div>
                 </div>
+                </>
             );
 
             if (loading) return <div className="auth-loading"><div className="spinner"></div><p>Loading...</p></div>;
 
             if (!session) return (
-                <div className="auth-container">
-                    <div className="auth-card">
+                <>
+                    {authorizingAmazon && <AmazonAuthLoadingOverlay />}
+                    <div className="auth-container">
+                        <div className="auth-card">
                         <h2>Welcome to BidFlow</h2>
                         <p className="subtitle">Sign in to access your placement data</p>
                         
@@ -1440,10 +1528,13 @@
                         </button>
                     </div>
                 </div>
+                </>
             );
 
             if (!credentials || credentials.status === 'inactive') return (
-                <div className="credentials-setup">
+                <>
+                    {authorizingAmazon && <AmazonAuthLoadingOverlay />}
+                    <div className="credentials-setup">
                     <div className="setup-card">
                         <div className="header">
                             <h2>Welcome, {session.user.email}!</h2>
@@ -1500,10 +1591,12 @@
                         )}
                     </div>
                 </div>
+                </>
             );
 
             return (
                 <>
+                    {authorizingAmazon && <AmazonAuthLoadingOverlay />}
                     <div className="tenant-header-bar">
                         <div className="tenant-info">
                             <span className="user-email">{session.user.email}</span>
