@@ -1,0 +1,2915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidFlow - Placement Optimizer</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Auth Component Styles */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 24px var(--shadow);
+        }
+        .auth-card h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            justify-content: center;
+        }
+        .tenant-header-bar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        .tenant-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .btn-small-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-badge.active {
+            background: rgba(0, 255, 148, 0.1);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+        }
+        .credentials-setup {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .setup-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .form-group input {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e15;
+            --bg-card: #111827;
+            --bg-hover: #1a2332;
+            --accent-primary: #00ff94;
+            --accent-secondary: #0095ff;
+            --accent-warning: #ff9500;
+            --accent-danger: #ff3366;
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --border: #1f2937;
+            --shadow: rgba(0, 255, 148, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            font-size: 3rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .upload-zone {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-hover);
+            box-shadow: 0 0 40px var(--shadow);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 4px 12px rgba(0, 255, 148, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 148, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+
+        .stat-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .stat-detail {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .data-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            /* Removed overflow: hidden to allow sticky header to work with page scroll */
+        }
+
+        .table-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .table-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        input, select {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 148, 0.1);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 0 0 12px 12px;
+            max-height: 70vh;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            min-width: 1400px; /* Ensures table doesn't compress on mobile */
+        }
+
+        thead {
+            background: var(--bg-hover);
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 15;
+            background: var(--bg-hover);
+            border-bottom: 2px solid var(--border);
+            padding: 0.5rem 0.3rem;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-secondary);
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+            line-height: 1.3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        th:hover {
+            color: var(--accent-primary);
+        }
+
+        td {
+            padding: 0.6rem 0.3rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            text-align: right;
+        }
+
+        th:first-child {
+            text-align: center;
+            position: sticky;
+            left: 0;
+            z-index: 25;
+            background: var(--bg-hover);
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        td:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: var(--bg-card);
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
+        }
+
+        tbody tr:hover td:first-child {
+            background: var(--bg-hover);
+        }
+
+        tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .metric-positive {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        .metric-negative {
+            color: var(--accent-danger);
+            font-weight: 600;
+        }
+
+        .multiplier {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            background: rgba(0, 255, 148, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .metric-group-30d {
+            background: rgba(0, 255, 148, 0.08);
+        }
+
+        .metric-group-7d {
+            background: rgba(0, 149, 255, 0.08);
+        }
+
+        .metric-percent-group {
+            background: rgba(255, 149, 0, 0.08);
+            color: var(--accent-warning);
+            font-weight: 500;
+        }
+
+        th.metric-percent-group {
+            background: var(--bg-hover) !important;
+        }
+
+        .changes-input-active {
+            color: #ffff00 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .acos-header {
+            color: var(--accent-primary) !important;
+            background: linear-gradient(rgba(0, 255, 148, 0.1), rgba(0, 255, 148, 0.1)), var(--bg-hover) !important;
+            border-bottom: 2px solid var(--accent-primary) !important;
+            box-shadow: 0 2px 4px rgba(0, 255, 148, 0.2) !important;
+        }
+
+        tbody tr:hover .metric-group-30d,
+        tbody tr:hover .metric-group-7d,
+        tbody tr:hover .metric-percent-group {
+            background: var(--bg-hover);
+        }
+
+        .campaign-group-separator {
+            border-top: 2px solid var(--accent-primary) !important;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            height: 280px;
+        }
+
+        /* Sankey Diagram Styles */
+        .sankey-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .sankey-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sankey-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sankey-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .control-widget {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: rgba(17, 24, 39, 0.8);
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            height: 42px;
+            box-sizing: border-box;
+            width: 220px;
+        }
+
+        .slider-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .value-display {
+            font-size: 0.875rem;
+            width: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            accent-color: var(--accent-primary);
+            width: 6rem;
+            cursor: pointer;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            width: 220px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 255, 148, 0.4);
+        }
+
+        .sankey-svg-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: visible;
+        }
+
+        .sankey-svg-wrapper svg {
+            width: 100%;
+            max-width: 1200px;
+            height: 800px;
+            overflow: visible;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'JetBrains Mono', monospace;
+            margin-right: 0.25rem;
+        }
+
+        .badge-top {
+            background: rgba(0, 255, 148, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .badge-pp {
+            background: rgba(0, 149, 255, 0.2);
+            color: var(--accent-secondary);
+        }
+
+        .badge-ros {
+            background: rgba(255, 149, 0, 0.2);
+            color: var(--accent-warning);
+        }
+
+        .badge-business {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--accent-danger);
+        }
+
+        .mobile-scroll-hint {
+            display: none;
+            background: rgba(0, 255, 148, 0.1);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            margin: 0.5rem 0;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .password-box {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 8px 40px rgba(0, 255, 148, 0.3);
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .password-box h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .password-box p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .password-input-group {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .password-input {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 3rem 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--accent-primary);
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 255, 148, 0.1);
+        }
+
+        .password-error {
+            color: var(--accent-danger);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .password-error.show {
+            display: block;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Mobile-specific improvements */
+        @media (max-width: 767px) {
+            .mobile-scroll-hint {
+                display: block;
+            }
+
+            .content {
+                padding: 0.75rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 1rem;
+                font-size: 0.85rem;
+            }
+
+            .stat-card {
+                padding: 0.75rem;
+            }
+
+            .stat-label {
+                font-size: 0.6rem;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .stat-detail {
+                font-size: 0.65rem;
+            }
+
+            .table-header {
+                padding: 0.75rem;
+            }
+
+            .table-title {
+                font-size: 1rem;
+            }
+
+            input, select {
+                font-size: 0.85rem;
+                padding: 0.6rem;
+            }
+
+            /* Make first column wider on mobile for better readability */
+            td:first-child {
+                min-width: 140px;
+                max-width: 140px;
+            }
+
+            th:first-child {
+                min-width: 140px;
+            }
+
+            /* Ensure tap targets are big enough */
+            th {
+                padding: 0.75rem 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            td {
+                padding: 0.75rem 0.4rem;
+                font-size: 0.85rem;
+            }
+
+            .changes-column {
+                padding-right: 1.5rem !important;
+            }
+
+            .badge {
+                font-size: 0.5rem;
+                padding: 0.2rem 0.3rem;
+            }
+
+            .multiplier {
+                font-size: 0.65rem;
+                padding: 0.15rem 0.3rem;
+            }
+
+            /* Scrollbar styling for mobile */
+            .table-wrapper::-webkit-scrollbar {
+                height: 8px;
+                width: 8px;
+            }
+
+            .table-wrapper::-webkit-scrollbar-track {
+                background: var(--bg-dark);
+                border-radius: 4px;
+            }
+
+            .table-wrapper::-webkit-scrollbar-thumb {
+                background: var(--accent-primary);
+                border-radius: 4px;
+            }
+
+            .table-wrapper::-webkit-scrollbar-thumb:hover {
+                background: var(--accent-secondary);
+            }
+
+            .table-wrapper {
+                max-height: 60vh;
+            }
+
+            /* Chart improvements for mobile */
+            .chart-container {
+                height: 240px;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            /* Improve header layout on mobile */
+            header {
+                margin-bottom: 1.25rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .content {
+                padding: 2rem;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+
+            .table-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .table-controls {
+                flex-direction: row;
+                width: auto;
+            }
+
+            table {
+                font-size: 1rem;
+            }
+
+            th {
+                font-size: 0.9rem;
+                padding: 1rem 0.5rem;
+            }
+
+            td {
+                padding: 1rem 0.5rem;
+                font-size: 1rem;
+            }
+
+            .changes-column {
+                padding-right: 2rem !important;
+            }
+
+            .chart-container {
+                height: 400px;
+                padding: 1.5rem;
+            }
+
+            /* Desktop scrollbar styling */
+            .table-wrapper::-webkit-scrollbar {
+                height: 10px;
+                width: 10px;
+            }
+
+            .table-wrapper::-webkit-scrollbar-track {
+                background: var(--bg-dark);
+                border-radius: 5px;
+            }
+
+            .table-wrapper::-webkit-scrollbar-thumb {
+                background: var(--accent-primary);
+                border-radius: 5px;
+            }
+
+            .table-wrapper::-webkit-scrollbar-thumb:hover {
+                background: var(--accent-secondary);
+            }
+
+            .table-wrapper {
+                max-height: 75vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const SUPABASE_URL = 'https://jnmrwxdevwjahamdtvqf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpubXJ3eGRldndqYWhhbWR0dnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzNzI3ODEsImV4cCI6MjA4MTk0ODc4MX0.nSaYzplLA39BodbnmXm7bKtzibeNVY4Z_bmSnd7fGA4';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabase;
+
+        const AuthComponent = ({ children }) => {
+            const [session, setSession] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [credentials, setCredentials] = useState(null);
+            const [showCredentialForm, setShowCredentialForm] = useState(false);
+            const [showUnsubscribePage, setShowUnsubscribePage] = useState(false);
+            const [authorizingAmazon, setAuthorizingAmazon] = useState(false);
+            const [formData, setFormData] = useState({ clientId: '', clientSecret: '', refreshToken: '', profileId: '' });
+            const [successMessage, setSuccessMessage] = useState(null);
+
+            // Email Auth State
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [isSignUp, setIsSignUp] = useState(false);
+            const [authError, setAuthError] = useState(null);
+
+            // PKCE Helpers
+            const generateRandomString = (length) => {
+                const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+                let result = '';
+                const values = new Uint8Array(length);
+                window.crypto.getRandomValues(values);
+                for (let i = 0; i < length; i++) {
+                    result += charset[values[i] % charset.length];
+                }
+                return result;
+            };
+
+            const sha256 = async (plain) => {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(plain);
+                return window.crypto.subtle.digest('SHA-256', data);
+            };
+
+            const base64urlencode = (a) => {
+                let str = "";
+                const bytes = new Uint8Array(a);
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    str += String.fromCharCode(bytes[i]);
+                }
+                return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+            };
+
+            useEffect(() => {
+                const checkUser = async () => {
+                    const { data: { user }, error } = await supabase.auth.getUser();
+
+                    if (error || !user) {
+                        setSession(null);
+                        setCredentials(null);
+                        await supabase.auth.signOut();
+                        setLoading(false);
+                        return;
+                    }
+
+                    const { data: { session } } = await supabase.auth.getSession();
+                    setSession(session);
+                    if (session) await fetchCredentials();
+                    setLoading(false);
+
+                    // Check for Amazon Auth Code in URL AFTER session is confirmed
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const amzCode = urlParams.get('code');
+                    if (amzCode && session) {
+                        handleAmazonCallback(amzCode);
+                    }
+                };
+
+                checkUser();
+
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                    if (session) {
+                        setSession(session);
+                        fetchCredentials();
+                    } else {
+                        setSession(null);
+                        setCredentials(null);
+                        setLoading(false);
+                    }
+                });
+                return () => subscription.unsubscribe();
+            }, []);
+
+            // Auto-clear success message after 5 seconds
+            useEffect(() => {
+                if (successMessage) {
+                    const timer = setTimeout(() => setSuccessMessage(null), 5000);
+                    return () => clearTimeout(timer);
+                }
+            }, [successMessage]);
+
+            const handleAmazonCallback = async (code) => {
+                setLoading(true);
+                try {
+                    // Refresh the session to get a fresh access token
+                    console.log('Refreshing session to get fresh token...');
+                    const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+
+                    if (sessionError) {
+                        console.error('Session refresh error:', sessionError);
+                        throw new Error('Failed to refresh session. Please sign in again.');
+                    }
+
+                    if (!session) {
+                        throw new Error('No active session. Please sign in again.');
+                    }
+
+                    console.log('Session refreshed successfully, calling Edge Function');
+
+                    const verifier = sessionStorage.getItem('amz_code_verifier');
+
+                    // Use the supabase instance directly - it will use the refreshed session automatically
+                    const { data, error } = await supabase.functions.invoke('amazon-oauth-exchange', {
+                        body: {
+                            code,
+                            code_verifier: verifier,
+                            redirect_uri: window.location.origin + '/'
+                        }
+                    });
+
+                    console.log('Edge Function response:', { data, error });
+
+                    if (error) {
+                        // Extract the actual error message from the response body
+                        let errorMsg = error.message;
+                        if (error.context && error.context instanceof Response) {
+                            try {
+                                const errorBody = await error.context.json();
+                                console.log('Error response body:', errorBody);
+                                errorMsg = errorBody.error || errorMsg;
+                            } catch (e) {
+                                console.error('Failed to parse error response:', e);
+                            }
+                        }
+                        throw new Error(errorMsg);
+                    }
+                    if (data?.error) {
+                        throw new Error(data.error);
+                    }
+
+                    setSuccessMessage('✅ Amazon Authorization successful! Connected to profile: ' + (data.profile?.countryCode || 'US'));
+
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    await fetchCredentials();
+                } catch (error) {
+                    alert('❌ Error exchanging Amazon code: ' + error.message);
+                    console.error('Full error details:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const authorizeAmazon = async () => {
+                setAuthorizingAmazon(true);
+
+                const clientId = 'amzn1.application-oa2-client.3bfbe7fd974d4a8f96d30372640e2701';
+                const redirectUri = window.location.origin + '/';
+                const scope = 'advertising::campaign_management';
+
+                // PKCE Generation
+                const verifier = generateRandomString(64);
+                sessionStorage.setItem('amz_code_verifier', verifier);
+
+                const challengeBuffer = await sha256(verifier);
+                const challenge = base64urlencode(challengeBuffer);
+
+                const state = generateRandomString(16);
+                sessionStorage.setItem('amz_auth_state', state);
+
+                const authUrl = `https://www.amazon.com/ap/oa?client_id=${clientId}&scope=${scope}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&code_challenge=${challenge}&code_challenge_method=S256`;
+
+                window.location.href = authUrl;
+            };
+
+            const fetchCredentials = async () => {
+                // ... existing fetchCredentials ...
+                try {
+                    const { data, error } = await supabase.from('credentials').select('*').maybeSingle();
+                    setCredentials(data);
+                } catch (error) { console.error('Error fetching credentials:', error); }
+                finally { setLoading(false); }
+            };
+
+            const signInWithGoogle = async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin }
+                });
+                if (error) setAuthError(error.message);
+            };
+
+            const handleEmailAuth = async (e) => {
+                e.preventDefault();
+                setAuthError(null);
+                setLoading(true);
+                
+                try {
+                    if (isSignUp) {
+                        const { error } = await supabase.auth.signUp({
+                            email,
+                            password,
+                        });
+                        if (error) throw error;
+                        alert('Confirmation email sent! Please check your inbox.');
+                    } else {
+                        const { error } = await supabase.auth.signInWithPassword({
+                            email,
+                            password,
+                        });
+                        if (error) throw error;
+                    }
+                } catch (error) {
+                    setAuthError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const signOut = async () => { await supabase.auth.signOut(); };
+
+            const handleUnsubscribe = async () => {
+                setLoading(true);
+                try {
+                    const { data: { session } } = await supabase.auth.refreshSession();
+
+                    if (!session) {
+                        throw new Error('Session expired. Please sign in again.');
+                    }
+
+                    const { data, error } = await supabase.functions.invoke('delete-account');
+
+                    if (error) {
+                        let errorMsg = error.message;
+                        if (error.context && error.context instanceof Response) {
+                            try {
+                                const errorBody = await error.context.json();
+                                errorMsg = errorBody.error || errorMsg;
+                            } catch (e) {
+                                console.error('Failed to parse error response:', e);
+                            }
+                        }
+                        throw new Error(errorMsg);
+                    }
+
+                    if (data?.error) {
+                        throw new Error(data.error);
+                    }
+
+                    setSuccessMessage('✅ You have been unsubscribed. All your data has been permanently deleted.');
+                    setTimeout(() => window.location.reload(), 2000);
+                } catch (error) {
+                    alert('❌ Error unsubscribing: ' + error.message);
+                    console.error('Unsubscribe error:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleStoreCredentials = async (e) => {
+                e.preventDefault();
+                alert('Please use the "Authorize Amazon Account" button for secure automated setup.');
+                /* Deprecated: store_amazon_credentials removed
+                setLoading(true);
+                try {
+                    const { data, error } = await supabase.rpc('store_amazon_credentials', {
+                        p_client_id: formData.clientId,
+                        p_client_secret: formData.clientSecret,
+                        p_refresh_token: formData.refreshToken,
+                        p_amazon_profile_id: formData.profileId
+                    });
+                    if (error) throw error;
+                    alert('✅ Credentials stored successfully!');
+                    setShowCredentialForm(false);
+                    await fetchCredentials();
+                } catch (error) { alert('❌ Failed to store credentials: ' + error.message); }
+                finally { setLoading(false); }
+                */
+            };
+
+            const triggerDataCollection = async () => {
+                if (!session?.user?.id || credentials?.status !== 'active') return;
+                setLoading(true);
+                try {
+                    const response = await fetch('https://your-n8n-instance.com/webhook/bidflow-collection', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tenant_id: session.user.id, trigger_source: 'frontend', timestamp: new Date().toISOString() })
+                    });
+                    if (!response.ok) throw new Error('Workflow trigger failed');
+                    alert('✅ Data collection started!');
+                } catch (error) { alert('❌ Failed to trigger: ' + error.message); }
+                finally { setLoading(false); }
+            };
+
+            if (showUnsubscribePage) return (
+                <div className="auth-container">
+                    <div className="auth-card" style={{maxWidth: '600px'}}>
+                        <h2 style={{color: '#dc2626', marginBottom: '1.5rem'}}>⚠️ Unsubscribe from BidFlow</h2>
+
+                        {successMessage && (
+                            <div style={{
+                                background: 'linear-gradient(135deg, #00ff94 0%, #00cc75 100%)',
+                                color: '#001a0f',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                marginBottom: '1.5rem',
+                                fontWeight: '500',
+                                textAlign: 'center',
+                                boxShadow: '0 4px 12px rgba(0, 255, 148, 0.3)'
+                            }}>
+                                {successMessage}
+                            </div>
+                        )}
+
+                        <div style={{textAlign: 'left', marginBottom: '2rem'}}>
+                            <p style={{marginBottom: '1.5rem', fontSize: '1.1rem'}}>
+                                When you unsubscribe from BidFlow, <strong>all of your data will be permanently deleted</strong>.
+                            </p>
+
+                            <div style={{background: 'var(--bg-hover)', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem'}}>
+                                <h3 style={{marginBottom: '1rem', fontSize: '1rem'}}>What will be deleted:</h3>
+                                <ul style={{listStyle: 'none', padding: 0}}>
+                                    <li style={{marginBottom: '0.75rem'}}>✗ Your Amazon Advertising account connection</li>
+                                    <li style={{marginBottom: '0.75rem'}}>✗ All stored credentials (Client ID, Client Secret, Refresh Token)</li>
+                                    <li style={{marginBottom: '0.75rem'}}>✗ All campaign and placement data</li>
+                                    <li style={{marginBottom: '0.75rem'}}>✗ All reports and analytics history</li>
+                                    <li style={{marginBottom: '0.75rem'}}>✗ Your user account and email</li>
+                                </ul>
+                            </div>
+
+                            <div style={{background: '#fef2f2', border: '1px solid #fca5a5', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem'}}>
+                                <p style={{margin: 0, color: '#991b1b', fontWeight: 500}}>
+                                    ⚠️ This action cannot be undone. Once you unsubscribe, your data is gone forever.
+                                </p>
+                            </div>
+
+                            <p style={{marginBottom: '2rem', fontSize: '0.95rem', color: 'var(--text-secondary)'}}>
+                                If you're experiencing issues or have questions, please contact support before unsubscribing.
+                                We're here to help!
+                            </p>
+                        </div>
+
+                        <div style={{display: 'flex', gap: '1rem', justifyContent: 'center'}}>
+                            <button
+                                className="btn-primary"
+                                onClick={() => setShowUnsubscribePage(false)}
+                                style={{flex: 1, maxWidth: '200px'}}
+                                disabled={loading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn-primary"
+                                onClick={handleUnsubscribe}
+                                style={{flex: 1, maxWidth: '200px', background: '#dc2626', borderColor: '#dc2626'}}
+                                disabled={loading}
+                            >
+                                {loading ? 'Processing...' : 'Unsubscribe & Delete All Data'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            if (loading) return <div className="auth-loading"><div className="spinner"></div><p>Loading...</p></div>;
+
+            if (!session) return (
+                <div className="auth-container">
+                    <div className="auth-card">
+                        <h2>Welcome to BidFlow</h2>
+                        <p className="subtitle">Sign in to access your placement data</p>
+                        
+                        <form onSubmit={handleEmailAuth} className="credential-form" style={{marginBottom: '1.5rem'}}>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Password</label>
+                                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                            </div>
+                            {authError && <div style={{color: 'var(--accent-danger)', marginBottom: '1rem', fontSize: '0.9rem'}}>{authError}</div>}
+                            <button type="submit" className="btn-primary" style={{marginBottom: '1rem'}}>
+                                {isSignUp ? 'Sign Up' : 'Sign In'}
+                            </button>
+                            <div style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>
+                                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                                <span 
+                                    onClick={() => setIsSignUp(!isSignUp)} 
+                                    style={{color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline'}}
+                                >
+                                    {isSignUp ? 'Sign In' : 'Sign Up'}
+                                </span>
+                            </div>
+                        </form>
+
+                        <div style={{display: 'flex', alignItems: 'center', margin: '1.5rem 0'}}>
+                            <div style={{flex: 1, height: '1px', background: 'var(--border)'}}></div>
+                            <span style={{padding: '0 1rem', color: 'var(--text-secondary)', fontSize: '0.8rem'}}>OR</span>
+                            <div style={{flex: 1, height: '1px', background: 'var(--border)'}}></div>
+                        </div>
+
+                        <button className="btn-primary" onClick={signInWithGoogle} style={{background: 'white', color: '#1f2937', border: '1px solid #d1d5db', fontWeight: '500'}}>
+                            <svg width="20" height="20" viewBox="0 0 20 20" style={{marginRight: '10px'}}>
+                                <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
+                                <path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/>
+                                <path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/>
+                                <path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/>
+                            </svg>
+                            Sign in with Google
+                        </button>
+                    </div>
+                </div>
+            );
+
+            if (!credentials || credentials.status === 'inactive') return (
+                <div className="credentials-setup">
+                    <div className="setup-card">
+                        <div className="header">
+                            <h2>Welcome, {session.user.email}!</h2>
+                        </div>
+                        {successMessage && (
+                            <div style={{
+                                background: 'linear-gradient(135deg, #00ff94 0%, #00cc75 100%)',
+                                color: '#001a0f',
+                                padding: '1rem',
+                                borderRadius: '8px',
+                                marginBottom: '1rem',
+                                fontWeight: '500',
+                                textAlign: 'center',
+                                boxShadow: '0 4px 12px rgba(0, 255, 148, 0.3)'
+                            }}>
+                                {successMessage}
+                            </div>
+                        )}
+                        <div className="status-badge inactive">⚠️ Amazon Ads credentials required</div>
+
+                        {!showCredentialForm ? (
+                            <div className="setup-prompt" style={{textAlign: 'center', padding: '1rem 0'}}>
+                                <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem'}}>To use BidFlow, you need to connect your Amazon Advertising account.</p>
+                                <button
+                                    className="btn-primary"
+                                    onClick={authorizeAmazon}
+                                    style={{marginBottom: '1rem'}}
+                                    disabled={authorizingAmazon}
+                                >
+                                    {authorizingAmazon ? (
+                                        <>
+                                            <div className="spinner" style={{width: '16px', height: '16px', marginRight: '8px'}}></div>
+                                            Connecting to Amazon...
+                                        </>
+                                    ) : (
+                                        '🔑 Authorize Amazon Account'
+                                    )}
+                                </button>
+                                <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>
+                                    OR <span onClick={() => setShowCredentialForm(true)} style={{textDecoration: 'underline', cursor: 'pointer', color: 'var(--accent-primary)'}}>Enter Credentials Manually</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleStoreCredentials} className="credential-form">
+                                <div className="form-group"><label>Client ID</label><input type="text" value={formData.clientId} onChange={(e) => setFormData({...formData, clientId: e.target.value})} required /></div>
+                                <div className="form-group"><label>Client Secret</label><input type="password" value={formData.clientSecret} onChange={(e) => setFormData({...formData, clientSecret: e.target.value})} required /></div>
+                                <div className="form-group"><label>Refresh Token</label><input type="password" value={formData.refreshToken} onChange={(e) => setFormData({...formData, refreshToken: e.target.value})} required /></div>
+                                <div className="form-group"><label>Profile ID</label><input type="text" value={formData.profileId} onChange={(e) => setFormData({...formData, profileId: e.target.value})} required /></div>
+                                <button type="submit" className="btn-primary">Save Credentials</button>
+                                <div style={{textAlign: 'center', marginTop: '1rem'}}>
+                                    <span onClick={() => setShowCredentialForm(false)} style={{fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer', color: 'var(--text-secondary)'}}>Back to OAuth</span>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            );
+
+            return (
+                <>
+                    <div className="tenant-header-bar">
+                        <div className="tenant-info">
+                            <span className="user-email">{session.user.email}</span>
+                            <span className="status-badge active">✅ Active</span>
+                            <button className="btn-small-ghost" onClick={triggerDataCollection}>🚀 Collect Data</button>
+                            <button className="btn-small-ghost" onClick={signOut}>Sign out</button>
+                            <button className="btn-small-ghost" style={{color: '#dc2626'}} onClick={() => setShowUnsubscribePage(true)}>Unsubscribe</button>
+                        </div>
+                    </div>
+                    {showCredentialForm ? (
+                        <div className="credentials-setup">
+                            <div className="setup-card">
+                                <form onSubmit={handleStoreCredentials} className="credential-form">
+                                    <h3>Update Credentials</h3>
+                                    <div className="form-group"><label>Client ID</label><input type="text" value={formData.clientId} onChange={(e) => setFormData({...formData, clientId: e.target.value})} required /></div>
+                                    <div className="form-group"><label>Client Secret</label><input type="password" value={formData.clientSecret} onChange={(e) => setFormData({...formData, clientSecret: e.target.value})} required /></div>
+                                    <div className="form-group"><label>Refresh Token</label><input type="password" value={formData.refreshToken} onChange={(e) => setFormData({...formData, refreshToken: e.target.value})} required /></div>
+                                    <div className="form-group"><label>Profile ID</label><input type="text" value={formData.profileId} onChange={(e) => setFormData({...formData, profileId: e.target.value})} required /></div>
+                                    <button type="submit" className="btn-primary">Save Credentials</button>
+                                </form>
+                            </div>
+                        </div>
+                    ) : children}
+                </>
+            );
+        };
+
+        const CONFIG = {
+            GOOGLE_API_KEY: 'AIzaSyAl3vMZM_kXq1RB1Jhk_5P3_NrOHnXCTyQ',
+            GOOGLE_DRIVE_FOLDER_ID: '1MZEl4NUwIq-ObppjNdK3qnRR7XFitdrA',
+            N8N_WEBHOOK_URL: 'https://n8n.bidflow.app/webhook/481801ae-ca24-4b0c-9a85-43fe438dfa1b',
+            AUTO_REFRESH_INTERVAL: 300000 // 5 minutes
+        };
+
+        const PlacementBadge = ({ placement, isExpanded, onToggle }) => {
+            const p = (placement || '').toLowerCase();
+
+            const badgeStyle = {
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'all 0.2s ease',
+                display: 'inline-block',
+                whiteSpace: 'nowrap'
+            };
+
+            if (p.includes('top')) {
+                return (
+                    <span className="badge badge-top" onClick={onToggle} style={badgeStyle}>
+                        {isExpanded ? 'Top of Search' : 'TOP'}
+                    </span>
+                );
+            }
+            if (p.includes('product')) {
+                return (
+                    <span className="badge badge-pp" onClick={onToggle} style={badgeStyle}>
+                        {isExpanded ? 'Product Pages' : 'PP'}
+                    </span>
+                );
+            }
+            if (p.includes('rest')) {
+                return (
+                    <span className="badge badge-ros" onClick={onToggle} style={badgeStyle}>
+                        {isExpanded ? 'Rest of Search' : 'ROS'}
+                    </span>
+                );
+            }
+            if (p.includes('business')) {
+                return (
+                    <span className="badge badge-business" onClick={onToggle} style={badgeStyle}>
+                        {isExpanded ? 'Amazon Business' : 'BIZ'}
+                    </span>
+                );
+            }
+            return null;
+        };
+
+        // Sankey Flow Component - Visualizes click flow from ad spend through placements to outcomes
+        const SankeyFlow = ({ placementData, showBizPlacements }) => {
+            const svgRef = useRef(null);
+            const speedRef = useRef(2.0);
+            const expandedBadgesRef = useRef(false);
+            const particlesRef = useRef([]);
+            const cacheRef = useRef({});
+            const animationRef = useRef();
+            const elapsedRef = useRef(0);
+            const spendCounterRef = useRef({});
+
+            const handleReset = () => {
+                particlesRef.current.length = 0;
+                elapsedRef.current = 0;
+                spendCounterRef.current = {};
+                if (svgRef.current) {
+                    d3.select(svgRef.current).selectAll(".p").remove();
+                }
+            };
+
+            // Listen for speed changes from the slider
+            useEffect(() => {
+                const handleSpeedUpdate = (e) => {
+                    speedRef.current = e.detail;
+                };
+
+                window.addEventListener('updateSpeed', handleSpeedUpdate);
+
+                return () => {
+                    window.removeEventListener('updateSpeed', handleSpeedUpdate);
+                };
+            }, []);
+
+            useEffect(() => {
+                if (!window.d3 || !window.d3.sankey || !svgRef.current || !placementData) return;
+
+                particlesRef.current.length = 0;
+                elapsedRef.current = 0;
+
+                const width = 1000;
+                const psize = 6;
+                const margin = { top: 80, right: 250, bottom: 80, left: 0 };
+                const bandHeight = 80;
+                const padding = 40;
+
+                // Use real placement data from dashboard
+                const raw = {
+                    "TOP": {
+                        "clicks no sales": Math.round((placementData['TOP']?.clicks || 100) * (1 - (placementData['TOP']?.cvr || 0.05) / 100)),
+                        "clicks to sales": Math.round((placementData['TOP']?.clicks || 100) * ((placementData['TOP']?.cvr || 0.05) / 100)),
+                        "spend": placementData['TOP']?.spend || 0
+                    },
+                    "ROS": {
+                        "clicks no sales": Math.round((placementData['ROS']?.clicks || 60) * (1 - (placementData['ROS']?.cvr || 0.05) / 100)),
+                        "clicks to sales": Math.round((placementData['ROS']?.clicks || 100) * ((placementData['ROS']?.cvr || 0.05) / 100)),
+                        "spend": placementData['ROS']?.spend || 0
+                    },
+                    "PP": {
+                        "clicks no sales": Math.round((placementData['PP']?.clicks || 150) * (1 - (placementData['PP']?.cvr || 0.05) / 100)),
+                        "clicks to sales": Math.round((placementData['PP']?.clicks || 50) * ((placementData['PP']?.cvr || 0.05) / 100)),
+                        "spend": placementData['PP']?.spend || 0
+                    }
+                };
+
+                // Only add BIZ if showBizPlacements is true
+                if (showBizPlacements) {
+                    raw["AMZ BIZ"] = {
+                        "clicks no sales": Math.round((placementData['BIZ']?.clicks || 20) * (1 - (placementData['BIZ']?.cvr || 0.05) / 100)),
+                        "clicks to sales": Math.round((placementData['BIZ']?.clicks || 10) * ((placementData['BIZ']?.cvr || 0.05) / 100)),
+                        "spend": placementData['BIZ']?.spend || 0
+                    };
+                }
+
+                const isLeaf = (d) => d.hasOwnProperty("clicks no sales");
+                const getChildren = ({ name, ...otherProps }) =>
+                    isLeaf(otherProps) ? undefined : Object.entries(otherProps).map(([name, obj]) => ({ name, ...obj }));
+
+                const hierarchy = d3.hierarchy({ name: "AD SPEND", ...raw }, getChildren).each((d) => {
+                    const absolutePath = (node) => `${node.parent ? absolutePath(node.parent) : ""}/${node.data.name}`;
+                    const datum = { name: d.data.name, path: absolutePath(d) };
+                    if (isLeaf(d.data)) {
+                        datum.groups = [
+                            { key: "clicks no sales", value: d.data["clicks no sales"] },
+                            { key: "clicks to sales", value: d.data["clicks to sales"] },
+                        ];
+                    }
+                    d.data = datum;
+                });
+
+                const uniqueLeaves = [...new Set(hierarchy.leaves().map((d) => d.data.name))];
+                const height = uniqueLeaves.length * (bandHeight + padding / 2) + 300;
+
+                const nodes = ["AD SPEND", ...Object.keys(raw)];
+                const links = Object.keys(raw).map(name => ({ source: "AD SPEND", target: name, value: 0 }));
+
+                const sankeyData = d3.sankey()
+                    .nodeId(d => d.name)
+                    .nodeAlign(d3.sankeyJustify)
+                    .nodeWidth(30)
+                    .nodePadding(padding)
+                    .size([width - margin.left - margin.right, height - margin.top - margin.bottom])({
+                        nodes: nodes.map(name => ({ name, fixedValue: 1 })),
+                        links: links.map(l => ({ ...l }))
+                    });
+
+                const walkRoutes = (n) => {
+                    const subroutes = n.sourceLinks.flatMap((d) => walkRoutes(d.target));
+                    return subroutes.length ? subroutes.map((r) => [n, ...r]) : [[n]];
+                };
+                const routes = walkRoutes(sankeyData.nodes.find((d) => d.targetLinks.length === 0));
+
+                const targetsAbsolute = hierarchy.leaves().flatMap((t) =>
+                    t.data.groups.map((g) => ({ name: t.data.name, path: t.data.path, group: g.key, value: g.value }))
+                );
+                const totalP = d3.sum(targetsAbsolute, (d) => d.value);
+                const thresholds = d3.range(targetsAbsolute.length).map((i) => d3.sum(targetsAbsolute.slice(0, i + 1).map((r) => r.value / totalP)));
+                const targetScale = d3.scaleThreshold().domain(thresholds).range(targetsAbsolute);
+
+                const colorScale = d3.scaleOrdinal().domain(["clicks to sales", "clicks no sales"]).range(["#00ff94", "#ff3366"]);
+
+                const leaves = sankeyData.nodes.filter((n) => n.sourceLinks.length === 0)
+                    .map((n) => ({
+                        node: n,
+                        targets: targetsAbsolute.filter((t) => t.name === n.name),
+                        spend: raw[n.name]?.spend || 0
+                    }));
+
+                // Initialize spend counters with CPC (Cost Per Click) for each placement
+                const cpcByPlacement = {};
+                leaves.forEach(leaf => {
+                    const totalClicks = leaf.targets.reduce((sum, t) => sum + t.value, 0);
+                    cpcByPlacement[leaf.node.name] = totalClicks > 0 ? leaf.spend / totalClicks : 0;
+                    if (!spendCounterRef.current[leaf.node.name]) {
+                        spendCounterRef.current[leaf.node.name] = 0;
+                    }
+                });
+
+                d3.select(svgRef.current).selectAll("*").remove();
+                const svg = d3.select(svgRef.current).attr("viewBox", [0, 0, width, height]).style("overflow", "visible");
+                const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+                function sankeyLinkCustom(nodes) {
+                    const p = d3.path(); const h = bandHeight / 2;
+                    nodes.forEach((n, i) => {
+                        if (i === 0) p.moveTo(n.x0, n.y0 + h);
+                        p.lineTo(n.x1, n.y0 + h);
+                        const nn = nodes[i + 1];
+                        if (nn) {
+                            const w = nn.x0 - n.x1;
+                            p.bezierCurveTo(n.x1 + w / 2, n.y0 + h, n.x1 + w / 2, nn.y0 + h, nn.x0, nn.y0 + h);
+                        }
+                    });
+                    return p.toString();
+                }
+
+                const routeLayer = g.append("g").attr("fill", "none").attr("stroke-opacity", 0.45).attr("stroke", "#1f2937")
+                    .selectAll("path").data(routes).join("path").attr("d", sankeyLinkCustom).attr("stroke-width", bandHeight);
+
+                routeLayer.each(function (nodes) {
+                    const path = this; const len = path.getTotalLength();
+                    cacheRef.current["/" + nodes.map((n) => n.name).join("/")] = {
+                        points: d3.range(len).map((l) => { const pt = path.getPointAtLength(l); return { x: pt.x, y: pt.y } })
+                    };
+                });
+
+                const particlesContainer = g.append("g");
+
+                // Badge Labels
+                g.selectAll(".label").data(sankeyData.nodes).join("g").attr("transform", (d) => {
+                        if (d.name === "AD SPEND") {
+                            return `translate(${d.x0}, ${d.y0 + bandHeight / 2})`;
+                        }
+                        return `translate(${d.x1 - bandHeight / 2}, ${d.y0 + bandHeight / 2})`;
+                    })
+                    .each(function(d) {
+                        const group = d3.select(this);
+                        if (d.name === "AD SPEND") {
+                            group.append("text").attr("stroke", "var(--bg-dark)").attr("stroke-width", 4).attr("text-anchor", "start").style("font-family", "JetBrains Mono").style("font-size", "18px").style("text-transform", "uppercase").style("font-weight", "700").text(d.name);
+                            group.append("text").attr("fill", "var(--text-primary)").attr("text-anchor", "start").style("font-family", "JetBrains Mono").style("font-size", "18px").style("text-transform", "uppercase").style("font-weight", "700").text(d.name);
+                        } else {
+                            let badgeClass = "badge ";
+                            let badgeText = d.name;
+                            if (d.name === "TOP") {
+                                badgeClass += "badge-top";
+                                badgeText = expandedBadgesRef.current ? "Top of Search" : "TOP";
+                            } else if (d.name === "PP") {
+                                badgeClass += "badge-pp";
+                                badgeText = expandedBadgesRef.current ? "Product Pages" : "PP";
+                            } else if (d.name === "ROS") {
+                                badgeClass += "badge-ros";
+                                badgeText = expandedBadgesRef.current ? "Rest of Search" : "ROS";
+                            } else if (d.name === "AMZ BIZ") {
+                                badgeClass += "badge-business";
+                                badgeText = expandedBadgesRef.current ? "Amazon Business" : "BIZ";
+                            }
+
+                            const foreignObj = group.append("foreignObject")
+                                .attr("x", expandedBadgesRef.current ? -160 : -100)
+                                .attr("y", -13)
+                                .attr("width", expandedBadgesRef.current ? 160 : 100)
+                                .attr("height", 26)
+                                .attr("class", "badge-foreign-object")
+                                .append("xhtml:div")
+                                .style("display", "flex")
+                                .style("justify-content", "flex-end")
+                                .style("cursor", "pointer")
+                                .html(`<div class="${badgeClass}" id="badge-${d.name.replace(' ', '-')}">${badgeText}</div>`);
+                        }
+                    });
+
+                // Wire up badge click handlers
+                setTimeout(() => {
+                    const badges = document.querySelectorAll('[id^="badge-"]');
+                    badges.forEach(badge => {
+                        badge.addEventListener('click', () => {
+                            // Toggle expanded state
+                            expandedBadgesRef.current = !expandedBadgesRef.current;
+                            const isExpanded = expandedBadgesRef.current;
+
+                            // Update all badge texts and widths directly in DOM
+                            const allBadges = document.querySelectorAll('[id^="badge-"]');
+                            allBadges.forEach(b => {
+                                const id = b.id;
+                                if (id === 'badge-TOP') {
+                                    b.textContent = isExpanded ? 'Top of Search' : 'TOP';
+                                } else if (id === 'badge-ROS') {
+                                    b.textContent = isExpanded ? 'Rest of Search' : 'ROS';
+                                } else if (id === 'badge-PP') {
+                                    b.textContent = isExpanded ? 'Product Pages' : 'PP';
+                                } else if (id === 'badge-AMZ-BIZ') {
+                                    b.textContent = isExpanded ? 'Amazon Business' : 'BIZ';
+                                }
+                            });
+
+                            // Update foreignObject widths and positions
+                            d3.select(svgRef.current).selectAll('.badge-foreign-object')
+                                .attr('x', isExpanded ? -160 : -100)
+                                .attr('width', isExpanded ? 160 : 100);
+                        });
+                    });
+                }, 100);
+
+                // Controls and Title above flow
+                const controlsY = -60;
+                const controlsGroup = g.append("g").attr("transform", `translate(0, ${controlsY})`);
+
+                // Speed control
+                controlsGroup.append("foreignObject")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", 220)
+                    .attr("height", 42)
+                    .append("xhtml:div")
+                    .html(`
+                        <div class="control-widget">
+                            <label class="slider-label">Speed</label>
+                            <input type="range" min="0.5" max="3.5" step="0.01" value="${speedRef.current}" id="speed-slider" />
+                            <span class="value-display" id="speed-display">${speedRef.current.toFixed(1)}</span>
+                        </div>
+                    `);
+
+                // Reset button
+                controlsGroup.append("foreignObject")
+                    .attr("x", 230)
+                    .attr("y", 0)
+                    .attr("width", 220)
+                    .attr("height", 42)
+                    .append("xhtml:div")
+                    .html(`<button class="reset-btn" id="reset-btn">Reset Flow</button>`);
+
+                // Hide/Show Biz button
+                const bizBtnStyle = showBizPlacements
+                    ? 'background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: var(--bg-dark); border: none;'
+                    : 'background: var(--bg-dark); color: var(--text-secondary); border: 1px solid var(--border);';
+
+                controlsGroup.append("foreignObject")
+                    .attr("x", 460)
+                    .attr("y", 0)
+                    .attr("width", 220)
+                    .attr("height", 42)
+                    .append("xhtml:div")
+                    .html(`<button class="reset-btn" id="biz-toggle-btn" style="${bizBtnStyle}">${showBizPlacements ? '✗ Hide Biz' : '✓ Show Biz'}</button>`);
+
+                // Wire up event handlers
+                setTimeout(() => {
+                    const slider = document.getElementById('speed-slider');
+                    const display = document.getElementById('speed-display');
+                    const resetBtn = document.getElementById('reset-btn');
+                    const bizBtn = document.getElementById('biz-toggle-btn');
+
+                    if (slider) {
+                        slider.addEventListener('input', (e) => {
+                            const newSpeed = parseFloat(e.target.value);
+                            if (display) display.textContent = newSpeed.toFixed(1);
+                            // Dispatch event to update React state
+                            window.dispatchEvent(new CustomEvent('updateSpeed', { detail: newSpeed }));
+                        });
+                    }
+
+                    if (resetBtn) {
+                        resetBtn.addEventListener('click', handleReset);
+                    }
+
+                    if (bizBtn) {
+                        bizBtn.addEventListener('click', () => {
+                            // This will trigger parent component re-render
+                            window.dispatchEvent(new CustomEvent('toggleBizPlacements'));
+                        });
+                    }
+                }, 100);
+
+                // Description
+                const adSpendNode = sankeyData.nodes.find((n) => n.name === "AD SPEND");
+                if (adSpendNode) {
+                    const desc = g.append("g").attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 25})`)
+                        .style("font-family", "JetBrains Mono").style("font-size", "12px").style("text-transform", "uppercase").attr("fill", "var(--text-secondary)");
+
+                    desc.append("text").text("CLICK FLOW LAST 7 DAYS ");
+                    desc.append("text").attr("class", "embedded-counter").attr("x", 180).attr("fill", "var(--accent-secondary)").style("font-weight", "bold").style("font-size", "14px").text(totalP);
+                }
+
+                const s2 = g.append("g").attr("transform", `translate(${width - margin.left - 150}, ${leaves[0].node.y0 - 45})`)
+                    .style("font-family", "JetBrains Mono").style("font-size", "12px").style("text-transform", "uppercase").attr("text-anchor", "end").attr("fill", "var(--text-secondary)");
+                s2.append("text").text("OUTCOMES");
+                s2.append("text").attr("y", 20).attr("fill", "var(--accent-primary)").style("font-weight", "bold").style("font-size", "11px").text("clicks to sales");
+                s2.append("text").attr("y", 35).attr("fill", "var(--accent-danger)").style("font-weight", "bold").style("font-size", "11px").text("clicks no sales");
+
+                // Total & Total Clicks % Header
+                const s3 = g.append("g").attr("transform", `translate(${width - margin.left - 35}, ${leaves[0].node.y0 - 45})`)
+                    .style("font-family", "JetBrains Mono").style("font-size", "12px").style("text-transform", "uppercase").attr("text-anchor", "end").attr("fill", "var(--text-secondary)");
+                s3.append("text").text("METRICS");
+                s3.append("text").attr("y", 20).attr("fill", "var(--accent-secondary)").style("font-weight", "bold").style("font-size", "11px").text("total clicks");
+                s3.append("text").attr("y", 35).attr("fill", "var(--accent-secondary)").style("font-weight", "bold").style("font-size", "11px").text("total clicks %");
+
+                // Spend Header
+                const s4 = g.append("g").attr("transform", `translate(${width - margin.left + 65}, ${leaves[0].node.y0 - 45})`)
+                    .style("font-family", "JetBrains Mono").style("font-size", "12px").style("text-transform", "uppercase").attr("text-anchor", "end").attr("fill", "var(--text-secondary)");
+                s4.append("text").text("SPEND");
+                s4.append("text").attr("y", 20).attr("fill", "var(--accent-warning)").style("font-weight", "bold").style("font-size", "11px").text("7 day");
+
+                const barWidth = 31; const barHeight = bandHeight + 6;
+                const barGroups = g.selectAll(".bar-group").data(leaves).join("g").attr("transform", (d) => `translate(${d.node.x1 - 6}, ${d.node.y0 - 3})`);
+                barGroups.append("rect").attr("width", barWidth).attr("height", barHeight).attr("fill", "var(--bg-card)").attr("stroke", "var(--border)").attr("stroke-width", 1);
+                barGroups.append("rect").attr("class", "bar-keyword").attr("width", barWidth).attr("height", 0).attr("fill", "var(--accent-primary)");
+                barGroups.append("rect").attr("class", "bar-asin").attr("x", 0).attr("y", barHeight).attr("width", barWidth).attr("height", 0).attr("fill", "var(--accent-danger)");
+
+                barGroups.append("text").attr("class", "p-green").attr("x", barWidth + 12).attr("y", barHeight * 0.25).attr("dy", "0.3em").style("font-family", "JetBrains Mono").style("font-size", "13px").style("font-weight", "bold").attr("fill", "var(--accent-primary)").text("0%");
+                barGroups.append("text").attr("class", "p-red").attr("x", barWidth + 12).attr("y", barHeight * 0.75).attr("dy", "0.3em").style("font-family", "JetBrains Mono").style("font-size", "13px").style("font-weight", "bold").attr("fill", "var(--accent-danger)").text("0%");
+                barGroups.append("text").attr("class", "c-green").attr("x", barWidth + 55).attr("y", barHeight * 0.25).attr("dy", "0.3em").style("font-family", "JetBrains Mono").style("font-size", "13px").style("font-weight", "bold").attr("fill", "var(--accent-primary)").text("0");
+                barGroups.append("text").attr("class", "c-red").attr("x", barWidth + 55).attr("y", barHeight * 0.75).attr("dy", "0.3em").style("font-family", "JetBrains Mono").style("font-size", "13px").style("font-weight", "bold").attr("fill", "var(--accent-danger)").text("0");
+
+                // Total Clicks & CVR Column (Blue)
+                barGroups.append("text").attr("class", "total-clicks").attr("x", barWidth + 115).attr("y", barHeight * 0.35).attr("dy", "0.3em").style("font-family", "JetBrains Mono").style("font-size", "14px").style("font-weight", "bold").attr("fill", "var(--accent-secondary)").text("0");
+                barGroups.append("text").attr("class", "cvr-rate").attr("x", barWidth + 115).attr("y", barHeight * 0.65).attr("dy", "0.3em").style("font-family", "JetBrains Mono").style("font-size", "12px").style("font-weight", "bold").attr("fill", "var(--accent-secondary)").text("0%");
+
+                // Spend Column (Orange)
+                barGroups.append("text").attr("class", "spend-value").attr("x", barWidth + 250).attr("y", barHeight * 0.5).attr("dy", "0.3em").attr("text-anchor", "end").style("font-family", "JetBrains Mono").style("font-size", "14px").style("font-weight", "bold").attr("fill", "var(--accent-warning)").text("$0");
+
+                function tick(t) {
+                    // Dynamically calculate speedScale based on current speedRef
+                    const speedScale = d3.scaleLinear().range([speedRef.current, speedRef.current + 0.5]);
+
+                    const pToAdd = Math.round(Math.random() * 7);
+                    for (let i = 0; i < pToAdd && particlesRef.current.length < totalP; i++) {
+                        const target = targetScale(Math.random());
+                        particlesRef.current.push({ id: `${t}_${i}`, speed: speedScale(Math.random()), color: colorScale(target.group), offset: (Math.random() - 0.5) * (bandHeight - psize), pos: 0, createdAt: t, length: cacheRef.current[target.path].points.length, target });
+                    }
+
+                    // Calculate total clicks across all placements for percentage
+                    const allCompleted = particlesRef.current.filter(p => p.pos >= p.length);
+                    const totalAllClicks = allCompleted.length;
+
+                    barGroups.each(function (d) {
+                        const exp = d3.sum(d.targets, (t) => t.value);
+                        const placementName = d.node.name;
+
+                        // Get newly completed particles for this placement
+                        const completedNow = particlesRef.current.filter((p) =>
+                            p.target.name === placementName &&
+                            p.pos >= p.length &&
+                            !p.counted
+                        );
+
+                        // Increment spend counter for each newly completed particle
+                        completedNow.forEach(p => {
+                            if (cpcByPlacement[placementName]) {
+                                spendCounterRef.current[placementName] =
+                                    (spendCounterRef.current[placementName] || 0) + cpcByPlacement[placementName];
+                            }
+                            p.counted = true; // Mark as counted to avoid double-counting
+                        });
+
+                        const af = particlesRef.current.filter((p) => p.target.name === placementName && p.target.group === "clicks no sales" && p.pos >= p.length).length;
+                        const kf = particlesRef.current.filter((p) => p.target.name === placementName && p.target.group === "clicks to sales" && p.pos >= p.length).length;
+                        d3.select(this).select(".bar-keyword").attr("height", Math.min(barHeight, (kf / exp) * barHeight));
+                        d3.select(this).select(".bar-asin").attr("y", barHeight - Math.min(barHeight, (af / exp) * barHeight)).attr("height", Math.min(barHeight, (af / exp) * barHeight));
+                        const tot = af + kf;
+                        d3.select(this).select(".p-green").text(tot > 0 ? (kf / tot * 100).toFixed(0) + "%" : "0%");
+                        d3.select(this).select(".p-red").text(tot > 0 ? (af / tot * 100).toFixed(0) + "%" : "0%");
+                        d3.select(this).select(".c-green").text(kf);
+                        d3.select(this).select(".c-red").text(af);
+
+                        // Update Total Clicks and Total Clicks % (Blue Column)
+                        d3.select(this).select(".total-clicks").text(tot);
+                        d3.select(this).select(".cvr-rate").text(totalAllClicks > 0 ? (tot / totalAllClicks * 100).toFixed(1) + "%" : "0%");
+
+                        // Update Spend (Orange Column) - Show accumulated spend counting up
+                        const currentSpend = spendCounterRef.current[placementName] || 0;
+                        const maxSpend = d.spend || 0;
+                        // Cap at max spend to avoid exceeding the total
+                        const displaySpend = Math.min(currentSpend, maxSpend);
+                        d3.select(this).select(".spend-value").text("$" + displaySpend.toFixed(2));
+                    });
+                    const pSel = particlesContainer.selectAll(".p").data(particlesRef.current, (d) => d.id)
+                        .join(enter => enter.append("rect").attr("class", "p").attr("opacity", 0.9).attr("fill", d => d.color).attr("width", psize).attr("height", psize));
+                    pSel.each(function (d) {
+                        const localTime = t - d.createdAt; d.pos = localTime * d.speed;
+                        const idx = Math.floor(d.pos); const points = cacheRef.current[d.target.path].points;
+                        if (d.pos >= d.length) { const last = points[d.length - 1]; d3.select(this).attr("x", last.x).attr("y", last.y + d.offset); }
+                        else {
+                            const coo = points[idx], next = points[idx + 1]
+                            if (coo && next) {
+                                const delta = d.pos - idx; const x = coo.x + (next.x - coo.x) * delta, y = coo.y + (next.y - coo.y) * delta;
+                                const lastX = points[d.length - 1].x; const squeeze = Math.max(0, psize - (lastX - x)), h = Math.max(2, psize - squeeze), dy = (psize - h) / 2, w = psize + squeeze, dx = squeeze / 2;
+                                d3.select(this).attr("x", x - dx).attr("y", y + d.offset + dy).attr("height", h).attr("width", w);
+                            }
+                        }
+                    });
+                }
+                function animate() { tick(elapsedRef.current++); animationRef.current = requestAnimationFrame(animate); }
+                animate();
+                return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+            }, [placementData, showBizPlacements]);
+
+            return (
+                <div className="sankey-container">
+                    <div className="sankey-svg-wrapper">
+                        <svg ref={svgRef}></svg>
+                    </div>
+                </div>
+            );
+        };
+
+        function PlacementDashboard() {
+            const [reports, setReports] = useState([]);
+            const [filteredData, setFilteredData] = useState([]);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [portfolioFilter, setPortfolioFilter] = useState('all');
+            const [sortConfig, setSortConfig] = useState({ key: 'Campaign', direction: 'asc' });
+            const [editingCell, setEditingCell] = useState(null);
+            const [weeklySheets, setWeeklySheets] = useState([]);
+            const [currentSheet, setCurrentSheet] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [submitting, setSubmitting] = useState(false);
+            const [isPlacementsExpanded, setIsPlacementsExpanded] = useState(false);
+            const [localEditValue, setLocalEditValue] = useState('');
+            const [warningRows, setWarningRows] = useState(new Set());
+            const [showBizPlacements, setShowBizPlacements] = useState(true);
+            const [showSankey, setShowSankey] = useState(true);
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+
+            useEffect(() => {
+                // Listen for biz toggle event from Sankey
+                const handleBizToggle = () => {
+                    setShowBizPlacements(prev => !prev);
+                };
+
+                window.addEventListener('toggleBizPlacements', handleBizToggle);
+
+                return () => {
+                    window.removeEventListener('toggleBizPlacements', handleBizToggle);
+                };
+            }, []);
+
+            const togglePlacements = () => setIsPlacementsExpanded(!isPlacementsExpanded);
+
+            useEffect(() => {
+                fetchWeeklySheets();
+
+                const interval = setInterval(() => {
+                    if (currentSheet) {
+                        fetchSheetData(currentSheet.id);
+                    }
+                }, CONFIG.AUTO_REFRESH_INTERVAL);
+
+                return () => clearInterval(interval);
+            }, []);
+
+            const fetchWeeklySheets = async () => {
+                try {
+                    setLoading(true);
+                    const response = await fetch(
+                        `https://www.googleapis.com/drive/v3/files?` +
+                        `q='${CONFIG.GOOGLE_DRIVE_FOLDER_ID}'+in+parents+and+mimeType='application/vnd.google-apps.spreadsheet'` +
+                        `&key=${CONFIG.GOOGLE_API_KEY}` +
+                        `&fields=files(id,name)` +
+                        `&orderBy=name desc`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch sheets from Google Drive');
+                    }
+
+                    const data = await response.json();
+                    const sheets = data.files.map(file => ({
+                        id: file.id,
+                        name: file.name,
+                        weekNumber: extractWeekNumber(file.name)
+                    }));
+
+                    setWeeklySheets(sheets);
+
+                    if (sheets.length > 0) {
+                        const mostRecent = sheets[0];
+                        setCurrentSheet(mostRecent);
+                        await fetchSheetData(mostRecent.id);
+                    }
+                } catch (error) {
+                    console.error('Error fetching weekly sheets:', error);
+                    alert('Error loading weekly reports. Please check console for details.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const extractWeekNumber = (filename) => {
+                const match = filename.match(/Week(\d+)/i);
+                return match ? `Week ${match[1]}` : filename;
+            };
+
+            const fetchSheetData = async (sheetId) => {
+                try {
+                    const response = await fetch(
+                        `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/USA!A:W?` +
+                        `key=${CONFIG.GOOGLE_API_KEY}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch sheet data');
+                    }
+
+                    const data = await response.json();
+                    const rows = data.values;
+
+                    if (!rows || rows.length === 0) {
+                        setReports([]);
+                        setFilteredData([]);
+                        return;
+                    }
+
+                    const headers = rows[0];
+                    const parsedData = rows.slice(1).map(row => {
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            obj[header] = row[index] || '';
+                        });
+                        return obj;
+                    }).filter(row => row.Campaign && row.Campaign !== '0');
+
+                    setReports(parsedData);
+                    setFilteredData(parsedData);
+                } catch (error) {
+                    console.error('Error fetching sheet data:', error);
+                    alert('Error loading sheet data. Please check console for details.');
+                }
+            };
+
+            const handleWeekChange = async (sheetId) => {
+                const selectedSheet = weeklySheets.find(s => s.id === sheetId);
+                setCurrentSheet(selectedSheet);
+                setLoading(true);
+                await fetchSheetData(sheetId);
+                setLoading(false);
+            };
+
+            useEffect(() => {
+                let filtered = [...reports];
+
+                if (searchTerm) {
+                    filtered = filtered.filter(row => {
+                        const campaign = (row.Campaign || '').toLowerCase();
+                        const portfolio = (row.Portfolio || '').toLowerCase();
+                        return campaign.includes(searchTerm.toLowerCase()) ||
+                               portfolio.includes(searchTerm.toLowerCase());
+                    });
+                }
+
+                if (portfolioFilter !== 'all') {
+                    filtered = filtered.filter(row => {
+                        return row.Portfolio === portfolioFilter;
+                    });
+                }
+
+                if (!showBizPlacements) {
+                    filtered = filtered.filter(row => {
+                        const placement = (row['Placement Type'] || '').toLowerCase();
+                        return !placement.includes('business');
+                    });
+                }
+
+                // GROUPED SORTING LOGIC
+                // 1. Group rows by Campaign
+                const groups = {};
+                filtered.forEach(row => {
+                    if (!groups[row.Campaign]) {
+                        groups[row.Campaign] = [];
+                    }
+                    groups[row.Campaign].push(row);
+                });
+
+                // 2. Sort within each group (FIXED PLACEMENT ORDER)
+                const placementOrder = {
+                    'placement top': 1,
+                    'placement rest of search': 2,
+                    'placement product page': 3,
+                    'placement amazon business': 4
+                };
+
+                Object.values(groups).forEach(groupRows => {
+                    groupRows.sort((a, b) => {
+                        const orderA = placementOrder[(a['Placement Type'] || '').toLowerCase()] || 999;
+                        const orderB = placementOrder[(b['Placement Type'] || '').toLowerCase()] || 999;
+                        return orderA - orderB;
+                    });
+                });
+
+                // 3. Sort the groups themselves based on the sortConfig
+                const sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
+                    const groupA = groups[keyA];
+                    const groupB = groups[keyB];
+
+                    if (sortConfig.key === 'Campaign') {
+                        return sortConfig.direction === 'asc' 
+                            ? keyA.localeCompare(keyB) 
+                            : keyB.localeCompare(keyA);
+                    }
+
+                    // For metrics, sum the value for the entire group to determine group rank
+                    const getSum = (group) => group.reduce((sum, row) => {
+                        let val = row[sortConfig.key];
+                        if (typeof val === 'string') {
+                            val = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
+                        }
+                        return sum + (parseFloat(val) || 0);
+                    }, 0);
+
+                    const sumA = getSum(groupA);
+                    const sumB = getSum(groupB);
+
+                    if (sumA < sumB) return sortConfig.direction === 'asc' ? -1 : 1;
+                    if (sumA > sumB) return sortConfig.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                // 4. Flatten the sorted groups back into a single array
+                const finalSortedData = [];
+                sortedGroupKeys.forEach(key => {
+                    finalSortedData.push(...groups[key]);
+                });
+
+                setFilteredData(finalSortedData);
+            }, [reports, searchTerm, portfolioFilter, sortConfig, showBizPlacements]);
+
+            useEffect(() => {
+                if (filteredData.length > 0 && chartRef.current && !showSankey) {
+                    createChart();
+                }
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [filteredData, showSankey]);
+
+            const createChart = () => {
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+
+                const ctx = chartRef.current.getContext('2d');
+
+                const placementData = {};
+                filteredData.forEach(row => {
+                    const placementRaw = (row['Placement Type'] || 'Unknown').toLowerCase().trim();
+
+                    // Normalize placement names to avoid duplicates
+                    let placement = 'Unknown';
+                    if (placementRaw.includes('top')) placement = 'Placement Top of Search';
+                    else if (placementRaw.includes('product')) placement = 'Placement Product Page';
+                    else if (placementRaw.includes('rest')) placement = 'Placement Rest of Search';
+                    else if (placementRaw.includes('business')) placement = 'Placement Amazon Business';
+
+                    const spend = parseFloat(row['Spend-7'] || 0);
+                    const clicks = parseFloat(row['Clicks-7'] || 0);
+
+                    if (!placementData[placement]) {
+                        placementData[placement] = { spend: 0, clicks: 0 };
+                    }
+                    placementData[placement].spend += spend;
+                    placementData[placement].clicks += clicks;
+                });
+
+                const labels = Object.keys(placementData);
+                const spendData = labels.map(label => placementData[label].spend);
+                const clicksData = labels.map(label => placementData[label].clicks);
+
+                chartInstance.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.map(l => l.replace('Placement ', '')),
+                        datasets: [
+                            {
+                                label: 'Spend (7d)',
+                                data: spendData,
+                                backgroundColor: 'rgba(0, 255, 148, 0.6)',
+                                borderColor: 'rgba(0, 255, 148, 1)',
+                                borderWidth: 2,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Clicks (7d)',
+                                data: clicksData,
+                                backgroundColor: 'rgba(0, 149, 255, 0.6)',
+                                borderColor: 'rgba(0, 149, 255, 1)',
+                                borderWidth: 2,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#e5e7eb',
+                                    font: {
+                                        family: 'JetBrains Mono',
+                                        size: 10
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                grid: { color: '#1f2937' },
+                                ticks: {
+                                    color: '#00ff94',
+                                    font: { family: 'JetBrains Mono', size: 9 },
+                                    callback: function(value) { return '$' + value.toFixed(0); }
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: { drawOnChartArea: false },
+                                ticks: {
+                                    color: '#0095ff',
+                                    font: { family: 'JetBrains Mono', size: 9 }
+                                }
+                            },
+                            x: {
+                                grid: { color: '#1f2937' },
+                                ticks: {
+                                    color: function(context) {
+                                        const label = context.tick.label.toLowerCase();
+                                        if (label.includes('top')) return '#00ff94'; // Green
+                                        if (label.includes('rest')) return '#ff9500'; // Orange
+                                        if (label.includes('product')) return '#0095ff'; // Blue
+                                        if (label.includes('business')) return '#ff3366'; // Red
+                                        return '#9ca3af'; // Default gray
+                                    },
+                                    font: {
+                                        family: 'JetBrains Mono',
+                                        size: 9,
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const stats = (() => {
+                const totalSpend7 = filteredData.reduce((sum, row) => sum + parseFloat(row['Spend-7'] || 0), 0);
+                const totalSpend30 = filteredData.reduce((sum, row) => sum + parseFloat(row['Spend-30'] || 0), 0);
+                const totalClicks7 = filteredData.reduce((sum, row) => sum + parseFloat(row['Clicks-7'] || 0), 0);
+                const totalOrders7 = filteredData.reduce((sum, row) => sum + parseFloat(row['Orders-7'] || 0), 0);
+                const cvr7 = totalClicks7 > 0 ? (totalOrders7 / totalClicks7 * 100) : 0;
+                return { totalSpend7, totalSpend30, totalClicks7, totalOrders7, cvr7 };
+            })();
+
+            // Calculate placement data for Sankey diagram (7-day data)
+            const placementData = (() => {
+                const data = {};
+                filteredData.forEach(row => {
+                    const placementType = (row['Placement Type'] || '').toLowerCase();
+                    let key = 'OTHER';
+
+                    if (placementType.includes('top')) key = 'TOP';
+                    else if (placementType.includes('product')) key = 'PP';
+                    else if (placementType.includes('rest')) key = 'ROS';
+                    else if (placementType.includes('business')) key = 'BIZ';
+
+                    // Skip BIZ data if showBizPlacements is false
+                    if (key === 'BIZ' && !showBizPlacements) {
+                        return;
+                    }
+
+                    if (!data[key]) {
+                        data[key] = { clicks: 0, orders: 0, cvr: 0, spend: 0 };
+                    }
+
+                    data[key].clicks += parseFloat(row['Clicks-7'] || 0);
+                    data[key].orders += parseFloat(row['Orders-7'] || 0);
+                    data[key].spend += parseFloat(row['Spend-7'] || 0);
+                });
+
+                // Calculate CVR for each placement
+                Object.keys(data).forEach(key => {
+                    if (data[key].clicks > 0) {
+                        data[key].cvr = (data[key].orders / data[key].clicks * 100);
+                    }
+                });
+
+                return data;
+            })();
+
+            const getUniquePortfolios = () => {
+                const portfolios = [...new Set(reports.map(r => r.Portfolio))].filter(Boolean);
+                return portfolios.sort();
+            };
+
+            const handleSort = (key) => {
+                setSortConfig(prevConfig => ({
+                    key,
+                    direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+                }));
+            };
+
+            const formatCurrency = (value) => {
+                let num = value;
+                if (typeof value === 'string') {
+                    // Remove non-numeric characters except dot and minus
+                    num = parseFloat(value.replace(/[^0-9.-]/g, ''));
+                }
+                if (isNaN(num) || num === null || num === undefined) num = 0;
+                
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(num);
+            };
+
+            const formatPercent = (value) => {
+                if (typeof value === 'string' && value.includes('%')) return value;
+                return `${(parseFloat(value) || 0).toFixed(2)}%`;
+            };
+
+            const handleChangeEdit = (index, newValue) => {
+                const updatedReports = [...reports];
+                const dataIndex = reports.findIndex((item) => 
+                    item.Campaign === filteredData[index].Campaign && 
+                    item['Placement Type'] === filteredData[index]['Placement Type']
+                );
+                
+                if (dataIndex !== -1) {
+                    let cleanValue = newValue.trim();
+                    
+                    // Validation: Stop changes over 1000%
+                    if (cleanValue && !isNaN(cleanValue)) {
+                        const numValue = parseFloat(cleanValue);
+                        if (numValue > 1000) {
+                            alert('⚠️ Safety Limit: Bid changes cannot exceed 1000%. Value has been reset.');
+                            setEditingCell(null);
+                            setLocalEditValue('');
+                            const newWarnings = new Set(warningRows);
+                            newWarnings.delete(index);
+                            setWarningRows(newWarnings);
+                            return;
+                        }
+                        
+                        if (numValue > 900) {
+                            const newWarnings = new Set(warningRows);
+                            newWarnings.add(index);
+                            setWarningRows(newWarnings);
+                        } else {
+                            if (warningRows.has(index)) {
+                                const newWarnings = new Set(warningRows);
+                                newWarnings.delete(index);
+                                setWarningRows(newWarnings);
+                            }
+                        }
+                        
+                        cleanValue = cleanValue + '%';
+                    } else {
+                        if (warningRows.has(index)) {
+                            const newWarnings = new Set(warningRows);
+                            newWarnings.delete(index);
+                            setWarningRows(newWarnings);
+                        }
+                    }
+                    
+                    updatedReports[dataIndex]['Changes in placement'] = cleanValue;
+                    setReports(updatedReports);
+                }
+                setEditingCell(null);
+                setLocalEditValue('');
+            };
+
+            const handleCellClick = (index) => {
+                setEditingCell(index);
+                const currentVal = (filteredData[index]['Changes in placement'] || '').toString().replace('%', '');
+                setLocalEditValue(currentVal);
+            };
+            const handleCampaignClick = (index) => setEditingCell('campaign-' + index);
+
+            // EDITED FUNCTION TO FIX CORS Handshake
+            const handleSubmitChanges = async () => {
+                // Extra security check
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    alert('⛔ Authentication required to submit changes.');
+                    return;
+                }
+
+                const changesData = reports.filter(row =>
+                    row['Changes in placement'] && row['Changes in placement'] !== '0' && row['Changes in placement'] !== '0%' && row['Changes in placement'].trim() !== ''
+                ).map(row => ({
+                    campaign: row.Campaign,
+                    portfolio: row.Portfolio,
+                    placement: row['Placement Type'],
+                    currentMultiplier: row['Increase bids by placement'],
+                    newMultiplier: row['Changes in placement'],
+                    week: currentSheet?.weekNumber || 'Unknown'
+                }));
+
+                if (changesData.length === 0) {
+                    alert('No changes to submit. Add multiplier percentages in the Changes column first.');
+                    return;
+                }
+
+                if (!confirm(`Submit ${changesData.length} placement changes to Amazon Ads API?`)) {
+                    return;
+                }
+
+                try {
+                    setSubmitting(true);
+                    const response = await fetch(CONFIG.N8N_WEBHOOK_URL, {
+                        method: 'POST',
+                        mode: 'cors', // Explicitly enable CORS mode
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            tenant_id: session.user.id,
+                            changes: changesData,
+                            timestamp: new Date().toISOString(),
+                            week: currentSheet?.weekNumber || 'Unknown',
+                            sheetId: currentSheet?.id || ''
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    alert(`✅ Successfully submitted ${changesData.length} changes!`);
+                    console.log('Submission result:', result);
+                    
+                } catch (error) {
+                    console.error('Error submitting changes:', error);
+                    alert(`❌ Connection Error: Ensure n8n is active and CORS is configured.\n\nDetail: ${error.message}`);
+                } finally {
+                    setSubmitting(false);
+                }
+            };
+
+            const getTrendArrow = (value30d, value7d, isACoS = false) => {
+                const val30 = parseFloat(value30d) || 0;
+                const val7 = parseFloat(value7d) || 0;
+                if (val30 === 0 || val7 === 0) return null; // Don't show arrows for 0% values
+                const diff = val7 - val30;
+                if (Math.abs(diff) < 3) return null;
+                if (isACoS) {
+                    if (diff < -3) return <span style={{color: 'var(--accent-primary)', fontSize: '0.9rem', marginLeft: '2px'}}>↓</span>;
+                    if (diff > 3) return <span style={{color: 'var(--accent-danger)', fontSize: '0.9rem', marginLeft: '2px'}}>↑</span>;
+                } else {
+                    if (diff > 3) return <span style={{color: 'var(--accent-primary)', fontSize: '0.9rem', marginLeft: '2px'}}>↑</span>;
+                    if (diff < -3) return <span style={{color: 'var(--accent-danger)', fontSize: '0.9rem', marginLeft: '2px'}}>↓</span>;
+                }
+                return null;
+            };
+
+            if (loading && weeklySheets.length === 0) {
+                return (
+                    <div className="app-container">
+                        <div className="bg-grid"></div>
+                        <div className="content">
+                            <header>
+                                <h1>Placement Optimizer</h1>
+                                <p className="subtitle">Bid Multiplier Analysis Dashboard</p>
+                            </header>
+                            <div className="loading">
+                                <div className="loading-spinner">⚙️</div>
+                                <h3>Loading Weekly Reports...</h3>
+                                <p>Fetching data from Google Drive</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="app-container">
+                    <div className="bg-grid"></div>
+                    <div className="content">
+                        <header>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'}}>
+                                <div>
+                                    <h1>Placement Optimizer</h1>
+                                    <p className="subtitle">Bid Multiplier Analysis Dashboard</p>
+                                </div>
+                                {weeklySheets.length > 0 && (
+                                    <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end', width: window.innerWidth < 768 ? '100%' : 'auto'}}>
+                                        <label style={{fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace', textTransform: 'uppercase'}}>
+                                            Select Week
+                                        </label>
+                                        <select
+                                            value={currentSheet?.id || ''}
+                                            onChange={(e) => handleWeekChange(e.target.value)}
+                                            style={{
+                                                minWidth: window.innerWidth < 768 ? '100%' : '200px',
+                                                width: window.innerWidth < 768 ? '100%' : 'auto',
+                                                fontSize: '0.9rem',
+                                                padding: '0.5rem 1rem',
+                                                fontFamily: 'JetBrains Mono, monospace',
+                                                fontWeight: '700'
+                                            }}
+                                        >
+                                            {weeklySheets.map(sheet => (
+                                                <option key={sheet.id} value={sheet.id}>
+                                                    {sheet.weekNumber}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        </header>
+
+                        {reports.length === 0 ? (
+                            <div className="upload-zone">
+                                <div className="upload-icon">📊</div>
+                                <h3>No Data Available</h3>
+                                <p style={{color: 'var(--text-secondary)', marginTop: '0.5rem'}}>Waiting for weekly reports in Google Drive...</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="stats-grid">
+                                    <div className="stat-card">
+                                        <div className="stat-label">Spend (7d)</div>
+                                        <div className="stat-value">{formatCurrency(stats.totalSpend7)}</div>
+                                        <div className="stat-detail">30d: {formatCurrency(stats.totalSpend30)}</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Clicks (7d)</div>
+                                        <div className="stat-value">{stats.totalClicks7}</div>
+                                        <div className="stat-detail">{stats.totalOrders7} orders</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">CVR (7d)</div>
+                                        <div className="stat-value" style={{color: stats.cvr7 > 5 ? 'var(--accent-primary)' : 'var(--accent-warning)'}}>
+                                            {formatPercent(stats.cvr7)}
+                                        </div>
+                                        <div className="stat-detail">{filteredData.length} placements</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Current Week</div>
+                                        <div className="stat-value" style={{fontSize: '1.2rem'}}>
+                                            {currentSheet?.weekNumber || 'N/A'}
+                                        </div>
+                                        <div className="stat-detail">
+                                            {[...new Set(filteredData.map(r => r.Campaign))].length} campaigns
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{marginBottom: '1.5rem', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '1rem', flexWrap: 'wrap'}}>
+                                    <button
+                                        onClick={() => setShowSankey(!showSankey)}
+                                        className="btn"
+                                    >
+                                        {showSankey ? '📊 Show Bar Chart' : '🌊 Show Flow Diagram'}
+                                    </button>
+                                </div>
+
+                                {showSankey ? (
+                                    <SankeyFlow placementData={placementData} showBizPlacements={showBizPlacements} />
+                                ) : (
+                                    <div className="chart-container">
+                                        <canvas ref={chartRef}></canvas>
+                                    </div>
+                                )}
+
+                                <div style={{marginBottom: '1.5rem', display: 'flex', justifyContent: 'flex-end'}}>
+                                    <button
+                                        onClick={handleSubmitChanges}
+                                        disabled={submitting}
+                                        className="btn"
+                                    >
+                                        {submitting ? '⏳ Submitting...' : '🚀 Submit Changes to Amazon'}
+                                    </button>
+                                </div>
+
+                                <div className="data-table">
+                                    <div className="table-header">
+                                        <div className="table-title">Placement Details</div>
+                                        <div className="table-controls">
+                                            <input
+                                                type="text"
+                                                placeholder="Search campaigns..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                            />
+                                            <select
+                                                value={portfolioFilter}
+                                                onChange={(e) => setPortfolioFilter(e.target.value)}
+                                            >
+                                                <option value="all">All Portfolios</option>
+                                                {getUniquePortfolios().map(p => (
+                                                    <option key={p} value={p}>{p}</option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                onClick={() => setShowBizPlacements(!showBizPlacements)}
+                                                className="btn"
+                                                style={{
+                                                    padding: '0.5rem 1rem',
+                                                    fontSize: '0.75rem',
+                                                    whiteSpace: 'nowrap',
+                                                    background: showBizPlacements ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'var(--bg-dark)',
+                                                    color: showBizPlacements ? 'var(--bg-dark)' : 'var(--text-secondary)',
+                                                    border: showBizPlacements ? 'none' : '1px solid var(--border)'
+                                                }}
+                                            >
+                                                {showBizPlacements ? '✗ Hide Biz' : '✓ Show Biz'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="mobile-scroll-hint">
+                                        📱 Rotate screen for better view 🔄
+                                    </div>
+                                    <div className="table-wrapper">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th onClick={() => handleSort('Campaign')}>Campaign</th>
+                                                    <th onClick={() => handleSort('Budget')}>Budget</th>
+                                                    <th onClick={() => handleSort('Clicks-30')}>Clicks<br/>30d</th>
+                                                    <th onClick={() => handleSort('Spend-30')}>Spend<br/>30d</th>
+                                                    <th onClick={() => handleSort('Orders-30')}>Orders<br/>30d</th>
+                                                    <th onClick={() => handleSort('CVR-30')}>CVR<br/>30d</th>
+                                                    <th className="acos-header" onClick={() => handleSort('ACoS-30')}>ACoS<br/>30d</th>
+                                                    <th onClick={() => handleSort('Clicks-7')}>Clicks<br/>7d</th>
+                                                    <th onClick={() => handleSort('Spend-7')}>Spend<br/>7d</th>
+                                                    <th onClick={() => handleSort('Orders-7')}>Orders<br/>7d</th>
+                                                    <th onClick={() => handleSort('CVR-7')}>CVR<br/>7d</th>
+                                                    <th className="acos-header" onClick={() => handleSort('ACOS-7')}>ACoS<br/>7d</th>
+                                                    <th onClick={() => handleSort('Spent DB Yesterday')}>DB<br/>Yest</th>
+                                                    <th onClick={() => handleSort('Spent Yesterday')}>Spent<br/>Yest</th>
+                                                    <th onClick={() => handleSort('Budget Check')}>Budget<br/>Check</th>
+                                                    <th className="metric-percent-group" onClick={() => handleSort('Last 30 days')}>LAST<br/>30D</th>
+                                                    <th className="metric-percent-group" onClick={() => handleSort('Last 7 days')}>LAST<br/>7D</th>
+                                                    <th className="metric-percent-group" onClick={() => handleSort('Yesterday')}>YEST</th>
+                                                    <th onClick={() => handleSort('Placement Type')}>Place</th>
+                                                    <th onClick={() => handleSort('Increase bids by placement')}>Multi<br/>plier</th>
+                                                    <th className="changes-column" onClick={() => handleSort('Changes in placement')}>Changes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredData.slice(0, 200).map((row, index) => {
+                                                    const multiplier = row['Increase bids by placement'];
+                                                    const isNewCampaignGroup = index > 0 && 
+                                                        filteredData[index - 1].Campaign !== row.Campaign;
+                                                    
+                                                    return (
+                                                        <tr key={index} className={isNewCampaignGroup ? 'campaign-group-separator' : ''}>
+                                                            <td style={{maxWidth: '150px'}}>
+                                                                {editingCell === 'campaign-' + index ? (
+                                                                    <div onClick={() => setEditingCell(null)} style={{ whiteSpace: 'normal', wordBreak: 'break-word', cursor: 'pointer', background: 'rgba(0, 255, 148, 0.1)', padding: '0.25rem', borderRadius: '4px' }}>
+                                                                        {row.Campaign}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div onClick={() => handleCampaignClick(index)} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                                                                        {row.Campaign}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                            <td>{row.Budget || '-'}</td>
+                                                            <td className="metric-group-30d">{row['Clicks-30'] || 0}</td>
+                                                            <td className="metric-group-30d">{formatCurrency(row['Spend-30'])}</td>
+                                                            <td className="metric-group-30d">{row['Orders-30'] || 0}</td>
+                                                            <td className={'metric-group-30d ' + (parseFloat(row['CVR-30']) > 5 ? 'metric-positive' : '')}>{formatPercent(row['CVR-30'])}</td>
+                                                            <td className={'metric-group-30d ' + (parseFloat(row['ACoS-30']) > 30 ? 'metric-negative' : 'metric-positive')}>
+                                                                {formatPercent(row['ACoS-30'])}
+                                                            </td>
+                                                            <td className="metric-group-7d">{row['Clicks-7'] || 0}</td>
+                                                            <td className="metric-group-7d">{formatCurrency(row['Spend-7'])}</td>
+                                                            <td className="metric-group-7d">{row['Orders-7'] || 0}</td>
+                                                            <td className={'metric-group-7d ' + (parseFloat(row['CVR-7']) > 5 ? 'metric-positive' : '')}>{formatPercent(row['CVR-7'])}{getTrendArrow(row['CVR-30'], row['CVR-7'], false)}</td>
+                                                            <td className={'metric-group-7d ' + (parseFloat(row['ACOS-7']) > 30 ? 'metric-negative' : 'metric-positive')}>
+                                                                {formatPercent(row['ACOS-7'])}
+                                                                {getTrendArrow(row['ACoS-30'], row['ACOS-7'], true)}
+                                                            </td>
+                                                            <td>{formatCurrency(row['Spent DB Yesterday'])}</td>
+                                                            <td>{formatCurrency(row['Spent Yesterday'])}</td>
+                                                            <td>{row['Budget Check'] || '-'}</td>
+                                                            <td className="metric-percent-group">{formatPercent(row['Last 30 days'])}</td>
+                                                            <td className="metric-percent-group">{formatPercent(row['Last 7 days'])}</td>
+                                                            <td className="metric-percent-group">{formatPercent(row['Yesterday'])}</td>
+                                                            <td style={{minWidth: '60px'}}>
+                                                                <PlacementBadge 
+                                                                    placement={row['Placement Type']} 
+                                                                    isExpanded={isPlacementsExpanded}
+                                                                    onToggle={togglePlacements}
+                                                                />
+                                                            </td>
+                                                            <td>{multiplier ? (<span className="multiplier">{multiplier}%</span>) : '-'}</td>
+                                                            <td className="changes-column" style={{maxWidth: '70px', position: 'relative'}}>
+                                                                {editingCell === index ? (
+                                                                    <>
+                                                                        <input 
+                                                                            type="text" 
+                                                                            defaultValue={(row['Changes in placement'] || '').toString().replace('%', '')} 
+                                                                            onBlur={(e) => handleChangeEdit(index, e.target.value)} 
+                                                                            onChange={(e) => setLocalEditValue(e.target.value)}
+                                                                            onKeyDown={(e) => { 
+                                                                                if (e.key === 'Enter') handleChangeEdit(index, e.target.value); 
+                                                                                else if (e.key === 'Escape') setEditingCell(null); 
+                                                                            }} 
+                                                                            autoFocus 
+                                                                            style={{ width: '100%', background: 'var(--bg-dark)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)', padding: '0.25rem', borderRadius: '4px', fontSize: '0.75rem' }} 
+                                                                        />
+                                                                        {(parseFloat(localEditValue) > 900 || warningRows.has(index)) && (
+                                                                            <div style={{
+                                                                                position: 'absolute',
+                                                                                bottom: '120%',
+                                                                                right: 0,
+                                                                                background: '#ff3366',
+                                                                                color: 'white',
+                                                                                padding: '6px 12px',
+                                                                                borderRadius: '6px',
+                                                                                fontSize: '11px',
+                                                                                fontWeight: 'bold',
+                                                                                whiteSpace: 'nowrap',
+                                                                                zIndex: 100,
+                                                                                boxShadow: '0 4px 15px rgba(255, 51, 102, 0.6)',
+                                                                                animation: 'shake 0.4s ease-in-out infinite'
+                                                                            }}>
+                                                                                💸 DANGER! YOU ARE BUYING BEZOS ANOTHER YACHT! 🛥️
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <div style={{position: 'relative'}}>
+                                                                        <span
+                                                                            onClick={() => handleCellClick(index)}
+                                                                            className={(row['Changes in placement'] && row['Changes in placement'] !== '0') ? 'changes-input-active' : ''}
+                                                                            style={{ cursor: 'pointer', display: 'block', padding: '0.25rem' }}
+                                                                        >
+                                                                            {row['Changes in placement'] || '0'}
+                                                                        </span>
+                                                                        {warningRows.has(index) && (
+                                                                            <div style={{
+                                                                                position: 'absolute',
+                                                                                bottom: '120%',
+                                                                                right: 0,
+                                                                                background: '#ff3366',
+                                                                                color: 'white',
+                                                                                padding: '6px 12px',
+                                                                                borderRadius: '6px',
+                                                                                fontSize: '11px',
+                                                                                fontWeight: 'bold',
+                                                                                whiteSpace: 'nowrap',
+                                                                                zIndex: 100,
+                                                                                boxShadow: '0 4px 15px rgba(255, 51, 102, 0.6)',
+                                                                                animation: 'shake 0.4s ease-in-out infinite'
+                                                                            }}>
+                                                                                💸 DANGER! YOU ARE BUYING BEZOS ANOTHER YACHT! 🛥️
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(
+            <AuthComponent>
+                <PlacementDashboard />
+            </AuthComponent>, 
+            document.getElementById('root')
+        );
+    </script>
+</body>
+</html>
