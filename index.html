@@ -2742,6 +2742,11 @@
                 return `${(parseFloat(value) || 0).toFixed(2)}%`;
             };
 
+            const formatWeekDisplay = (weekId) => {
+                const [year, week] = weekId.split('-W');
+                return `Week ${parseInt(week)} ${year}`;
+            };
+
             const handleChangeEdit = (index, newValue) => {
                 const updatedReports = [...reports];
                 const dataIndex = reports.findIndex((item) => 
@@ -2928,7 +2933,7 @@
                                         >
                                             {availableWeeks.map(week => (
                                                 <option key={week.id} value={week.id}>
-                                                    {week.week_id} ({week.start_date})
+                                                    {formatWeekDisplay(week.week_id)}
                                                 </option>
                                             ))}
                                         </select>
