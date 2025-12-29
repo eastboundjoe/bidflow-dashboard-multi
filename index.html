@@ -1431,7 +1431,11 @@
                     // Call n8n Flow 1 webhook with tenant_id
                     const response = await fetch(CONFIG.N8N_COLLECTION_WEBHOOK, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        mode: 'cors', // Enable CORS
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
                         body: JSON.stringify({
                             tenant_id: session.user.id,
                             trigger_source: 'bidflow_ui',
