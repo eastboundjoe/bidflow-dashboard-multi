@@ -2387,13 +2387,15 @@
                     const placementTypeMap = {
                         'Top of Search': 'Placement Top of Search',
                         'Product Page': 'Placement Product Page',
-                        'Rest of Search': 'Placement Rest of Search'
+                        'Rest of Search': 'Placement Rest of Search',
+                        'Amazon Business': 'Placement Amazon Business'
                     };
 
                     const bidColumnMap = {
                         'Top of Search': 'placement_top_of_search',
                         'Product Page': 'placement_product_page',
-                        'Rest of Search': 'placement_rest_of_search'
+                        'Rest of Search': 'placement_rest_of_search',
+                        'Amazon Business': 'placement_amazon_business'
                     };
 
                     const parsedData = performance.map(p => {
@@ -2484,7 +2486,7 @@
 
                 // 2. Sort within each group (FIXED PLACEMENT ORDER)
                 const placementOrder = {
-                    'placement top': 1,
+                    'placement top of search': 1,
                     'placement rest of search': 2,
                     'placement product page': 3,
                     'placement amazon business': 4
