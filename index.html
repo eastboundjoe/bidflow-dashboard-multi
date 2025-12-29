@@ -1431,11 +1431,7 @@
                     // Call n8n Flow 1 webhook with tenant_id
                     const response = await fetch(CONFIG.N8N_COLLECTION_WEBHOOK, {
                         method: 'POST',
-                        mode: 'cors', // Enable CORS
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             tenant_id: session.user.id,
                             trigger_source: 'bidflow_ui',
@@ -1782,8 +1778,8 @@
         };
 
         const CONFIG = {
-            N8N_COLLECTION_WEBHOOK: 'http://localhost:5678/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87', // Flow 1 - Local testing
-            N8N_SUBMISSION_WEBHOOK: 'http://localhost:5678/webhook/32328f48-51f5-4123-b693-af5455d3b29c', // Flow 2 - Local testing
+            N8N_COLLECTION_WEBHOOK: 'https://n8n.bidflow.app/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87', // Flow 1 - Production
+            N8N_SUBMISSION_WEBHOOK: 'https://n8n.bidflow.app/webhook/32328f48-51f5-4123-b693-af5455d3b29c', // Flow 2 - Production
             AUTO_REFRESH_INTERVAL: 300000 // 5 minutes
         };
 
