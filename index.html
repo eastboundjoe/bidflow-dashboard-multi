@@ -2315,13 +2315,6 @@
                         bidMap[b.campaign_id] = b;
                     });
 
-                    // DEBUG: Check if bids data exists
-                    console.log('📊 Weekly Placement Bids Data:', bids);
-                    console.log('🗺️ Bid Map Keys:', Object.keys(bidMap));
-                    if (bids.length > 0) {
-                        console.log('📋 First bid sample:', bids[0]);
-                    }
-
                     const portfolioMap = {};
                     if (portfolios) {
                         portfolios.forEach(p => {
@@ -2343,22 +2336,12 @@
                     };
 
                     const parsedData = performance.map((p, idx) => {
-                        const campaignBids = bidMap[p.campaign_id] || {};
+                        // FIX: Trim campaign_id to remove leading/trailing spaces
+                        const campaignId = (p.campaign_id || '').trim();
+                        const campaignBids = bidMap[campaignId] || {};
                         const bidColumn = bidColumnMap[p.placement_type];
                         const multiplier = campaignBids[bidColumn] || 0;
                         const portfolioName = campaignBids.portfolio_id ? (portfolioMap[campaignBids.portfolio_id] || campaignBids.portfolio_id) : '-';
-
-                        // DEBUG: Log first few rows to see what's happening
-                        if (idx < 3) {
-                            console.log(`🔍 Row ${idx}:`, {
-                                campaign_name: p.campaign_name,
-                                campaign_id: p.campaign_id,
-                                placement_type: p.placement_type,
-                                bidColumn: bidColumn,
-                                campaignBids: campaignBids,
-                                multiplier: multiplier
-                            });
-                        }
 
                         return {
                             'Campaign': p.campaign_name,
@@ -2374,8 +2357,8 @@
                             'Orders-7': p.purchases_7d || 0,
                             'CVR-7': (p.cvr_7d || 0).toString(),
                             'ACOS-7': (p.acos_7d || 0).toString(),
-                            'Spent DB Yesterday': 0, 
-                            'Spent Yesterday': 0,    
+                            'Spent DB Yesterday': 0,
+                            'Spent Yesterday': 0,
                             'Budget Check': '-',
                             'Last 30 days': '0%',
                             'Last 7 days': '0%',
@@ -2383,7 +2366,7 @@
                             'Placement Type': placementTypeMap[p.placement_type] || p.placement_type,
                             'Increase bids by placement': multiplier.toString(),
                             'Changes in placement': '0',
-                            'campaign_id': p.campaign_id,
+                            'campaign_id': campaignId,  // Use trimmed ID
                             'snapshot_id': snapshotId
                         };
                     }).filter(row => row.Campaign && row.Campaign !== '0');
