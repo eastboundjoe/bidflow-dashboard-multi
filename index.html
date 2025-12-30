@@ -2295,6 +2295,12 @@
 
                     if (perfError) throw perfError;
 
+                    // DEBUG: Check performance data
+                    console.log('📈 Performance Data Count:', performance?.length || 0);
+                    if (performance && performance.length > 0) {
+                        console.log('📈 First performance row:', performance[0]);
+                    }
+
                     // 2. Fetch Bid Data
                     const { data: bids, error: bidError } = await window.supabaseClient
                         .from('weekly_placement_bids')
@@ -2314,6 +2320,13 @@
                     bids.forEach(b => {
                         bidMap[b.campaign_id] = b;
                     });
+
+                    // DEBUG: Check bid data
+                    console.log('📊 Bids Data:', bids);
+                    console.log('🗺️ Bid Map Keys:', Object.keys(bidMap));
+                    if (bids.length > 0) {
+                        console.log('📋 First bid:', bids[0]);
+                    }
 
                     const portfolioMap = {};
                     if (portfolios) {
@@ -2342,6 +2355,19 @@
                         const bidColumn = bidColumnMap[p.placement_type];
                         const multiplier = campaignBids[bidColumn] || 0;
                         const portfolioName = campaignBids.portfolio_id ? (portfolioMap[campaignBids.portfolio_id] || campaignBids.portfolio_id) : '-';
+
+                        // DEBUG: Log first 3 rows
+                        if (idx < 3) {
+                            console.log(`🔍 Row ${idx}:`, {
+                                original_campaign_id: `"${p.campaign_id}"`,
+                                trimmed_campaign_id: `"${campaignId}"`,
+                                placement_type: p.placement_type,
+                                bidColumn: bidColumn,
+                                found_bid: !!campaignBids.campaign_id,
+                                bid_value: campaignBids[bidColumn],
+                                multiplier: multiplier
+                            });
+                        }
 
                         return {
                             'Campaign': p.campaign_name,
