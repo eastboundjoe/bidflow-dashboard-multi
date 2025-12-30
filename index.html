@@ -694,11 +694,6 @@
             color: var(--accent-warning);
         }
 
-        .badge-business {
-            background: rgba(255, 51, 102, 0.2);
-            color: var(--accent-danger);
-        }
-
         .mobile-scroll-hint {
             display: none;
             background: rgba(0, 255, 148, 0.1);
@@ -2437,13 +2432,6 @@
                 if (portfolioFilter !== 'all') {
                     filtered = filtered.filter(row => {
                         return row.Portfolio === portfolioFilter;
-                    });
-                }
-
-                if (!showBizPlacements) {
-                    filtered = filtered.filter(row => {
-                        const placement = (row['Placement Type'] || '').toLowerCase();
-                        return !placement.includes('business');
                     });
                 }
 
