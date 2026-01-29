@@ -7,3 +7,13 @@ google-workspace-mcp/
 tiktok-mcp/
 text-simplifier-mcp/
 mcp-client/
+
+# Exclude loose Deno/Edge Function files in root
+report-collector-deploy.ts
+report-collector.ts
+report-generator.ts
+report-poller-deploy.ts
+report-processor-deploy.ts
+workflow-executor.ts
+test-ads-api.ts
+gemini-test-function.ts
