@@ -1,0 +1,95 @@
+bidding,campaignId,campaignType,dailyBudget,endDate,name,networks,portfolioId,premiumBidAdjustment,startDate,state,targetingType
+{'adjustments': []},186884032230789,sponsoredProducts,1.0,20170818,Test,,,False,20170813,archived,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",101118158478486,sponsoredProducts,40.0,20171109,Campaign w/ Bad Pictures,,,False,20171005,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 50}]}",169467312005,sponsoredProducts,400.0,,Manual w/ New Pcs,,,True,20171109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",105830310528258,sponsoredProducts,5.0,,Manual Prime EarFBA,,,False,20171114,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",50339991324208,sponsoredProducts,70.0,,11-9-2017 Auto New Pics,,,False,20171108,paused,auto
+{'adjustments': []},64233855967792,sponsoredProducts,1.0,,Midful test,,,False,20180523,archived,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",80308419693044,sponsoredProducts,1.0,,Sleep Patch Test,,,False,20180523,paused,manual
+{'adjustments': []},182139489172702,sponsoredProducts,1.0,,Mindful Test,,,False,20180523,archived,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",8294863810901,sponsoredProducts,250.0,,Auto Test (Old 2018),,267311883122153,False,20180702,enabled,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 50}]}",141732568666631,sponsoredProducts,140.0,,Mindful Manual,,267311883122153,True,20180704,paused,manual
+{'adjustments': []},169025168865533,sponsoredProducts,10.0,20190118,Auto High,,,False,20180710,archived,auto
+{'adjustments': []},212174976021202,sponsoredProducts,10.0,20190118,Auto Mid,,,False,20180710,archived,auto
+{'adjustments': []},140214644619540,sponsoredProducts,10.0,20190118,Auto Low,,,False,20180710,archived,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",207543819560227,sponsoredProducts,100.0,,Auto 7-15,,,False,20180714,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",222483532454993,sponsoredProducts,10.0,,7-24 Manual 3 KWs BR/PH,,,False,20180723,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",144741229683737,sponsoredProducts,120.0,,Mindful Manual | 2 (Old 2019),,267311883122153,False,20190103,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",103145253886671,sponsoredProducts,20.0,,Fortnite,,,False,20190418,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementProductPage', 'percentage': 30}, {'predicate': 'placementTop', 'percentage': 30}]}",2183283813214,sponsoredProducts,30.0,,Product targeting,,,True,20190627,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 30}, {'predicate': 'placementProductPage', 'percentage': 20}]}",23093652481822,sponsoredProducts,45.0,20190724,Toys (Jun 2019)_AMZN,,,True,20190703,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",80692448635238,sponsoredProducts,25.0,,Project Snowball,,185501844651456,False,20190723,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",32796282320272,sponsoredProducts,15.0,,Off Amz Re-target,['offAmazon'],,False,20190920,archived,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 30}, {'predicate': 'placementProductPage', 'percentage': 10}]}",113345751458083,sponsoredProducts,15.0,20191231,Q4 seasonality _Manual_opt 11-25-2019 760c,,,True,20191203,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 30}, {'predicate': 'placementProductPage', 'percentage': 10}]}",134457333603377,sponsoredProducts,15.0,20191231,Q4 seasonality _Auto_opt 11-25-2019 be2d,,,True,20191203,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",248065976869846,sponsoredProducts,100.0,,Test EX Only,,,False,20200208,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementProductPage', 'percentage': 280}]}",277937493346019,sponsoredProducts,50.0,,ASIN | EX Campaign,,,False,20200212,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",43105733590353,sponsoredProducts,25.0,,Sponsored Display,['offAmazon'],,False,20200213,archived,auto
+"{'strategy': 'manual', 'adjustments': [{'predicate': 'placementTop', 'percentage': 230}]}",21304329571381,sponsoredProducts,40.0,,self care gifts | EX,,,True,20200217,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 280}]}",65896404659606,sponsoredProducts,50.0,,play therapy | EX,,,True,20200217,paused,manual
+"{'strategy': 'manual', 'adjustments': [{'predicate': 'placementTop', 'percentage': 100}, {'predicate': 'placementProductPage', 'percentage': 100}]}",132641694052716,sponsoredProducts,50.0,,therapeutic games | EX + PH,,267311883122153,True,20200222,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",36152987898399,sponsoredProducts,50.0,,Retarget,['offAmazon'],,False,20200222,archived,auto
+"{'strategy': 'manual', 'adjustments': []}",269284888470415,sponsoredProducts,50.0,,games for teens | EX,,267311883122153,False,20200222,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",232640301335644,sponsoredProducts,100.0,,Campaign - 4/22/2020 15:54:23,['offAmazon'],,False,20200422,archived,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",106440430782539,sponsoredProducts,200.0,,SP-B085X24KZG-ASINEX,,57582952213263,False,20200528,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",57357953962517,sponsoredProducts,200.0,,SP-B085X24KZG-Auto,,57582952213263,False,20200528,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 10}, {'predicate': 'placementProductPage', 'percentage': 10}]}",119679597577066,sponsoredProducts,75.0,,SP-B085X24KZG-EX,,57582952213263,True,20200608,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",55585235041423,sponsoredProducts,100.0,,SP-B085X24KZG-PH,,57582952213263,False,20200614,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",252872747987833,sponsoredProducts,100.0,20210405,Easter gifts for kids,,,False,20210314,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",241724456364578,sponsoredProducts,200.0,,Mindful Manual | 3,,,False,20210426,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",341048246508566,sponsoredProducts,5.0,,Hyde Sanding Disc,,,False,20240609,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 30}]}",502511940390617,sponsoredProducts,35.0,,SP-B0D7DP2Z94-ASINEXP-CompIso1,,191331747156294,True,20240801,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 70}]}",529331077535815,sponsoredProducts,25.0,,SP-B0D7DP2Z94-EX-RootKWs,,191331747156294,True,20240801,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 90}]}",351173458779206,sponsoredProducts,25.0,,SP-B0D7DP2Z94-EX-DryTopping,,191331747156294,True,20240801,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",523481363813196,sponsoredProducts,100.0,,Seafood | SP | EX | dried ramen topping 1,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",370478226047949,sponsoredProducts,27.23,,Seafood | SP | EX | dehydrated vegetable 1,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",293238963247790,sponsoredProducts,20.0,,Seafood | SP | EX | dehydrated vegetable 2,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",521684106946760,sponsoredProducts,100.0,,Seafood | SP | EX | ramen bae 1,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",346126180719687,sponsoredProducts,20.0,,Seafood | SP | EX | dried vegetable 1,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",341969138833391,sponsoredProducts,20.0,,Seafood | SP | EX | topper 1,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",515780350873393,sponsoredProducts,50.0,,Seafood | SP | EX | 1,,191331747156294,False,20240801,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",443191059695070,sponsoredProducts,30.0,,Seafood | SP | PH | ramen bae 1,,,False,20241007,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 82}]}",342238452662036,sponsoredProducts,500.0,,SP-B07BYYNKCY-EX-Mindful-Q4,,87721106900865,True,20241007,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",468687219951451,sponsoredProducts,25.0,,SP-B0D7DP2Z94-BR-DriedBae,,191331747156294,False,20241007,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",533472724050813,sponsoredProducts,10.0,,INNERICONS Mindfulness Therapy Games: Social|B07BYYNKCY|Auto|SP|TM,,,False,20241005,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 75}]}",312332219000325,sponsoredProducts,25.0,,SP-B0D7DP2Z94-PH-DriedTopping,,191331747156294,True,20241007,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 4}]}",486899392009931,sponsoredProducts,10.0,,Auto | Seafood,,191331747156294,True,20241007,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",321866584669467,sponsoredProducts,10.0,,INNERICONS Mindfulness Therapy Games: Social|B07BYYNKCY|Manual|SP-KW|TM,,,False,20241005,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",410989647497476,sponsoredProducts,30.0,,Seafood | SP | BR | dried ramen topping 1,,,False,20241007,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",418529822268506,sponsoredProducts,10.0,,M575 Stand | Manual,,98428251313894,False,20250126,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",412654049834906,sponsoredProducts,12.0,,M575 | Auto 1,,98428251313894,False,20250317,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 55}]}",450729232668053,sponsoredProducts,60.0,,SP-B0D7DP2Z94-ASINEX-CompIso2,,191331747156294,True,20250530,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 98}]}",391355722364356,sponsoredProducts,20.0,,SP-B07BYYNKCY-Auto-LowBid,,267311883122153,True,20250602,enabled,auto
+"{'strategy': 'legacyForSales', 'adjustments': []}",449184920936920,sponsoredProducts,15.0,,SP-B0D7DP2Z94-Auto-LowBid,,191331747156294,False,20250602,enabled,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 100}]}",437570024967211,sponsoredProducts,45.0,,SP-B0D7DP2Z94-Auto-CatchAll,,191331747156294,True,20250602,enabled,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementProductPage', 'percentage': 31}, {'predicate': 'placementTop', 'percentage': 101}]}",325289076755448,sponsoredProducts,20.0,,SP-B07BYYNKCY-Auto-CatchAll,,267311883122153,True,20250602,enabled,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 98}]}",551198816421009,sponsoredProducts,30.0,,SP-B07BYYNKCY-PH-BR-RootKWs,,267311883122153,True,20250612,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 10}]}",502045504310164,sponsoredProducts,50.0,,SP-B07BYYNKCY-ASINEX-CompIso,,267311883122153,True,20250727,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 90}, {'predicate': 'placementProductPage', 'percentage': 10}]}",351612740735197,sponsoredProducts,30.0,,SP-B0D7DP2Z94-PH-TargetRamen,,191331747156294,True,20250727,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 400}]}",424201090506042,sponsoredProducts,60.0,,SP-B07BYYNKCY-EX-TestKids,,267311883122153,True,20250731,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 350}, {'predicate': 'placementProductPage', 'percentage': 20}]}",537982474899350,sponsoredProducts,15.0,,SP-B0D7DP2Z94-EX-TargetRamen,,191331747156294,True,20250807,enabled,manual
+"{'strategy': 'autoForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 30}, {'predicate': 'placementProductPage', 'percentage': 5}]}",430112847178449,sponsoredProducts,65.0,,SP-B0D7DP2Z94-ASINEX-CompIso,,191331747156294,True,20250825,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 530}]}",283272330249419,sponsoredProducts,50.0,,SP-B07BYYNKCY-EX-IndexTest,,267311883122153,True,20250825,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 150}, {'predicate': 'placementProductPage', 'percentage': 5}]}",361235057611453,sponsoredProducts,25.0,,SP-B0D7DP2Z94-EX-WinningHarvest,,191331747156294,True,20250826,enabled,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 108}]}",423242877531839,sponsoredProducts,25.0,,SP-B07BYYNKCY-EX-LowVolHiCVR,,267311883122153,True,20250828,enabled,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",404881810420697,sponsoredProducts,20.0,,Mindful-Couples Gifts-SP-Q4,,87721106900865,False,20251026,archived,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",550646222587336,sponsoredProducts,20.0,,Mindful-Gifts for Women 2-SP-Q4,,87721106900865,False,20251026,archived,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",286218817960887,sponsoredProducts,20.0,,Mindful-Gifts for Women 1-SP-Q4,,87721106900865,False,20251026,archived,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",544376049918982,sponsoredProducts,20.0,,Mindful-Generic & Money-SP-Q4,,87721106900865,False,20251026,archived,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",474981340341159,sponsoredProducts,20.0,,Mindful-Teachers-SP-Q4,,87721106900865,False,20251026,archived,manual
+"{'strategy': 'autoForSales', 'adjustments': []}",483761875109229,sponsoredProducts,20.0,,Mindful-Gifts for kids-SP-Q4,,87721106900865,False,20251026,archived,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 60}, {'predicate': 'placementProductPage', 'percentage': 20}]}",322660229893208,sponsoredProducts,1.0,,SP-B07BYYNKCY-Auto-ReopenBacktoSchool,,92685955788713,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",424478001216281,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-FamilyGames2-Q4,,87721106900865,False,20251108,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 79}, {'predicate': 'placementProductPage', 'percentage': 1}]}",319073186640964,sponsoredProducts,100.0,,SP-B07BYYNKCY-PH-FamilyGames1-Q4,,87721106900865,True,20251108,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 24}]}",482591331185568,sponsoredProducts,100.0,,SP-B07BYYNKCY-PH-Thanksgiving1-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 18}]}",406816765601487,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-GiftsKidsSchool-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 160}, {'predicate': 'placementProductPage', 'percentage': 20}]}",355711630907654,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-FamilyGames4-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 55}]}",445541567087855,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-Activities1-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 48}]}",534687798263985,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-FamilyGifts2-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 22}, {'predicate': 'placementProductPage', 'percentage': 5}]}",328866193280735,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-FamilyGifts4-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 10}]}",410252792181590,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-FamilyGames3-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 24}, {'predicate': 'placementProductPage', 'percentage': 1}]}",453716757471171,sponsoredProducts,100.0,,SP-B07BYYNKCY-PH-FamilyGifts1-Q4,,87721106900865,True,20251109,paused,manual
+"{'strategy': 'legacyForSales', 'adjustments': []}",357551427949991,sponsoredProducts,50.0,,SP-B07BYYNKCY-PH-FamilyGifts3-Q4,,87721106900865,False,20251109,paused,manual
+"{'strategy': 'autoForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 32}]}",304142983382390,sponsoredProducts,2000.0,,SP-B07BYYNKCY-Auto-UpDownTest-Q4,,87721106900865,True,20251120,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 600}]}",558809438035742,sponsoredProducts,1000.0,,SP-B07BYYNKCY-Auto-TOS-Q4,,87721106900865,True,20251120,paused,auto
+"{'strategy': 'legacyForSales', 'adjustments': [{'predicate': 'placementTop', 'percentage': 54}]}",475209139329637,sponsoredProducts,100.0,,SP-B07BYYNKCY-PH-test(HR),,267311883122153,True,20251209,enabled,manual
