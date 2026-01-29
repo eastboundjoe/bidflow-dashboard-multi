@@ -178,9 +178,11 @@ async function processReport(
       await processCampaignReport(report, reportData);
     }
 
-    // Mark as completed
+    // Mark as completed - URL expires in 1 hour
+    const urlExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     await updateReportStatus(report.report_id, 'COMPLETED', {
       url: status.url,
+      url_expires_at: urlExpiresAt,
     });
 
     logger.info('Report processed successfully', {
