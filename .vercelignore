@@ -1,2 +1,9 @@
-# Exclude standalone Node.js engine from Vercel build
+# Exclude standalone projects from Vercel build
 bidflow-engine-py/
+placement-optimization-functions/
+amazon-ads-api-mcp/
+n8n-mcp/
+google-workspace-mcp/
+tiktok-mcp/
+text-simplifier-mcp/
+mcp-client/
