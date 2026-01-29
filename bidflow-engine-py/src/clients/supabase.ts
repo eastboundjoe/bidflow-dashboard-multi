@@ -243,7 +243,7 @@ export async function createWeeklySnapshot(
     // Reset status to collecting for re-run
     await client
       .from('weekly_snapshots')
-      .update({ status: 'collecting' })
+      .update({ status: 'COLLECTING' })
       .eq('id', existing.id);
     return existing.id;
   }
@@ -257,7 +257,7 @@ export async function createWeeklySnapshot(
       week_number: week.week_number,
       start_date: week.start_date,
       end_date: week.end_date,
-      status: 'collecting',
+      status: 'COLLECTING',
     })
     .select('id')
     .single();
@@ -282,7 +282,7 @@ export async function updateSnapshotStatus(
     .update({
       status,
       ...updates,
-      ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
+      ...(status === 'COMPLETED' ? { completed_at: new Date().toISOString() } : {}),
     })
     .eq('id', snapshotId);
 
@@ -314,7 +314,7 @@ export async function getPendingReports(): Promise<ReportLedgerEntry[]> {
   const { data, error } = await client
     .from('report_ledger')
     .select('*')
-    .in('status', ['pending', 'processing'])
+    .in('status', ['PENDING', 'PROCESSING'])
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -422,7 +422,7 @@ export async function areAllReportsComplete(snapshotId: string): Promise<boolean
 
   if (!data || data.length === 0) return false;
 
-  return data.every(r => r.status === 'completed');
+  return data.every(r => r.status === 'COMPLETED');
 }
 
 // Get snapshot by ID

@@ -119,7 +119,7 @@ export async function processReports(): Promise<void> {
           error: errorMessage,
         });
 
-        await updateReportStatus(report.report_id, 'failed');
+        await updateReportStatus(report.report_id, 'FAILED');
 
         failedCount++;
 
@@ -159,14 +159,14 @@ async function processReport(
 
   if (status.status === 'PENDING' || status.status === 'PROCESSING') {
     // Update our status to processing if it was pending
-    if (report.status === 'pending') {
-      await updateReportStatus(report.report_id, 'processing');
+    if (report.status === 'PENDING') {
+      await updateReportStatus(report.report_id, 'PROCESSING');
     }
     return 'pending';
   }
 
   if (status.status === 'FAILURE') {
-    await updateReportStatus(report.report_id, 'failed');
+    await updateReportStatus(report.report_id, 'FAILED');
     return 'failed';
   }
 
@@ -184,7 +184,7 @@ async function processReport(
     }
 
     // Mark as completed
-    await updateReportStatus(report.report_id, 'completed', {
+    await updateReportStatus(report.report_id, 'COMPLETED', {
       url: status.url,
     });
 
@@ -297,7 +297,7 @@ async function checkSnapshotCompletion(
 ): Promise<void> {
   // Check if all reports for this tenant are now complete
   // Note: This is a simplified check - in a full implementation you'd track snapshot_id
-  const allComplete = reports.every(r => r.status === 'completed');
+  const allComplete = reports.every(r => r.status === 'COMPLETED');
 
   if (allComplete && reports.length > 0) {
     logger.info('All reports complete for tenant, syncing to raw', {

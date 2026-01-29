@@ -52,7 +52,7 @@ export interface ReportLedgerEntry {
   report_id: string;
   name: string;
   report_type: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
   url?: string;
   url_expires_at?: string;
   processed?: boolean;
@@ -68,7 +68,7 @@ export interface WeeklySnapshot {
   week_number: number;
   start_date: string;
   end_date: string;
-  status: 'collecting' | 'processing' | 'completed' | 'failed';
+  status: 'COLLECTING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
   workflow_execution_id?: string;
   created_at?: string;
   completed_at?: string;

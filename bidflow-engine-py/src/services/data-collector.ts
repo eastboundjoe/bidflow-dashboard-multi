@@ -59,7 +59,7 @@ export async function collectDataForTenant(
           report_id: reportId,
           name: reportConfig.name,
           report_type: reportConfig.groupBy.includes('campaignPlacement') ? 'placement' : 'campaign',
-          status: 'pending',
+          status: 'PENDING',
           created_at: new Date().toISOString(),
         });
 
@@ -83,7 +83,7 @@ export async function collectDataForTenant(
     }
 
     // Update snapshot status to processing
-    await updateSnapshotStatus(snapshotId, 'processing');
+    await updateSnapshotStatus(snapshotId, 'PROCESSING');
 
     logger.info('Data collection complete for tenant', {
       credentialId: credential.id,
@@ -93,7 +93,7 @@ export async function collectDataForTenant(
     });
   } catch (error) {
     // Mark snapshot as failed
-    await updateSnapshotStatus(snapshotId, 'failed');
+    await updateSnapshotStatus(snapshotId, 'FAILED');
     throw error;
   }
 }
