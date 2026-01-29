@@ -337,7 +337,7 @@ export async function updateReportStatus(
     .update({
       status,
       ...updates,
-      ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
+      updated_at: new Date().toISOString(),
     })
     .eq('report_id', reportId);
 

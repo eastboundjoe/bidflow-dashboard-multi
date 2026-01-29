@@ -60,6 +60,7 @@ export async function collectDataForTenant(
           name: reportConfig.name,
           report_type: reportConfig.groupBy.includes('campaignPlacement') ? 'placement' : 'campaign',
           status: 'pending',
+          created_at: new Date().toISOString(),
         });
 
         logger.info('Requested report', {
