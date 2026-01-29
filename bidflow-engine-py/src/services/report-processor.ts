@@ -204,33 +204,55 @@ async function processCampaignReport(
   const reportType = getReportType(report.name);
   const dataDate = new Date().toISOString().split('T')[0];
 
-  const stagingReports: StagingCampaignReport[] = data.map((row) => {
-    const metrics = normalizeMetrics(row);
-    const acos_14d = metrics.sales_14d > 0 ? (metrics.spend / metrics.sales_14d) * 100 : null;
-    const cvr_14d = metrics.clicks > 0 ? metrics.purchases_14d / metrics.clicks : null;
-    const ctr = metrics.impressions > 0 ? metrics.clicks / metrics.impressions : null;
-    const cpc = metrics.clicks > 0 ? metrics.spend / metrics.clicks : null;
+  // Deduplicate by campaign_id (keep last occurrence / aggregate if needed)
+  const campaignMap = new Map<string, StagingCampaignReport>();
 
-    return {
-      tenant_id: report.tenant_id,
-      report_id: report.report_id,
-      report_name: report.name,
-      report_type: reportType,
-      data_date: dataDate,
-      campaign_id: String(row.campaignId),
-      campaign_name: row.campaignName || '',
-      impressions: metrics.impressions,
-      clicks: metrics.clicks,
-      spend: metrics.spend,
-      purchases_14d: metrics.purchases_14d,
-      sales_14d: metrics.sales_14d,
-      ctr,
-      cpc,
-      acos_14d,
-      cvr_14d,
-      created_at: new Date().toISOString(),
-    };
-  });
+  for (const row of data) {
+    const metrics = normalizeMetrics(row);
+    const campaignId = String(row.campaignId);
+
+    // If we've seen this campaign, aggregate the metrics
+    const existing = campaignMap.get(campaignId);
+    if (existing) {
+      existing.impressions += metrics.impressions;
+      existing.clicks += metrics.clicks;
+      existing.spend += metrics.spend;
+      existing.purchases_14d += metrics.purchases_14d;
+      existing.sales_14d += metrics.sales_14d;
+      // Recalculate derived metrics
+      existing.ctr = existing.impressions > 0 ? existing.clicks / existing.impressions : null;
+      existing.cpc = existing.clicks > 0 ? existing.spend / existing.clicks : null;
+      existing.acos_14d = existing.sales_14d > 0 ? (existing.spend / existing.sales_14d) * 100 : null;
+      existing.cvr_14d = existing.clicks > 0 ? existing.purchases_14d / existing.clicks : null;
+    } else {
+      const acos_14d = metrics.sales_14d > 0 ? (metrics.spend / metrics.sales_14d) * 100 : null;
+      const cvr_14d = metrics.clicks > 0 ? metrics.purchases_14d / metrics.clicks : null;
+      const ctr = metrics.impressions > 0 ? metrics.clicks / metrics.impressions : null;
+      const cpc = metrics.clicks > 0 ? metrics.spend / metrics.clicks : null;
+
+      campaignMap.set(campaignId, {
+        tenant_id: report.tenant_id,
+        report_id: report.report_id,
+        report_name: report.name,
+        report_type: reportType,
+        data_date: dataDate,
+        campaign_id: campaignId,
+        campaign_name: row.campaignName || '',
+        impressions: metrics.impressions,
+        clicks: metrics.clicks,
+        spend: metrics.spend,
+        purchases_14d: metrics.purchases_14d,
+        sales_14d: metrics.sales_14d,
+        ctr,
+        cpc,
+        acos_14d,
+        cvr_14d,
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  const stagingReports = Array.from(campaignMap.values());
 
   if (stagingReports.length > 0) {
     await insertCampaignReports(stagingReports);
@@ -244,37 +266,58 @@ async function processPlacementReport(
   const reportType = getReportType(report.name);
   const dataDate = new Date().toISOString().split('T')[0];
 
-  const stagingReports: StagingPlacementReport[] = data.map((row) => {
+  // Deduplicate by campaign_id + placement_type (aggregate if needed)
+  const placementMap = new Map<string, StagingPlacementReport>();
+
+  for (const row of data) {
     const metrics = normalizeMetrics(row);
-    const acos_14d = metrics.sales_14d > 0 ? (metrics.spend / metrics.sales_14d) * 100 : null;
-    const cvr_14d = metrics.clicks > 0 ? metrics.purchases_14d / metrics.clicks : null;
-    const ctr = metrics.impressions > 0 ? metrics.clicks / metrics.impressions : null;
-    const cpc = metrics.clicks > 0 ? metrics.spend / metrics.clicks : null;
-
-    // Normalize placement name
+    const campaignId = String(row.campaignId);
     const placement_type = normalizePlacement(row.placementClassification);
+    const key = `${campaignId}:${placement_type}`;
 
-    return {
-      tenant_id: report.tenant_id,
-      report_id: report.report_id,
-      report_name: report.name,
-      report_type: reportType,
-      data_date: dataDate,
-      campaign_id: String(row.campaignId),
-      campaign_name: row.campaignName || '',
-      placement_type,
-      impressions: metrics.impressions,
-      clicks: metrics.clicks,
-      spend: metrics.spend,
-      purchases_14d: metrics.purchases_14d,
-      sales_14d: metrics.sales_14d,
-      ctr,
-      cpc,
-      acos_14d,
-      cvr_14d,
-      created_at: new Date().toISOString(),
-    };
-  });
+    // If we've seen this campaign+placement combo, aggregate the metrics
+    const existing = placementMap.get(key);
+    if (existing) {
+      existing.impressions += metrics.impressions;
+      existing.clicks += metrics.clicks;
+      existing.spend += metrics.spend;
+      existing.purchases_14d += metrics.purchases_14d;
+      existing.sales_14d += metrics.sales_14d;
+      // Recalculate derived metrics
+      existing.ctr = existing.impressions > 0 ? existing.clicks / existing.impressions : null;
+      existing.cpc = existing.clicks > 0 ? existing.spend / existing.clicks : null;
+      existing.acos_14d = existing.sales_14d > 0 ? (existing.spend / existing.sales_14d) * 100 : null;
+      existing.cvr_14d = existing.clicks > 0 ? existing.purchases_14d / existing.clicks : null;
+    } else {
+      const acos_14d = metrics.sales_14d > 0 ? (metrics.spend / metrics.sales_14d) * 100 : null;
+      const cvr_14d = metrics.clicks > 0 ? metrics.purchases_14d / metrics.clicks : null;
+      const ctr = metrics.impressions > 0 ? metrics.clicks / metrics.impressions : null;
+      const cpc = metrics.clicks > 0 ? metrics.spend / metrics.clicks : null;
+
+      placementMap.set(key, {
+        tenant_id: report.tenant_id,
+        report_id: report.report_id,
+        report_name: report.name,
+        report_type: reportType,
+        data_date: dataDate,
+        campaign_id: campaignId,
+        campaign_name: row.campaignName || '',
+        placement_type,
+        impressions: metrics.impressions,
+        clicks: metrics.clicks,
+        spend: metrics.spend,
+        purchases_14d: metrics.purchases_14d,
+        sales_14d: metrics.sales_14d,
+        ctr,
+        cpc,
+        acos_14d,
+        cvr_14d,
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  const stagingReports = Array.from(placementMap.values());
 
   if (stagingReports.length > 0) {
     await insertPlacementReports(stagingReports);
