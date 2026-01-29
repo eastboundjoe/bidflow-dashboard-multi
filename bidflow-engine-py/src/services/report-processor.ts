@@ -13,8 +13,6 @@ import {
 import {
   AmazonAdsClient,
   normalizeMetrics,
-  calculateAcos,
-  calculateCvr,
 } from '../clients/amazon-ads.js';
 import { syncStagingToRaw } from './data-sync.js';
 import type {
@@ -202,24 +200,33 @@ async function processCampaignReport(
   data: any[]
 ): Promise<void> {
   const reportType = getReportType(report.name);
+  const dataDate = new Date().toISOString().split('T')[0];
 
   const stagingReports: StagingCampaignReport[] = data.map((row) => {
     const metrics = normalizeMetrics(row);
-    const acos = calculateAcos(metrics.spend, metrics.sales);
-    const cvr = calculateCvr(metrics.clicks, metrics.purchases);
+    const acos_14d = metrics.sales_14d > 0 ? (metrics.spend / metrics.sales_14d) * 100 : null;
+    const cvr_14d = metrics.clicks > 0 ? metrics.purchases_14d / metrics.clicks : null;
+    const ctr = metrics.impressions > 0 ? metrics.clicks / metrics.impressions : null;
+    const cpc = metrics.clicks > 0 ? metrics.spend / metrics.clicks : null;
 
     return {
       tenant_id: report.tenant_id,
+      report_id: report.report_id,
+      report_name: report.name,
+      report_type: reportType,
+      data_date: dataDate,
       campaign_id: String(row.campaignId),
       campaign_name: row.campaignName || '',
-      report_type: reportType,
       impressions: metrics.impressions,
       clicks: metrics.clicks,
       spend: metrics.spend,
-      sales: metrics.sales,
-      purchases: metrics.purchases,
-      acos,
-      cvr,
+      purchases_14d: metrics.purchases_14d,
+      sales_14d: metrics.sales_14d,
+      ctr,
+      cpc,
+      acos_14d,
+      cvr_14d,
+      created_at: new Date().toISOString(),
     };
   });
 
@@ -233,28 +240,37 @@ async function processPlacementReport(
   data: any[]
 ): Promise<void> {
   const reportType = getReportType(report.name);
+  const dataDate = new Date().toISOString().split('T')[0];
 
   const stagingReports: StagingPlacementReport[] = data.map((row) => {
     const metrics = normalizeMetrics(row);
-    const acos = calculateAcos(metrics.spend, metrics.sales);
-    const cvr = calculateCvr(metrics.clicks, metrics.purchases);
+    const acos_14d = metrics.sales_14d > 0 ? (metrics.spend / metrics.sales_14d) * 100 : null;
+    const cvr_14d = metrics.clicks > 0 ? metrics.purchases_14d / metrics.clicks : null;
+    const ctr = metrics.impressions > 0 ? metrics.clicks / metrics.impressions : null;
+    const cpc = metrics.clicks > 0 ? metrics.spend / metrics.clicks : null;
 
     // Normalize placement name
-    const placement = normalizePlacement(row.placementClassification);
+    const placement_type = normalizePlacement(row.placementClassification);
 
     return {
       tenant_id: report.tenant_id,
+      report_id: report.report_id,
+      report_name: report.name,
+      report_type: reportType,
+      data_date: dataDate,
       campaign_id: String(row.campaignId),
       campaign_name: row.campaignName || '',
-      placement,
-      report_type: reportType,
+      placement_type,
       impressions: metrics.impressions,
       clicks: metrics.clicks,
       spend: metrics.spend,
-      sales: metrics.sales,
-      purchases: metrics.purchases,
-      acos,
-      cvr,
+      purchases_14d: metrics.purchases_14d,
+      sales_14d: metrics.sales_14d,
+      ctr,
+      cpc,
+      acos_14d,
+      cvr_14d,
+      created_at: new Date().toISOString(),
     };
   });
 

@@ -108,31 +108,47 @@ export interface PlacementReportRow {
 
 export interface StagingCampaignReport {
   tenant_id: string;
+  report_id: string;
+  report_name: string;
+  report_type: string;
+  data_date: string;
   campaign_id: string;
   campaign_name: string;
-  report_type: string;
+  campaign_status?: string;
+  campaign_budget_amount?: number;
+  portfolio_id?: string;
   impressions: number;
   clicks: number;
   spend: number;
-  sales: number;
-  purchases: number;
-  acos: string;
-  cvr: string;
+  purchases_14d: number;
+  sales_14d: number;
+  ctr?: number | null;
+  cpc?: number | null;
+  acos_14d?: number | null;
+  cvr_14d?: number | null;
+  created_at?: string;
 }
 
 export interface StagingPlacementReport {
   tenant_id: string;
+  report_id: string;
+  report_name: string;
+  report_type: string;
+  data_date: string;
   campaign_id: string;
   campaign_name: string;
-  placement: string;
-  report_type: string;
+  campaign_status?: string;
+  placement_type: string;
   impressions: number;
   clicks: number;
   spend: number;
-  sales: number;
-  purchases: number;
-  acos: string;
-  cvr: string;
+  purchases_14d: number;
+  sales_14d: number;
+  ctr?: number | null;
+  cpc?: number | null;
+  acos_14d?: number | null;
+  cvr_14d?: number | null;
+  created_at?: string;
 }
 
 export interface AmazonTokenResponse {

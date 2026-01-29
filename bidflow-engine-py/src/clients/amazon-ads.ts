@@ -378,15 +378,15 @@ export function normalizeMetrics(row: any): {
   impressions: number;
   clicks: number;
   spend: number;
-  sales: number;
-  purchases: number;
+  sales_14d: number;
+  purchases_14d: number;
 } {
   return {
     impressions: row.impressions ?? 0,
     clicks: row.clicks ?? 0,
     spend: parseFloat(row.cost ?? '0'),
-    sales: parseFloat(row.sales14d ?? '0'),
-    purchases: row.purchases14d ?? 0,
+    sales_14d: parseFloat(row.sales14d ?? '0'),
+    purchases_14d: row.purchases14d ?? 0,
   };
 }
 
