@@ -11,7 +11,7 @@ import {
   alertCritical,
   alertError,
 } from '../utils/metrics.js';
-import { getActiveCredentials, logSchedulerRun as logSchedulerRunDb, decryptRefreshToken } from '../clients/supabase.js';
+import { getActiveCredentials, logSchedulerRun as logSchedulerRunDb, getRefreshTokenFromVault } from '../clients/supabase.js';
 import { collectDataForTenant } from './data-collector.js';
 import type { TenantCredentials } from '../types/index.js';
 
@@ -50,10 +50,13 @@ export async function runDailyCollection(): Promise<void> {
     try {
       logTenantStart(credential.id, credential.account_name);
 
-      // Decrypt the refresh token
-      const refreshToken = await decryptRefreshToken(credential.id);
+      // Get refresh token from Vault
+      if (!credential.vault_id_refresh_token) {
+        throw new Error('No vault reference found for refresh token');
+      }
+      const refreshToken = await getRefreshTokenFromVault(credential.vault_id_refresh_token);
       if (!refreshToken) {
-        throw new Error('Failed to decrypt refresh token');
+        throw new Error('Failed to get refresh token from Vault');
       }
 
       // Run collection for this tenant

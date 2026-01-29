@@ -30,55 +30,100 @@ export function getSupabaseClient(): SupabaseClient {
   return supabaseClient;
 }
 
-// Credential Operations
+// Day name mapping
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+// Credential Operations - Updated for actual schema
 export async function getActiveCredentials(dayOfWeek: number): Promise<TenantCredentials[]> {
   const client = getSupabaseClient();
+  const dayName = DAY_NAMES[dayOfWeek];
 
   const { data, error } = await client
     .from('credentials')
     .select('*')
-    .eq('is_active', true)
-    .contains('schedule_days', [dayOfWeek]);
+    .eq('status', 'active')
+    .eq('report_day', dayName)
+    .is('deleted_at', null);
 
   if (error) {
     logger.error('Failed to fetch active credentials', { error: error.message });
     throw error;
   }
 
-  return data || [];
+  // Map to expected format
+  return (data || []).map(row => ({
+    id: row.tenant_id,
+    tenant_id: row.tenant_id,
+    profile_id: row.amazon_profile_id,
+    refresh_token: '', // Will be fetched from Vault
+    vault_id_refresh_token: row.vault_id_refresh_token,
+    marketplace: row.marketplace_id,
+    account_name: `Tenant ${row.tenant_id.substring(0, 8)}`,
+    is_active: row.status === 'active',
+    schedule_days: [dayOfWeek],
+    report_hour: row.report_hour,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
 }
 
-export async function getCredentialById(id: string): Promise<TenantCredentials | null> {
+export async function getCredentialByTenantId(tenantId: string): Promise<TenantCredentials | null> {
   const client = getSupabaseClient();
 
   const { data, error } = await client
     .from('credentials')
     .select('*')
-    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .is('deleted_at', null)
     .single();
 
   if (error) {
     if (error.code === 'PGRST116') return null;
-    logger.error('Failed to fetch credential', { id, error: error.message });
+    logger.error('Failed to fetch credential', { tenantId, error: error.message });
     throw error;
   }
 
-  return data;
+  return {
+    id: data.tenant_id,
+    tenant_id: data.tenant_id,
+    profile_id: data.amazon_profile_id,
+    refresh_token: '',
+    vault_id_refresh_token: data.vault_id_refresh_token,
+    marketplace: data.marketplace_id,
+    account_name: `Tenant ${data.tenant_id.substring(0, 8)}`,
+    is_active: data.status === 'active',
+    schedule_days: [],
+    report_hour: data.report_hour,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 }
 
-export async function decryptRefreshToken(credentialId: string): Promise<string> {
+// Alias for backward compatibility
+export const getCredentialById = getCredentialByTenantId;
+
+export async function getRefreshTokenFromVault(vaultId: string): Promise<string> {
   const client = getSupabaseClient();
 
-  const { data, error } = await client.rpc('get_credentials', {
-    p_credential_id: credentialId,
+  const { data, error } = await client.rpc('get_tenant_token', {
+    p_vault_id: vaultId,
   });
 
   if (error) {
-    logger.error('Failed to decrypt refresh token', { credentialId, error: error.message });
+    logger.error('Failed to get refresh token from Vault', { vaultId, error: error.message });
     throw error;
   }
 
-  return data?.refresh_token || '';
+  return data || '';
+}
+
+// Legacy function name for compatibility
+export async function decryptRefreshToken(tenantId: string): Promise<string> {
+  const credential = await getCredentialByTenantId(tenantId);
+  if (!credential || !credential.vault_id_refresh_token) {
+    throw new Error(`No vault reference found for tenant: ${tenantId}`);
+  }
+  return getRefreshTokenFromVault(credential.vault_id_refresh_token);
 }
 
 // Portfolio Operations

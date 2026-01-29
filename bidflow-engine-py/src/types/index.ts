@@ -5,10 +5,12 @@ export interface TenantCredentials {
   tenant_id: string;
   profile_id: string;
   refresh_token: string;
+  vault_id_refresh_token?: string;
   marketplace: string;
   account_name: string;
   is_active: boolean;
   schedule_days: number[];
+  report_hour?: number;
   created_at: string;
   updated_at: string;
 }

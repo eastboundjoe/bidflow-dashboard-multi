@@ -26,7 +26,6 @@ export const config = {
   supabase: {
     url: getEnvVar('SUPABASE_URL'),
     serviceRoleKey: getEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
-    encryptionKey: getEnvVar('ENCRYPTION_KEY'),
   },
 
   // Amazon Ads
