@@ -1,0 +1,2 @@
+# Exclude standalone Node.js engine from Vercel build
+bidflow-engine-py/
