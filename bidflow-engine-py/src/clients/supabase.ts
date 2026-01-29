@@ -353,14 +353,17 @@ export async function insertCampaignReports(
 ): Promise<void> {
   const client = getSupabaseClient();
 
-  const { error } = await client.from('staging_campaign_reports').insert(reports);
+  // Use upsert to handle duplicates (unique on campaign_id, report_type, data_date)
+  const { error } = await client
+    .from('staging_campaign_reports')
+    .upsert(reports, { onConflict: 'campaign_id,report_type,data_date' });
 
   if (error) {
     logger.error('Failed to insert campaign reports', { error: error.message });
     throw error;
   }
 
-  logger.info('Inserted campaign reports', { count: reports.length });
+  logger.info('Upserted campaign reports', { count: reports.length });
 }
 
 export async function insertPlacementReports(
@@ -368,14 +371,17 @@ export async function insertPlacementReports(
 ): Promise<void> {
   const client = getSupabaseClient();
 
-  const { error } = await client.from('staging_placement_reports').insert(reports);
+  // Use upsert to handle duplicates
+  const { error } = await client
+    .from('staging_placement_reports')
+    .upsert(reports, { onConflict: 'campaign_id,placement_type,report_type,data_date' });
 
   if (error) {
     logger.error('Failed to insert placement reports', { error: error.message });
     throw error;
   }
 
-  logger.info('Inserted placement reports', { count: reports.length });
+  logger.info('Upserted placement reports', { count: reports.length });
 }
 
 // Sync Operation
