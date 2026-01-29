@@ -63,14 +63,51 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       const supabase = createClient();
       const { data: placements, error: fetchError } = await supabase
         .from("view_placement_optimization_report")
-        .select("*")
-        .order("spend", { ascending: false });
+        .select(`
+          "Campaign",
+          "Portfolio",
+          "Placement Type",
+          "Spend",
+          "Clicks",
+          "Orders",
+          "Budget",
+          "CVR",
+          "ACoS",
+          "tenant_id"
+        `)
+        .order("Spend", { ascending: false });
 
       if (fetchError) {
         throw new Error(fetchError.message);
       }
 
-      setData(placements || []);
+      // Map capitalized view columns to lowercase type properties
+      const mappedData: PlacementData[] = (placements || []).map((row: any) => ({
+        id: `${row.Campaign}-${row["Placement Type"]}`,
+        campaign_name: row.Campaign,
+        portfolio_name: row.Portfolio,
+        placement_type: row["Placement Type"],
+        spend: parseFloat(row.Spend) || 0,
+        clicks: parseInt(row.Clicks) || 0,
+        orders: parseInt(row.Orders) || 0,
+        acos: parseFloat(row.ACoS) || 0,
+        cvr: parseFloat(row.CVR) || 0,
+        impressions: 0, // Not in view
+        sales: 0,       // Not in view
+        bid_adjustment: 0,
+        week_id: "current",
+        tenant_id: row.tenant_id,
+        campaign_id: "",
+        portfolio_id: null,
+        units: 0,
+        ctr: 0,
+        cpc: 0,
+        roas: row.Spend > 0 ? (row.sales / row.Spend) : 0,
+        date_range_start: new Date().toISOString(),
+        date_range_end: new Date().toISOString(),
+      }));
+
+      setData(mappedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data");
     } finally {
