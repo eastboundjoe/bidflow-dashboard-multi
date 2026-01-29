@@ -7,10 +7,8 @@ import {
   updateReportStatus,
   insertCampaignReports,
   insertPlacementReports,
-  areAllReportsComplete,
-  updateSnapshotStatus,
   getCredentialById,
-  decryptRefreshToken,
+  getTenantVaultCredentials,
 } from '../clients/supabase.js';
 import {
   AmazonAdsClient,
@@ -25,26 +23,41 @@ import type {
   StagingPlacementReport,
 } from '../types/index.js';
 
-// Client cache by credential ID
+// Client cache by tenant ID
 const clientCache: Map<string, AmazonAdsClient> = new Map();
 
-async function getAmazonClient(credentialId: string): Promise<AmazonAdsClient> {
-  let client = clientCache.get(credentialId);
+async function getAmazonClient(tenantId: string): Promise<AmazonAdsClient> {
+  let client = clientCache.get(tenantId);
 
   if (!client) {
-    const credential = await getCredentialById(credentialId);
+    const credential = await getCredentialById(tenantId);
     if (!credential) {
-      throw new Error(`Credential not found: ${credentialId}`);
+      throw new Error(`Credential not found: ${tenantId}`);
     }
 
-    const refreshToken = await decryptRefreshToken(credentialId);
-    if (!refreshToken) {
-      throw new Error(`Failed to decrypt refresh token for: ${credentialId}`);
+    if (!credential.vault_id_refresh_token) {
+      throw new Error(`No vault reference for refresh token: ${tenantId}`);
     }
 
-    client = new AmazonAdsClient(credential.profile_id, refreshToken);
+    // Get credentials from Vault
+    const vaultCreds = await getTenantVaultCredentials(
+      credential.vault_id_refresh_token,
+      credential.vault_id_client_id || '',
+      credential.vault_id_client_secret || ''
+    );
+
+    if (!vaultCreds.refreshToken) {
+      throw new Error(`Failed to get refresh token from Vault: ${tenantId}`);
+    }
+
+    client = new AmazonAdsClient(
+      credential.profile_id,
+      vaultCreds.refreshToken,
+      vaultCreds.clientId || undefined,
+      vaultCreds.clientSecret || undefined
+    );
     await client.initialize();
-    clientCache.set(credentialId, client);
+    clientCache.set(tenantId, client);
   }
 
   return client;
@@ -61,25 +74,25 @@ export async function processReports(): Promise<void> {
     return;
   }
 
-  // Group reports by credential for efficient client reuse
-  const reportsByCredential = new Map<string, ReportLedgerEntry[]>();
+  // Group reports by tenant for efficient client reuse
+  const reportsByTenant = new Map<string, ReportLedgerEntry[]>();
   for (const report of pendingReports) {
-    const existing = reportsByCredential.get(report.credential_id) || [];
+    const existing = reportsByTenant.get(report.tenant_id) || [];
     existing.push(report);
-    reportsByCredential.set(report.credential_id, existing);
+    reportsByTenant.set(report.tenant_id, existing);
   }
 
   let processedCount = 0;
   let failedCount = 0;
 
-  for (const [credentialId, reports] of reportsByCredential) {
+  for (const [tenantId, reports] of reportsByTenant) {
     let amazonClient: AmazonAdsClient;
 
     try {
-      amazonClient = await getAmazonClient(credentialId);
+      amazonClient = await getAmazonClient(tenantId);
     } catch (error) {
       logger.error('Failed to initialize Amazon client', {
-        credentialId,
+        tenantId,
         error: error instanceof Error ? error.message : String(error),
       });
       continue;
@@ -102,30 +115,28 @@ export async function processReports(): Promise<void> {
         const errorMessage = error instanceof Error ? error.message : String(error);
         logger.error('Error processing report', {
           reportId: report.id,
-          reportName: report.report_name,
+          reportName: report.name,
           error: errorMessage,
         });
 
-        await updateReportStatus(report.id!, 'FAILED', {
-          error_message: errorMessage,
-        });
+        await updateReportStatus(report.report_id, 'failed');
 
         failedCount++;
 
-        await alertError(`Report processing failed: ${report.report_name}`, {
-          reportId: report.report_request_id,
-          credentialId,
+        await alertError(`Report processing failed: ${report.name}`, {
+          reportId: report.report_id,
+          tenantId,
           error: errorMessage,
         });
       }
     }
 
-    // Check if all reports for this credential's snapshot are complete
+    // Check if all reports for this tenant are complete
     try {
-      await checkSnapshotCompletion(credentialId, reports);
+      await checkSnapshotCompletion(tenantId, reports);
     } catch (error) {
       logger.error('Error checking snapshot completion', {
-        credentialId,
+        tenantId,
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -143,21 +154,19 @@ async function processReport(
   report: ReportLedgerEntry
 ): Promise<'completed' | 'pending' | 'failed'> {
   // Check report status with Amazon
-  const status = await amazonClient.getReportStatus(report.report_request_id);
-  logReportStatus(report.report_request_id, status.status);
+  const status = await amazonClient.getReportStatus(report.report_id);
+  logReportStatus(report.report_id, status.status);
 
   if (status.status === 'PENDING' || status.status === 'PROCESSING') {
-    // Update our status to PROCESSING if it was PENDING
-    if (report.status === 'PENDING') {
-      await updateReportStatus(report.id!, 'PROCESSING');
+    // Update our status to processing if it was pending
+    if (report.status === 'pending') {
+      await updateReportStatus(report.report_id, 'processing');
     }
     return 'pending';
   }
 
   if (status.status === 'FAILURE') {
-    await updateReportStatus(report.id!, 'FAILED', {
-      error_message: status.statusDetails || 'Report generation failed',
-    });
+    await updateReportStatus(report.report_id, 'failed');
     return 'failed';
   }
 
@@ -166,7 +175,7 @@ async function processReport(
     const reportData = await amazonClient.downloadReport(status.url);
 
     // Determine report type and process accordingly
-    const isPlacementReport = report.report_name.includes('Placement');
+    const isPlacementReport = report.name.includes('Placement') || report.report_type === 'placement';
 
     if (isPlacementReport) {
       await processPlacementReport(report, reportData);
@@ -175,13 +184,13 @@ async function processReport(
     }
 
     // Mark as completed
-    await updateReportStatus(report.id!, 'COMPLETED', {
-      download_url: status.url,
+    await updateReportStatus(report.report_id, 'completed', {
+      url: status.url,
     });
 
     logger.info('Report processed successfully', {
       reportId: report.id,
-      reportName: report.report_name,
+      reportName: report.name,
       rowCount: reportData.length,
     });
 
@@ -195,7 +204,7 @@ async function processCampaignReport(
   report: ReportLedgerEntry,
   data: any[]
 ): Promise<void> {
-  const reportType = getReportType(report.report_name);
+  const reportType = getReportType(report.name);
 
   const stagingReports: StagingCampaignReport[] = data.map((row) => {
     const metrics = normalizeMetrics(row);
@@ -203,8 +212,7 @@ async function processCampaignReport(
     const cvr = calculateCvr(metrics.clicks, metrics.purchases);
 
     return {
-      credential_id: report.credential_id,
-      snapshot_id: report.snapshot_id,
+      tenant_id: report.tenant_id,
       campaign_id: String(row.campaignId),
       campaign_name: row.campaignName || '',
       report_type: reportType,
@@ -227,7 +235,7 @@ async function processPlacementReport(
   report: ReportLedgerEntry,
   data: any[]
 ): Promise<void> {
-  const reportType = getReportType(report.report_name);
+  const reportType = getReportType(report.name);
 
   const stagingReports: StagingPlacementReport[] = data.map((row) => {
     const metrics = normalizeMetrics(row);
@@ -238,8 +246,7 @@ async function processPlacementReport(
     const placement = normalizePlacement(row.placementClassification);
 
     return {
-      credential_id: report.credential_id,
-      snapshot_id: report.snapshot_id,
+      tenant_id: report.tenant_id,
       campaign_id: String(row.campaignId),
       campaign_name: row.campaignName || '',
       placement,
@@ -285,33 +292,28 @@ function normalizePlacement(placementClassification: string): string {
 }
 
 async function checkSnapshotCompletion(
-  credentialId: string,
+  tenantId: string,
   reports: ReportLedgerEntry[]
 ): Promise<void> {
-  // Get unique snapshot IDs
-  const snapshotIds = [...new Set(reports.map((r) => r.snapshot_id))];
+  // Check if all reports for this tenant are now complete
+  // Note: This is a simplified check - in a full implementation you'd track snapshot_id
+  const allComplete = reports.every(r => r.status === 'completed');
 
-  for (const snapshotId of snapshotIds) {
-    const allComplete = await areAllReportsComplete(snapshotId);
+  if (allComplete && reports.length > 0) {
+    logger.info('All reports complete for tenant, syncing to raw', {
+      tenantId,
+      reportCount: reports.length
+    });
 
-    if (allComplete) {
-      logger.info('All reports complete for snapshot, syncing to raw', { snapshotId });
-
-      try {
-        await syncStagingToRaw(snapshotId);
-        await updateSnapshotStatus(snapshotId, 'COMPLETED', {
-          reports_completed: reports.filter((r) => r.snapshot_id === snapshotId).length,
-        });
-
-        logger.info('Snapshot complete and synced', { snapshotId });
-      } catch (error) {
-        logger.error('Failed to sync snapshot', {
-          snapshotId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-
-        await updateSnapshotStatus(snapshotId, 'FAILED');
-      }
+    try {
+      // Sync staging data to raw tables
+      await syncStagingToRaw(tenantId);
+      logger.info('Staging data synced to raw', { tenantId });
+    } catch (error) {
+      logger.error('Failed to sync staging to raw', {
+        tenantId,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 }

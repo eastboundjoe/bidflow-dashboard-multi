@@ -52,19 +52,19 @@ export async function collectDataForTenant(
 
     for (const reportConfig of REPORT_CONFIGS) {
       try {
-        const reportRequestId = await amazonClient.createReport(reportConfig);
+        const reportId = await amazonClient.createReport(reportConfig);
 
         reportEntries.push({
-          credential_id: credential.id,
-          snapshot_id: snapshotId,
-          report_name: reportConfig.name,
-          report_request_id: reportRequestId,
-          status: 'PENDING',
+          tenant_id: credential.id,
+          report_id: reportId,
+          name: reportConfig.name,
+          report_type: reportConfig.groupBy.includes('campaignPlacement') ? 'placement' : 'campaign',
+          status: 'pending',
         });
 
         logger.info('Requested report', {
           reportName: reportConfig.name,
-          reportRequestId,
+          reportId,
         });
       } catch (error) {
         logger.error('Failed to request report', {
@@ -81,12 +81,8 @@ export async function collectDataForTenant(
       incrementReportsRequested(reportEntries.length);
     }
 
-    // Update snapshot with counts
-    await updateSnapshotStatus(snapshotId, 'PROCESSING', {
-      portfolios_count: portfolios.length,
-      campaigns_count: campaigns.length,
-      reports_requested: reportEntries.length,
-    });
+    // Update snapshot status to processing
+    await updateSnapshotStatus(snapshotId, 'processing');
 
     logger.info('Data collection complete for tenant', {
       credentialId: credential.id,
@@ -96,7 +92,7 @@ export async function collectDataForTenant(
     });
   } catch (error) {
     // Mark snapshot as failed
-    await updateSnapshotStatus(snapshotId, 'FAILED');
+    await updateSnapshotStatus(snapshotId, 'failed');
     throw error;
   }
 }

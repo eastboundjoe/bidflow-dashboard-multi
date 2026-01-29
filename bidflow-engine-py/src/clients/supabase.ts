@@ -142,98 +142,110 @@ export async function getTenantVaultCredentials(
   vaultIdClientId: string,
   vaultIdClientSecret: string
 ): Promise<TenantVaultCredentials> {
-  const [refreshToken, clientId, clientSecret] = await Promise.all([
-    getRefreshTokenFromVault(vaultIdRefreshToken),
-    getRefreshTokenFromVault(vaultIdClientId),
-    getRefreshTokenFromVault(vaultIdClientSecret),
-  ]);
+  // Only fetch from Vault if we have a valid vault ID
+  const refreshToken = await getRefreshTokenFromVault(vaultIdRefreshToken);
+  const clientId = vaultIdClientId ? await getRefreshTokenFromVault(vaultIdClientId) : '';
+  const clientSecret = vaultIdClientSecret ? await getRefreshTokenFromVault(vaultIdClientSecret) : '';
 
   return { refreshToken, clientId, clientSecret };
 }
 
 // Portfolio Operations
 export async function upsertPortfolios(
-  credentialId: string,
+  tenantId: string,
   portfolios: Portfolio[]
 ): Promise<void> {
   const client = getSupabaseClient();
 
   const rows = portfolios.map(p => ({
-    credential_id: credentialId,
+    tenant_id: tenantId,
     portfolio_id: p.portfolio_id,
-    name: p.name,
+    portfolio_name: p.name,
     budget_amount: p.budget_amount,
-    budget_policy: p.budget_policy,
-    state: p.state,
+    currency: 'USD',
+    portfolio_state: p.state,
     updated_at: new Date().toISOString(),
   }));
 
   const { error } = await client
     .from('staging_portfolios')
-    .upsert(rows, { onConflict: 'credential_id,portfolio_id' });
+    .upsert(rows, { onConflict: 'tenant_id,portfolio_id' });
 
   if (error) {
-    logger.error('Failed to upsert portfolios', { credentialId, error: error.message });
+    logger.error('Failed to upsert portfolios', { tenantId, error: error.message });
     throw error;
   }
 
-  logger.info('Upserted portfolios', { credentialId, count: portfolios.length });
+  logger.info('Upserted portfolios', { tenantId, count: portfolios.length });
 }
 
 // Campaign/Bid Operations
 export async function upsertCampaignBids(
-  credentialId: string,
+  tenantId: string,
   campaigns: Campaign[]
 ): Promise<void> {
   const client = getSupabaseClient();
 
   const rows = campaigns.map(c => ({
-    credential_id: credentialId,
+    tenant_id: tenantId,
     campaign_id: c.campaign_id,
     portfolio_id: c.portfolio_id,
     campaign_name: c.name,
-    state: c.state,
-    budget: c.budget,
-    budget_type: c.budget_type,
-    bidding_strategy: c.bidding_strategy,
-    bid_top_of_search: c.bid_top_of_search,
-    bid_rest_of_search: c.bid_rest_of_search,
-    bid_product_page: c.bid_product_page,
+    campaign_status: c.state,
+    campaign_budget: c.budget,
+    placement_top_of_search: c.bid_top_of_search,
+    placement_rest_of_search: c.bid_rest_of_search,
+    placement_product_page: c.bid_product_page,
     updated_at: new Date().toISOString(),
   }));
 
   const { error } = await client
     .from('staging_placement_bids')
-    .upsert(rows, { onConflict: 'credential_id,campaign_id' });
+    .upsert(rows, { onConflict: 'tenant_id,campaign_id' });
 
   if (error) {
-    logger.error('Failed to upsert campaign bids', { credentialId, error: error.message });
+    logger.error('Failed to upsert campaign bids', { tenantId, error: error.message });
     throw error;
   }
 
-  logger.info('Upserted campaign bids', { credentialId, count: campaigns.length });
+  logger.info('Upserted campaign bids', { tenantId, count: campaigns.length });
 }
 
 // Weekly Snapshot Operations
 export async function createWeeklySnapshot(
-  credentialId: string,
+  tenantId: string,
   weekLabel: string
 ): Promise<string> {
   const client = getSupabaseClient();
 
+  // Get week metadata using the database function
+  const { data: weekData, error: weekError } = await client.rpc('get_week_metadata', {
+    input_date: new Date().toISOString().split('T')[0]
+  });
+
+  if (weekError || !weekData || weekData.length === 0) {
+    logger.error('Failed to get week metadata', { error: weekError?.message });
+    throw weekError || new Error('No week metadata returned');
+  }
+
+  const week = weekData[0];
+
   const { data, error } = await client
     .from('weekly_snapshots')
     .insert({
-      credential_id: credentialId,
-      week_label: weekLabel,
-      snapshot_date: new Date().toISOString().split('T')[0],
-      status: 'COLLECTING',
+      tenant_id: tenantId,
+      week_id: week.week_id,
+      year: week.year,
+      week_number: week.week_number,
+      start_date: week.start_date,
+      end_date: week.end_date,
+      status: 'collecting',
     })
     .select('id')
     .single();
 
   if (error) {
-    logger.error('Failed to create weekly snapshot', { credentialId, error: error.message });
+    logger.error('Failed to create weekly snapshot', { tenantId, error: error.message });
     throw error;
   }
 
@@ -252,7 +264,7 @@ export async function updateSnapshotStatus(
     .update({
       status,
       ...updates,
-      ...(status === 'COMPLETED' ? { completed_at: new Date().toISOString() } : {}),
+      ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
     })
     .eq('id', snapshotId);
 
@@ -284,7 +296,7 @@ export async function getPendingReports(): Promise<ReportLedgerEntry[]> {
   const { data, error } = await client
     .from('report_ledger')
     .select('*')
-    .in('status', ['PENDING', 'PROCESSING'])
+    .in('status', ['pending', 'processing'])
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -307,9 +319,9 @@ export async function updateReportStatus(
     .update({
       status,
       ...updates,
-      ...(status === 'COMPLETED' ? { completed_at: new Date().toISOString() } : {}),
+      ...(status === 'completed' ? { completed_at: new Date().toISOString() } : {}),
     })
-    .eq('id', reportId);
+    .eq('report_id', reportId);
 
   if (error) {
     logger.error('Failed to update report status', { reportId, error: error.message });
@@ -349,19 +361,19 @@ export async function insertPlacementReports(
 }
 
 // Sync Operation
-export async function syncStagingToRaw(snapshotId: string): Promise<void> {
+export async function syncStagingToRaw(tenantId: string): Promise<void> {
   const client = getSupabaseClient();
 
   const { error } = await client.rpc('sync_staging_to_raw', {
-    p_snapshot_id: snapshotId,
+    p_tenant_id: tenantId,
   });
 
   if (error) {
-    logger.error('Failed to sync staging to raw', { snapshotId, error: error.message });
+    logger.error('Failed to sync staging to raw', { tenantId, error: error.message });
     throw error;
   }
 
-  logger.info('Synced staging to raw', { snapshotId });
+  logger.info('Synced staging to raw', { tenantId });
 }
 
 // Scheduler Log Operations
@@ -392,7 +404,7 @@ export async function areAllReportsComplete(snapshotId: string): Promise<boolean
 
   if (!data || data.length === 0) return false;
 
-  return data.every(r => r.status === 'COMPLETED');
+  return data.every(r => r.status === 'completed');
 }
 
 // Get snapshot by ID

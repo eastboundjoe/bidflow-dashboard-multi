@@ -48,27 +48,28 @@ export interface ReportConfig {
 
 export interface ReportLedgerEntry {
   id?: string;
-  credential_id: string;
-  snapshot_id: string;
-  report_name: string;
-  report_request_id: string;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-  download_url?: string;
-  error_message?: string;
+  tenant_id: string;
+  report_id: string;
+  name: string;
+  report_type: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  url?: string;
+  url_expires_at?: string;
+  processed?: boolean;
   created_at?: string;
-  completed_at?: string;
+  updated_at?: string;
 }
 
 export interface WeeklySnapshot {
   id?: string;
-  credential_id: string;
-  week_label: string;
-  snapshot_date: string;
-  status: 'COLLECTING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-  portfolios_count?: number;
-  campaigns_count?: number;
-  reports_requested?: number;
-  reports_completed?: number;
+  tenant_id: string;
+  week_id: string;
+  year: number;
+  week_number: number;
+  start_date: string;
+  end_date: string;
+  status: 'collecting' | 'processing' | 'completed' | 'failed';
+  workflow_execution_id?: string;
   created_at?: string;
   completed_at?: string;
 }
@@ -106,8 +107,7 @@ export interface PlacementReportRow {
 }
 
 export interface StagingCampaignReport {
-  credential_id: string;
-  snapshot_id: string;
+  tenant_id: string;
   campaign_id: string;
   campaign_name: string;
   report_type: string;
@@ -121,8 +121,7 @@ export interface StagingCampaignReport {
 }
 
 export interface StagingPlacementReport {
-  credential_id: string;
-  snapshot_id: string;
+  tenant_id: string;
   campaign_id: string;
   campaign_name: string;
   placement: string;
