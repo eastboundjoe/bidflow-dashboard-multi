@@ -230,6 +230,24 @@ export async function createWeeklySnapshot(
 
   const week = weekData[0];
 
+  // Check if snapshot already exists for this tenant+week
+  const { data: existing } = await client
+    .from('weekly_snapshots')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('week_id', week.week_id)
+    .single();
+
+  if (existing) {
+    logger.info('Using existing weekly snapshot', { snapshotId: existing.id, weekId: week.week_id });
+    // Reset status to collecting for re-run
+    await client
+      .from('weekly_snapshots')
+      .update({ status: 'collecting' })
+      .eq('id', existing.id);
+    return existing.id;
+  }
+
   const { data, error } = await client
     .from('weekly_snapshots')
     .insert({
