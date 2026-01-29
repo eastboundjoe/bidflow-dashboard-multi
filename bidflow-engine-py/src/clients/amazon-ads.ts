@@ -209,11 +209,20 @@ export class AmazonAdsClient {
     do {
       const response = await withRetry(
         async () =>
-          this.httpClient.post('/sp/campaigns/list', {
-            includeExtendedDataFields: true,
-            maxResults: 100,
-            ...(nextToken ? { nextToken } : {}),
-          }),
+          this.httpClient.post(
+            '/sp/campaigns/list',
+            {
+              includeExtendedDataFields: true,
+              maxResults: 100,
+              ...(nextToken ? { nextToken } : {}),
+            },
+            {
+              headers: {
+                'Accept': 'application/vnd.spCampaign.v3+json',
+                'Content-Type': 'application/vnd.spCampaign.v3+json',
+              },
+            }
+          ),
         'Get campaigns'
       );
 
