@@ -71,18 +71,23 @@ export const REPORT_CONFIGS: ReportConfig[] = [
 export class AmazonAdsClient {
   private profileId: string;
   private refreshToken: string;
+  private clientId: string;
+  private clientSecret: string;
   private accessToken: string | null = null;
   private httpClient: AxiosInstance;
 
-  constructor(profileId: string, refreshToken: string) {
+  constructor(profileId: string, refreshToken: string, clientId?: string, clientSecret?: string) {
     this.profileId = profileId;
     this.refreshToken = refreshToken;
+    // Use per-tenant credentials if provided, otherwise fall back to global config
+    this.clientId = clientId || config.amazon.clientId;
+    this.clientSecret = clientSecret || config.amazon.clientSecret;
 
     this.httpClient = axios.create({
       baseURL: config.amazon.apiBaseUrl,
       timeout: 60000,
       headers: {
-        'Amazon-Advertising-API-ClientId': config.amazon.clientId,
+        'Amazon-Advertising-API-ClientId': this.clientId,
         'Content-Type': 'application/json',
       },
     });
@@ -138,8 +143,8 @@ export class AmazonAdsClient {
           config.amazon.oauthUrl,
           new URLSearchParams({
             grant_type: 'refresh_token',
-            client_id: config.amazon.clientId,
-            client_secret: config.amazon.clientSecret,
+            client_id: this.clientId,
+            client_secret: this.clientSecret,
             refresh_token: this.refreshToken,
           }),
           {

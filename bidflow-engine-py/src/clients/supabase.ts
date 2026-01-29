@@ -57,6 +57,8 @@ export async function getActiveCredentials(dayOfWeek: number): Promise<TenantCre
     profile_id: row.amazon_profile_id,
     refresh_token: '', // Will be fetched from Vault
     vault_id_refresh_token: row.vault_id_refresh_token,
+    vault_id_client_id: row.vault_id_client_id,
+    vault_id_client_secret: row.vault_id_client_secret,
     marketplace: row.marketplace_id,
     account_name: `Tenant ${row.tenant_id.substring(0, 8)}`,
     is_active: row.status === 'active',
@@ -89,6 +91,8 @@ export async function getCredentialByTenantId(tenantId: string): Promise<TenantC
     profile_id: data.amazon_profile_id,
     refresh_token: '',
     vault_id_refresh_token: data.vault_id_refresh_token,
+    vault_id_client_id: data.vault_id_client_id,
+    vault_id_client_secret: data.vault_id_client_secret,
     marketplace: data.marketplace_id,
     account_name: `Tenant ${data.tenant_id.substring(0, 8)}`,
     is_active: data.status === 'active',
@@ -124,6 +128,27 @@ export async function decryptRefreshToken(tenantId: string): Promise<string> {
     throw new Error(`No vault reference found for tenant: ${tenantId}`);
   }
   return getRefreshTokenFromVault(credential.vault_id_refresh_token);
+}
+
+// Get all credentials from Vault for a tenant
+export interface TenantVaultCredentials {
+  refreshToken: string;
+  clientId: string;
+  clientSecret: string;
+}
+
+export async function getTenantVaultCredentials(
+  vaultIdRefreshToken: string,
+  vaultIdClientId: string,
+  vaultIdClientSecret: string
+): Promise<TenantVaultCredentials> {
+  const [refreshToken, clientId, clientSecret] = await Promise.all([
+    getRefreshTokenFromVault(vaultIdRefreshToken),
+    getRefreshTokenFromVault(vaultIdClientId),
+    getRefreshTokenFromVault(vaultIdClientSecret),
+  ]);
+
+  return { refreshToken, clientId, clientSecret };
 }
 
 // Portfolio Operations

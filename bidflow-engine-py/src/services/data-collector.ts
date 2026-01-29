@@ -6,6 +6,7 @@ import {
   createWeeklySnapshot,
   updateSnapshotStatus,
   insertReportLedgerEntries,
+  TenantVaultCredentials,
 } from '../clients/supabase.js';
 import { AmazonAdsClient, REPORT_CONFIGS } from '../clients/amazon-ads.js';
 import { getWeekLabel } from './tenant-scheduler.js';
@@ -13,7 +14,7 @@ import type { TenantCredentials, ReportLedgerEntry } from '../types/index.js';
 
 export async function collectDataForTenant(
   credential: TenantCredentials,
-  refreshToken: string
+  vaultCreds: TenantVaultCredentials
 ): Promise<void> {
   logger.info('Starting data collection', {
     credentialId: credential.id,
@@ -21,8 +22,13 @@ export async function collectDataForTenant(
     profileId: credential.profile_id,
   });
 
-  // Initialize Amazon Ads client
-  const amazonClient = new AmazonAdsClient(credential.profile_id, refreshToken);
+  // Initialize Amazon Ads client with per-tenant credentials
+  const amazonClient = new AmazonAdsClient(
+    credential.profile_id,
+    vaultCreds.refreshToken,
+    vaultCreds.clientId,
+    vaultCreds.clientSecret
+  );
   await amazonClient.initialize();
 
   // Create weekly snapshot

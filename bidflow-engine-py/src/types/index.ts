@@ -6,6 +6,8 @@ export interface TenantCredentials {
   profile_id: string;
   refresh_token: string;
   vault_id_refresh_token?: string;
+  vault_id_client_id?: string;
+  vault_id_client_secret?: string;
   marketplace: string;
   account_name: string;
   is_active: boolean;

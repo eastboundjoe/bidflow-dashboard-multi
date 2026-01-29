@@ -11,7 +11,7 @@ import {
   alertCritical,
   alertError,
 } from '../utils/metrics.js';
-import { getActiveCredentials, logSchedulerRun as logSchedulerRunDb, getRefreshTokenFromVault } from '../clients/supabase.js';
+import { getActiveCredentials, logSchedulerRun as logSchedulerRunDb, getTenantVaultCredentials } from '../clients/supabase.js';
 import { collectDataForTenant } from './data-collector.js';
 import type { TenantCredentials } from '../types/index.js';
 
@@ -50,17 +50,21 @@ export async function runDailyCollection(): Promise<void> {
     try {
       logTenantStart(credential.id, credential.account_name);
 
-      // Get refresh token from Vault
-      if (!credential.vault_id_refresh_token) {
-        throw new Error('No vault reference found for refresh token');
+      // Get all credentials from Vault
+      if (!credential.vault_id_refresh_token || !credential.vault_id_client_id || !credential.vault_id_client_secret) {
+        throw new Error('Missing vault references for credentials');
       }
-      const refreshToken = await getRefreshTokenFromVault(credential.vault_id_refresh_token);
-      if (!refreshToken) {
-        throw new Error('Failed to get refresh token from Vault');
+      const vaultCreds = await getTenantVaultCredentials(
+        credential.vault_id_refresh_token,
+        credential.vault_id_client_id,
+        credential.vault_id_client_secret
+      );
+      if (!vaultCreds.refreshToken || !vaultCreds.clientId || !vaultCreds.clientSecret) {
+        throw new Error('Failed to get credentials from Vault');
       }
 
       // Run collection for this tenant
-      await collectDataForTenant(credential, refreshToken);
+      await collectDataForTenant(credential, vaultCreds);
 
       const duration = Date.now() - startTime;
       logTenantComplete(credential.id, duration);
