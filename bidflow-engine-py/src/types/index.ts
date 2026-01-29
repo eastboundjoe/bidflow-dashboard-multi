@@ -52,7 +52,7 @@ export interface ReportLedgerEntry {
   report_id: string;
   name: string;
   report_type: string;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
   url?: string;
   url_expires_at?: string;
   processed?: boolean;

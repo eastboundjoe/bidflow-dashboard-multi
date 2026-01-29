@@ -158,10 +158,7 @@ async function processReport(
   logReportStatus(report.report_id, status.status);
 
   if (status.status === 'PENDING' || status.status === 'PROCESSING') {
-    // Update our status to processing if it was pending
-    if (report.status === 'PENDING') {
-      await updateReportStatus(report.report_id, 'PROCESSING');
-    }
+    // Still waiting for Amazon - keep as PENDING
     return 'pending';
   }
 

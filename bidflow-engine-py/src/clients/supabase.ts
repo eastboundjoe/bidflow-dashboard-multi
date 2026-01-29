@@ -314,7 +314,7 @@ export async function getPendingReports(): Promise<ReportLedgerEntry[]> {
   const { data, error } = await client
     .from('report_ledger')
     .select('*')
-    .in('status', ['PENDING', 'PROCESSING'])
+    .eq('status', 'PENDING')
     .order('created_at', { ascending: true });
 
   if (error) {
