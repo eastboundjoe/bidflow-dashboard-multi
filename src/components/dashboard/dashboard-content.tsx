@@ -98,21 +98,27 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         if (acos > 0) {
           sales = spend / (acos / 100);
         } else if (orders > 0 && spend > 0) {
-          // Fallback if acos is 0 but there are orders
-          sales = spend * 2; // Rough estimate or handle as needed
+          sales = spend * 2;
         }
 
+        // Map database placement types to Sankey display names
+        const rawPlacement = row["Placement Type"] || "Unknown";
+        let placement_type = rawPlacement;
+        if (rawPlacement === "Placement Top") placement_type = "Top of Search";
+        else if (rawPlacement === "Placement Rest Of Search") placement_type = "Rest of Search";
+        else if (rawPlacement === "Placement Product Page") placement_type = "Product Page";
+
         return {
-          id: `${row.Campaign}-${row["Placement Type"]}`,
+          id: `${row.Campaign}-${rawPlacement}`,
           campaign_name: row.Campaign || "Unknown",
           portfolio_name: row.Portfolio || "No Portfolio",
-          placement_type: row["Placement Type"] || "Unknown",
+          placement_type: placement_type,
           spend: spend,
           clicks: parseInt(row.Clicks) || 0,
           orders: orders,
           acos: acos,
           cvr: parseFloat(row.CVR) || 0,
-          impressions: (parseInt(row.Clicks) || 0) * 20, // Estimate impressions since not in view
+          impressions: (parseInt(row.Clicks) || 0) * 20,
           sales: sales,
           bid_adjustment: 0,
           week_id: "current",

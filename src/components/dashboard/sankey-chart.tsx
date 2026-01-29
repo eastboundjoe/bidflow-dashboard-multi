@@ -222,10 +222,33 @@ export function SankeyChart({ data, width = 800, height = 400 }: SankeyChartProp
       ]);
 
     // Generate layout
-    const { nodes: sankeyNodes, links: sankeyLinks } = sankeyGenerator({
-      nodes: nodes.map((d) => ({ ...d })),
-      links: links.map((d) => ({ ...d })),
-    });
+    let sankeyData;
+    try {
+      // Ensure all links have a value > 0 as required by d3-sankey
+      const validLinks = links.filter(l => l.value > 0).map(d => ({ ...d }));
+      const validNodes = nodes.map(d => ({ ...d }));
+
+      // Only run if we have both nodes and valid links
+      if (validNodes.length === 0 || validLinks.length === 0) {
+        svg.append("text")
+           .attr("x", innerWidth / 2)
+           .attr("y", innerHeight / 2)
+           .attr("text-anchor", "middle")
+           .attr("fill", "currentColor")
+           .text("Insufficient data for flow visualization");
+        return;
+      }
+
+      sankeyData = sankeyGenerator({
+        nodes: validNodes,
+        links: validLinks,
+      });
+    } catch (err) {
+      console.error("Sankey layout failed:", err);
+      return;
+    }
+
+    const { nodes: sankeyNodes, links: sankeyLinks } = sankeyData;
 
     // Draw links
     const linkGroup = g.append("g").attr("class", "links");
