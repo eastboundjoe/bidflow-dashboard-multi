@@ -392,9 +392,26 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       {/* Stats Grid */}
       <StatsGrid stats={stats} loading={loading} />
 
-      {/* Performance Trends Chart - Only show if we have multiple weeks of data */}
-      {!loading && data.length > 0 && new Set(data.map(d => d.week_id)).size > 1 && (
-        <PerformanceChart data={data} />
+      {/* Performance Trends Chart */}
+      {!loading && data.length > 0 && (
+        new Set(data.map(d => d.week_id)).size > 1 ? (
+          <PerformanceChart data={data} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">📈</div>
+                  <p className="text-sm">Trend data will appear after multiple weeks of collection</p>
+                  <p className="text-xs mt-2">Currently showing: {[...new Set(data.map(d => d.week_id))].join(', ')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
       )}
 
       {/* Main Content */}
