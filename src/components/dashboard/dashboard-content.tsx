@@ -63,38 +63,21 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       const supabase = createClient();
       const { data: placements, error: fetchError } = await supabase
         .from("view_placement_optimization_report")
-        .select(`
-          "Campaign",
-          "Portfolio",
-          "Placement Type",
-          "Spend-30",
-          "Clicks-30",
-          "Orders-30",
-          "Budget",
-          "CVR-30",
-          "ACoS-30",
-          "Spend-7",
-          "Clicks-7",
-          "Orders-7",
-          "CVR-7",
-          "ACoS-7",
-          "Tenant ID",
-          "Increase bids by placement"
-        `)
-        .order("Spend-30", { ascending: false });
+        .select("*")
+        .order("Spend", { ascending: false });
 
       if (fetchError) {
         throw new Error(fetchError.message);
       }
 
       // Map view columns to lowercase type properties
-      // Column names use hyphens like "Spend-30", "Clicks-30", etc.
+      // Using select("*") and accessing columns by their actual names
       const mappedData: PlacementData[] = (placements || []).map((row: any) => {
-        const spend = parseFloat(row["Spend-30"]) || 0;
-        const acos = parseFloat(row["ACoS-30"]) || 0;
-        const orders = parseInt(row["Orders-30"]) || 0;
-        const clicks = parseInt(row["Clicks-30"]) || 0;
-        const cvr = parseFloat(row["CVR-30"]) || 0;
+        const spend = parseFloat(row.Spend) || 0;
+        const acos = parseFloat(row.ACoS) || 0;
+        const orders = parseInt(row.Orders) || 0;
+        const clicks = parseInt(row.Clicks) || 0;
+        const cvr = parseFloat(row.CVR) || 0;
         const bidAdjustment = parseInt(row["Increase bids by placement"]) || 0;
 
         // Calculate sales from Spend and ACoS (Spend / (ACoS/100))
@@ -126,7 +109,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           sales: sales,
           bid_adjustment: bidAdjustment,
           week_id: "current",
-          tenant_id: row["Tenant ID"],
+          tenant_id: row.tenant_id,
           campaign_id: "",
           portfolio_id: null,
           units: orders,
