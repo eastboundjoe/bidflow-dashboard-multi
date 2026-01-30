@@ -73,20 +73,24 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
+      // Handle potential case variations from Supabase
       const mappedData: PlacementData[] = (placements || []).map((row: any) => {
-        const spend = parseFloat(row.Spend) || 0; // Fixed: View uses 'Spend' not 'Spend_30'
-        const acos = parseFloat(row.ACoS) || 0;   // Fixed: View uses 'ACoS' not 'ACoS_30'
-        const orders = parseInt(row.Orders) || 0; // Fixed: View uses 'Orders' not 'Orders_30'
-        const clicks = parseInt(row.Clicks) || 0; // Fixed: View uses 'Clicks' not 'Clicks_30'
-        const cvr = parseFloat(row.CVR) || 0;     // Fixed: View uses 'CVR' not 'CVR_30'
+        // Helper to get value with case-insensitive fallback
+        const getVal = (key: string) => row[key] ?? row[key.toLowerCase()] ?? row[key.toUpperCase()];
+
+        const spend = parseFloat(getVal("Spend")) || 0;
+        const acos = parseFloat(getVal("ACoS")) || 0;
+        const orders = parseInt(getVal("Orders")) || 0;
+        const clicks = parseInt(getVal("Clicks")) || 0;
+        const cvr = parseFloat(getVal("CVR")) || 0;
         const bidAdjustment = parseInt(row["Increase bids by placement"]) || 0;
-        
+
         // 7-day metrics
-        const spend_7d = parseFloat(row.Spend_7d) || 0;
-        const clicks_7d = parseInt(row.Clicks_7d) || 0;
-        const orders_7d = parseInt(row.Orders_7d) || 0;
-        const cvr_7d = parseFloat(row.CVR_7d) || 0;
-        const acos_7d = parseFloat(row.ACoS_7d) || 0;
+        const spend_7d = parseFloat(getVal("Spend_7d")) || 0;
+        const clicks_7d = parseInt(getVal("Clicks_7d")) || 0;
+        const orders_7d = parseInt(getVal("Orders_7d")) || 0;
+        const cvr_7d = parseFloat(getVal("CVR_7d")) || 0;
+        const acos_7d = parseFloat(getVal("ACoS_7d")) || 0;
 
         // Calculate sales from Spend and ACoS (Spend / (ACoS/100))
         let sales = 0;
@@ -103,7 +107,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         }
 
         // Map database placement types to Sankey display names
-        const rawPlacement = row["Placement Type"] || "Unknown";
+        const rawPlacement = row["Placement Type"] || getVal("placement_type") || "Unknown";
         let placement_type = rawPlacement;
         if (rawPlacement === "Placement Top") placement_type = "Top of Search";
         else if (rawPlacement === "Placement Rest Of Search") placement_type = "Rest of Search";
@@ -111,15 +115,15 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
         // Fix portfolio filtering: use portfolio name as ID if actual ID is missing
         // The view returns 'Portfolio' which is the name
-        const portfolioName = row.Portfolio || "No Portfolio";
+        const portfolioName = getVal("Portfolio") || "No Portfolio";
         const portfolioId = row.portfolio_id || portfolioName;
 
         return {
-          id: `${row.Campaign}-${rawPlacement}`,
+          id: `${getVal("Campaign") || row.campaign_name}-${rawPlacement}`,
           tenant_id: row.tenant_id,
           campaign_id: row.campaign_id || "",
-          campaign_name: row.Campaign || "Unknown",
-          campaign_budget: row.Budget ? parseFloat(row.Budget) : null,
+          campaign_name: getVal("Campaign") || row.campaign_name || "Unknown",
+          campaign_budget: getVal("Budget") ? parseFloat(getVal("Budget")) : null,
           
           portfolio_id: portfolioId,
           portfolio_name: portfolioName,
@@ -149,13 +153,13 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           acos_7d,
           
           // Spend timing
-          spent_db_yesterday: parseFloat(row["Spent DB Yesterday"]) || 0,
-          spent_yesterday: parseFloat(row["Spent Yesterday"]) || 0,
-          
+          spent_db_yesterday: parseFloat(row["Spent DB Yesterday"] ?? row["spent_db_yesterday"]) || 0,
+          spent_yesterday: parseFloat(row["Spent Yesterday"] ?? row["spent_yesterday"]) || 0,
+
           // Impression shares
-          impression_share_30d: row["Last 30 days"] || "0%",
-          impression_share_7d: row["Last 7 days"] || "0%",
-          impression_share_yesterday: row["Yesterday"] || "0%",
+          impression_share_30d: row["Last 30 days"] ?? row["last_30_days"] ?? "0%",
+          impression_share_7d: row["Last 7 days"] ?? row["last_7_days"] ?? "0%",
+          impression_share_yesterday: row["Yesterday"] ?? row["yesterday"] ?? "0%",
 
           bid_adjustment: bidAdjustment,
           changes_in_placement: "0",
@@ -353,8 +357,8 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       {/* Stats Grid */}
       <StatsGrid stats={stats} loading={loading} />
 
-      {/* Performance Trends Chart */}
-      {!loading && data.length > 0 && (
+      {/* Performance Trends Chart - Only show if we have multiple weeks of data */}
+      {!loading && data.length > 0 && new Set(data.map(d => d.week_id)).size > 1 && (
         <PerformanceChart data={data} />
       )}
 
