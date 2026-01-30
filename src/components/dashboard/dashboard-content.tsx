@@ -19,6 +19,35 @@ interface DashboardContentProps {
   initialData?: PlacementData[];
 }
 
+// Helper to get ISO week number and week date range
+function getWeekInfo(date: Date = new Date()) {
+  // Get ISO week number
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+
+  // Get week start (Monday) and end (Sunday)
+  const weekStart = new Date(date);
+  const day = weekStart.getDay();
+  const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+  weekStart.setDate(diff);
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  return {
+    week_id: `${d.getUTCFullYear()}-W${weekNum.toString().padStart(2, '0')}`,
+    week_number: weekNum,
+    year: d.getUTCFullYear(),
+    start_date: weekStart.toISOString(),
+    end_date: weekEnd.toISOString(),
+  };
+}
+
 export function DashboardContent({ initialData = [] }: DashboardContentProps) {
   const [data, setData] = React.useState<PlacementData[]>(initialData);
   const [loading, setLoading] = React.useState(initialData.length === 0);
@@ -163,10 +192,16 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
           bid_adjustment: bidAdjustment,
           changes_in_placement: "0",
-          
-          week_id: "current",
-          date_range_start: new Date().toISOString(),
-          date_range_end: new Date().toISOString(),
+
+          // Get proper week info
+          ...(() => {
+            const weekInfo = getWeekInfo();
+            return {
+              week_id: weekInfo.week_id,
+              date_range_start: weekInfo.start_date,
+              date_range_end: weekInfo.end_date,
+            };
+          })(),
         };
       });
 
