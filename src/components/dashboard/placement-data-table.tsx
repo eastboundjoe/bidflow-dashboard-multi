@@ -129,21 +129,42 @@ export function PlacementDataTable({
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({
-        clicks_7d: false,
-        spend_7d: false,
-        orders_7d: false,
-        cvr_7d: false,
-        acos_7d: false,
-        spent_db_yesterday: false,
-        campaign_budget: false,
-        portfolio_name: false,
-    });
+    React.useState<VisibilityState>({});
   const [globalFilter, setGlobalFilter] = React.useState("");
   
   // State for expanding campaign names and placement badges
   const [expandedCampaigns, setExpandedCampaigns] = React.useState<Set<string>>(new Set());
   const [isPlacementsExpanded, setIsPlacementsExpanded] = React.useState(false);
+
+  // Refs for synchronized horizontal scrolling
+  const topScrollRef = React.useRef<HTMLDivElement>(null);
+  const tableScrollRef = React.useRef<HTMLDivElement>(null);
+  const [scrollWidth, setScrollWidth] = React.useState(0);
+
+  // Sync scroll positions between top scrollbar and table
+  const handleTopScroll = () => {
+    if (tableScrollRef.current && topScrollRef.current) {
+      tableScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const handleTableScroll = () => {
+    if (topScrollRef.current && tableScrollRef.current) {
+      topScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+    }
+  };
+
+  // Update scroll width when table renders
+  React.useEffect(() => {
+    const updateScrollWidth = () => {
+      if (tableScrollRef.current) {
+        setScrollWidth(tableScrollRef.current.scrollWidth);
+      }
+    };
+    updateScrollWidth();
+    window.addEventListener('resize', updateScrollWidth);
+    return () => window.removeEventListener('resize', updateScrollWidth);
+  }, [data, columnVisibility]);
 
   const toggleCampaign = (id: string) => {
     const next = new Set(expandedCampaigns);
@@ -235,7 +256,7 @@ export function PlacementDataTable({
         ),
         cell: ({ row }) => {
             const val = row.getValue("campaign_budget") as number | null;
-            return <div className="text-right font-mono tabular-nums text-xs">{val ? `$${val}` : "-"}</div>;
+            return <div className="text-center font-mono tabular-nums text-xs">{val ? `$${val}` : "-"}</div>;
         }
       },
       {
@@ -251,7 +272,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatNumber(row.getValue("clicks"))}
           </div>
         ),
@@ -269,7 +290,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-primary text-xs">
+          <div className="text-center font-mono tabular-nums text-primary text-xs">
             {formatCurrency(row.getValue("spend"))}
           </div>
         ),
@@ -287,7 +308,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {row.getValue("orders")}
           </div>
         ),
@@ -305,7 +326,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatPercent(row.getValue("cvr"))}
           </div>
         ),
@@ -331,7 +352,7 @@ export function PlacementDataTable({
               ? "text-yellow-400"
               : "text-red-400";
           return (
-            <div className={`text-right font-mono tabular-nums text-xs ${colorClass}`}>
+            <div className={`text-center font-mono tabular-nums text-xs ${colorClass}`}>
               {formatPercent(acos)}
             </div>
           );
@@ -350,7 +371,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatNumber(row.getValue("clicks_7d"))}
           </div>
         ),
@@ -368,7 +389,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatCurrency(row.getValue("spend_7d"))}
           </div>
         ),
@@ -386,7 +407,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {row.getValue("orders_7d")}
           </div>
         ),
@@ -404,7 +425,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatPercent(row.getValue("cvr_7d"))}
           </div>
         ),
@@ -430,7 +451,7 @@ export function PlacementDataTable({
               ? "text-yellow-400"
               : "text-red-400";
           return (
-            <div className={`text-right font-mono tabular-nums text-xs ${colorClass}`}>
+            <div className={`text-center font-mono tabular-nums text-xs ${colorClass}`}>
               {formatPercent(acos)}
             </div>
           );
@@ -449,7 +470,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatCurrency(row.getValue("spent_db_yesterday"))}
           </div>
         ),
@@ -467,7 +488,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {formatCurrency(row.getValue("spent_yesterday"))}
           </div>
         ),
@@ -485,7 +506,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {row.getValue("impression_share_30d")}
           </div>
         ),
@@ -503,7 +524,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {row.getValue("impression_share_7d")}
           </div>
         ),
@@ -521,7 +542,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-right font-mono tabular-nums text-xs">
+          <div className="text-center font-mono tabular-nums text-xs">
             {row.getValue("impression_share_yesterday")}
           </div>
         ),
@@ -555,7 +576,7 @@ export function PlacementDataTable({
         cell: ({ row }) => {
           const adjustment = row.getValue("bid_adjustment") as number;
           return (
-            <div className="text-right font-mono tabular-nums text-xs">
+            <div className="text-center font-mono tabular-nums text-xs">
               {adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`}
             </div>
           );
@@ -664,13 +685,26 @@ export function PlacementDataTable({
           )}
         </div>
       </div>
-      <div className="overflow-hidden rounded-lg border border-border/50">
+      {/* Top scrollbar for horizontal scrolling */}
+      <div
+        ref={topScrollRef}
+        onScroll={handleTopScroll}
+        className="overflow-x-auto overflow-y-hidden mb-1"
+        style={{ height: '12px' }}
+      >
+        <div style={{ width: scrollWidth, height: '1px' }} />
+      </div>
+      <div
+        ref={tableScrollRef}
+        onScroll={handleTableScroll}
+        className="overflow-auto rounded-lg border border-border/50 max-h-[70vh]"
+      >
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-border/50 hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-card/50 px-2 h-10">
+                  <TableHead key={header.id} className="bg-card px-2 h-10">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
