@@ -57,21 +57,46 @@ export interface PlacementData {
   tenant_id: string;
   campaign_id: string;
   campaign_name: string;
+  campaign_budget: number | null;
   portfolio_id: string | null;
   portfolio_name: string | null;
   placement_type: string;
+  
+  // 30-day metrics
   impressions: number;
   clicks: number;
   spend: number;
-  sales: number;
   orders: number;
+  sales: number;
   units: number;
   ctr: number;
   cpc: number;
   acos: number;
   roas: number;
   cvr: number;
+
+  // 7-day metrics
+  clicks_7d: number;
+  spend_7d: number;
+  orders_7d: number;
+  sales_7d: number;
+  units_7d: number;
+  cvr_7d: number;
+  acos_7d: number;
+
+  // Spend timing metrics
+  spent_db_yesterday: number;
+  spent_yesterday: number;
+
+  // Impression share metrics
+  impression_share_30d: string;
+  impression_share_7d: string;
+  impression_share_yesterday: string;
+
+  // Bid adjustments
   bid_adjustment: number;
+  changes_in_placement: string;
+  
   week_id: string;
   date_range_start: string;
   date_range_end: string;

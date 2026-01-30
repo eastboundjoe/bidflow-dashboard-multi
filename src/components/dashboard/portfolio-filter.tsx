@@ -57,10 +57,13 @@ export function extractPortfolios(data: Array<{ portfolio_id: string | null; por
   const portfolioMap = new Map<string, Portfolio>();
 
   data.forEach((row) => {
-    if (row.portfolio_id && row.portfolio_name && !portfolioMap.has(row.portfolio_id)) {
-      portfolioMap.set(row.portfolio_id, {
-        id: row.portfolio_id,
-        name: row.portfolio_name,
+    const id = row.portfolio_id || row.portfolio_name;
+    const name = row.portfolio_name;
+
+    if (id && name && !portfolioMap.has(id)) {
+      portfolioMap.set(id, {
+        id,
+        name,
       });
     }
   });

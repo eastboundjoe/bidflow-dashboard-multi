@@ -12,6 +12,7 @@ import { PortfolioFilter, extractPortfolios } from "./portfolio-filter";
 import { SankeyChart, SpendFlowChart } from "./sankey-chart";
 import { PerformanceChart } from "./performance-chart";
 import { createClient } from "@/lib/supabase/client";
+import { N8N_WEBHOOKS } from "@/lib/constants";
 import type { PlacementData } from "@/types";
 
 interface DashboardContentProps {
@@ -73,12 +74,19 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
       const mappedData: PlacementData[] = (placements || []).map((row: any) => {
-        const spend = parseFloat(row.Spend_30) || 0;
-        const acos = parseFloat(row.ACoS_30) || 0;
-        const orders = parseInt(row.Orders_30) || 0;
-        const clicks = parseInt(row.Clicks_30) || 0;
-        const cvr = parseFloat(row.CVR_30) || 0;
+        const spend = parseFloat(row.Spend) || 0; // Fixed: View uses 'Spend' not 'Spend_30'
+        const acos = parseFloat(row.ACoS) || 0;   // Fixed: View uses 'ACoS' not 'ACoS_30'
+        const orders = parseInt(row.Orders) || 0; // Fixed: View uses 'Orders' not 'Orders_30'
+        const clicks = parseInt(row.Clicks) || 0; // Fixed: View uses 'Clicks' not 'Clicks_30'
+        const cvr = parseFloat(row.CVR) || 0;     // Fixed: View uses 'CVR' not 'CVR_30'
         const bidAdjustment = parseInt(row["Increase bids by placement"]) || 0;
+        
+        // 7-day metrics
+        const spend_7d = parseFloat(row.Spend_7d) || 0;
+        const clicks_7d = parseInt(row.Clicks_7d) || 0;
+        const orders_7d = parseInt(row.Orders_7d) || 0;
+        const cvr_7d = parseFloat(row.CVR_7d) || 0;
+        const acos_7d = parseFloat(row.ACoS_7d) || 0;
 
         // Calculate sales from Spend and ACoS (Spend / (ACoS/100))
         let sales = 0;
@@ -86,6 +94,12 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           sales = spend / (acos / 100);
         } else if (orders > 0 && spend > 0) {
           sales = spend * 2;
+        }
+        
+        // Calculate 7d sales
+        let sales_7d = 0;
+        if (acos_7d > 0) {
+          sales_7d = spend_7d / (acos_7d / 100);
         }
 
         // Map database placement types to Sankey display names
@@ -95,27 +109,58 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         else if (rawPlacement === "Placement Rest Of Search") placement_type = "Rest of Search";
         else if (rawPlacement === "Placement Product Page") placement_type = "Product Page";
 
+        // Fix portfolio filtering: use portfolio name as ID if actual ID is missing
+        // The view returns 'Portfolio' which is the name
+        const portfolioName = row.Portfolio || "No Portfolio";
+        const portfolioId = row.portfolio_id || portfolioName;
+
         return {
           id: `${row.Campaign}-${rawPlacement}`,
+          tenant_id: row.tenant_id,
+          campaign_id: row.campaign_id || "",
           campaign_name: row.Campaign || "Unknown",
-          portfolio_name: row.Portfolio || "No Portfolio",
+          campaign_budget: row.Budget ? parseFloat(row.Budget) : null,
+          
+          portfolio_id: portfolioId,
+          portfolio_name: portfolioName,
+          
           placement_type: placement_type,
+          
+          // 30d
           spend: spend,
           clicks: clicks,
           orders: orders,
           acos: acos,
           cvr: cvr,
-          impressions: clicks * 20,
           sales: sales,
-          bid_adjustment: bidAdjustment,
-          week_id: "current",
-          tenant_id: row.tenant_id,
-          campaign_id: "",
-          portfolio_id: null,
+          impressions: clicks * 20, // Estimate if not available
           units: orders,
-          ctr: 0.5,
+          ctr: 0.5, // Placeholder/Estimate
           cpc: clicks > 0 ? spend / clicks : 0,
           roas: spend > 0 ? sales / spend : 0,
+
+          // 7d
+          clicks_7d,
+          spend_7d,
+          orders_7d,
+          sales_7d,
+          units_7d: orders_7d,
+          cvr_7d,
+          acos_7d,
+          
+          // Spend timing
+          spent_db_yesterday: parseFloat(row["Spent DB Yesterday"]) || 0,
+          spent_yesterday: parseFloat(row["Spent Yesterday"]) || 0,
+          
+          // Impression shares
+          impression_share_30d: row["Last 30 days"] || "0%",
+          impression_share_7d: row["Last 7 days"] || "0%",
+          impression_share_yesterday: row["Yesterday"] || "0%",
+
+          bid_adjustment: bidAdjustment,
+          changes_in_placement: "0",
+          
+          week_id: "current",
           date_range_start: new Date().toISOString(),
           date_range_end: new Date().toISOString(),
         };
@@ -136,6 +181,71 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     }
   }, [fetchData, initialData.length]);
 
+  const [submitting, setSubmitting] = React.useState(false);
+
+  // Handle editing of Changes column
+  const handleEdit = (id: string, value: string) => {
+    setData((prev) =>
+      prev.map((row) =>
+        row.id === id ? { ...row, changes_in_placement: value } : row
+      )
+    );
+  };
+
+  // Submit changes to Amazon via n8n webhook
+  const handleSubmitChanges = async () => {
+    const changesData = data
+      .filter(
+        (row) =>
+          row.changes_in_placement &&
+          row.changes_in_placement !== "0" &&
+          row.changes_in_placement !== "0%" &&
+          row.changes_in_placement.trim() !== ""
+      )
+      .map((row) => ({
+        campaign: row.campaign_name,
+        portfolio: row.portfolio_name,
+        placement: row.placement_type,
+        currentMultiplier: row.bid_adjustment.toString(),
+        newMultiplier: row.changes_in_placement,
+        week: selectedWeek || "Unknown",
+        campaignId: row.campaign_id,
+      }));
+
+    if (changesData.length === 0) {
+      alert("No changes to submit. Add multiplier percentages in the Changes column first.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(N8N_WEBHOOKS.SUBMISSION, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          changes: changesData,
+          timestamp: new Date().toISOString(),
+          user_id: (await createClient().auth.getUser()).data.user?.id
+        }),
+      });
+
+      if (response.ok) {
+        alert("✅ Changes submitted successfully to Amazon!");
+        // Reset changes after successful submission
+        setData((prev) =>
+          prev.map((row) => ({ ...row, changes_in_placement: "0" }))
+        );
+      } else {
+        alert("❌ Failed to submit changes. Please try again.");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("❌ Error submitting changes.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Export to CSV
   const handleExport = () => {
     if (filteredData.length === 0) return;
@@ -144,26 +254,48 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       "Campaign",
       "Portfolio",
       "Placement",
-      "Impressions",
-      "Clicks",
-      "Spend",
-      "Sales",
-      "ACOS",
-      "ROAS",
+      "Budget",
+      "Clicks 30d",
+      "Spend 30d",
+      "Orders 30d",
+      "CVR 30d",
+      "ACoS 30d",
+      "Clicks 7d",
+      "Spend 7d",
+      "Orders 7d",
+      "CVR 7d",
+      "ACoS 7d",
+      "Spent DB Yesterday",
+      "Spent Yesterday",
+      "Impression Share 30d",
+      "Impression Share 7d",
+      "Impression Share Yesterday",
       "Bid Adjustment",
+      "Changes",
     ];
 
     const rows = filteredData.map((row) => [
       row.campaign_name,
       row.portfolio_name || "",
       row.placement_type,
-      row.impressions,
+      row.campaign_budget || "",
       row.clicks,
       row.spend.toFixed(2),
-      row.sales.toFixed(2),
-      row.acos.toFixed(2),
-      row.roas.toFixed(2),
+      row.orders,
+      row.cvr.toFixed(2) + "%",
+      row.acos.toFixed(2) + "%",
+      row.clicks_7d,
+      row.spend_7d.toFixed(2),
+      row.orders_7d,
+      row.cvr_7d.toFixed(2) + "%",
+      row.acos_7d.toFixed(2) + "%",
+      row.spent_db_yesterday.toFixed(2),
+      row.spent_yesterday.toFixed(2),
+      row.impression_share_30d,
+      row.impression_share_7d,
+      row.impression_share_yesterday,
       row.bid_adjustment,
+      row.changes_in_placement,
     ]);
 
     const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
@@ -273,7 +405,13 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
               </p>
             </div>
           ) : (
-            <PlacementDataTable data={filteredData} onExport={handleExport} />
+            <PlacementDataTable 
+              data={filteredData} 
+              onExport={handleExport}
+              onEdit={handleEdit}
+              onSubmit={handleSubmitChanges}
+              submitting={submitting}
+            />
           )}
         </CardContent>
       </Card>

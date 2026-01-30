@@ -13,7 +13,7 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, Download } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Download, Rocket } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +37,9 @@ import type { PlacementData } from "@/types";
 interface PlacementDataTableProps {
   data: PlacementData[];
   onExport?: () => void;
+  onEdit?: (id: string, value: string) => void;
+  onSubmit?: () => void;
+  submitting?: boolean;
 }
 
 const formatCurrency = (value: number) =>
@@ -52,201 +55,13 @@ const formatPercent = (value: number) =>
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("en-US").format(value);
 
-export const placementColumns: ColumnDef<PlacementData>[] = [
-  {
-    accessorKey: "campaign_name",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Campaign
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="max-w-[200px] truncate font-medium">
-        {row.getValue("campaign_name")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "portfolio_name",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Portfolio
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="text-muted-foreground">
-        {row.getValue("portfolio_name") || "—"}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "placement_type",
-    header: "Placement",
-    cell: ({ row }) => {
-      const placement = row.getValue("placement_type") as string;
-      return <PlacementBadge placement={placement} />;
-    },
-  },
-  {
-    accessorKey: "impressions",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Impr.
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="text-right font-mono tabular-nums">
-        {formatNumber(row.getValue("impressions"))}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "clicks",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Clicks
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="text-right font-mono tabular-nums">
-        {formatNumber(row.getValue("clicks"))}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "spend",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Spend
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="text-right font-mono tabular-nums text-primary">
-        {formatCurrency(row.getValue("spend"))}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "sales",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Sales
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="text-right font-mono tabular-nums text-primary">
-        {formatCurrency(row.getValue("sales"))}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "acos",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        ACOS
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const acos = row.getValue("acos") as number;
-      const colorClass =
-        acos < 20
-          ? "text-green-400"
-          : acos < 35
-          ? "text-yellow-400"
-          : "text-red-400";
-      return (
-        <div className={`text-right font-mono tabular-nums ${colorClass}`}>
-          {formatPercent(acos)}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "roas",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        ROAS
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const roas = row.getValue("roas") as number;
-      const colorClass =
-        roas > 5
-          ? "text-green-400"
-          : roas > 3
-          ? "text-yellow-400"
-          : "text-red-400";
-      return (
-        <div className={`text-right font-mono tabular-nums ${colorClass}`}>
-          {roas.toFixed(2)}x
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "bid_adjustment",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="font-mono text-xs uppercase tracking-wider"
-      >
-        Bid Adj.
-        <ArrowUpDown className="ml-2 h-3 w-3" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const adjustment = row.getValue("bid_adjustment") as number;
-      return (
-        <div className="text-right font-mono tabular-nums">
-          {adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`}
-        </div>
-      );
-    },
-  },
-];
-
-export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) {
+export function PlacementDataTable({ 
+  data, 
+  onExport,
+  onEdit,
+  onSubmit,
+  submitting = false
+}: PlacementDataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "spend", desc: true },
   ]);
@@ -254,12 +69,422 @@ export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) 
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+        // Hide some 7d columns by default to reduce clutter
+        clicks_7d: false,
+        spend_7d: false,
+        orders_7d: false,
+        cvr_7d: false,
+        acos_7d: false,
+        spent_db_yesterday: false,
+    });
   const [globalFilter, setGlobalFilter] = React.useState("");
+
+  const columns = React.useMemo<ColumnDef<PlacementData>[]>(
+    () => [
+      {
+        accessorKey: "campaign_name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Campaign
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="max-w-[150px] truncate font-medium text-xs" title={row.getValue("campaign_name")}>
+            {row.getValue("campaign_name")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "portfolio_name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Portfolio
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-muted-foreground text-xs max-w-[100px] truncate" title={row.getValue("portfolio_name") || ""}>
+            {row.getValue("portfolio_name") || "—"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "campaign_budget",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Budget
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+            const val = row.getValue("campaign_budget") as number | null;
+            return <div className="text-right font-mono tabular-nums text-xs">{val ? `$${val}` : "-"}</div>;
+        }
+      },
+      {
+        accessorKey: "clicks",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Clicks<br/>30d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatNumber(row.getValue("clicks"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "spend",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Spend<br/>30d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-primary text-xs">
+            {formatCurrency(row.getValue("spend"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "orders",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Orders<br/>30d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {row.getValue("orders")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "cvr",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            CVR<br/>30d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatPercent(row.getValue("cvr"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "acos",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            ACoS<br/>30d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const acos = row.getValue("acos") as number;
+          const colorClass =
+            acos < 20
+              ? "text-green-400"
+              : acos < 35
+              ? "text-yellow-400"
+              : "text-red-400";
+          return (
+            <div className={`text-right font-mono tabular-nums text-xs ${colorClass}`}>
+              {formatPercent(acos)}
+            </div>
+          );
+        },
+      },
+      // 7 Day Metrics
+      {
+        accessorKey: "clicks_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Clicks<br/>7d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatNumber(row.getValue("clicks_7d"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "spend_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Spend<br/>7d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatCurrency(row.getValue("spend_7d"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "orders_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Orders<br/>7d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {row.getValue("orders_7d")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "cvr_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            CVR<br/>7d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatPercent(row.getValue("cvr_7d"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "acos_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            ACoS<br/>7d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const acos = row.getValue("acos_7d") as number;
+          const colorClass =
+            acos < 20
+              ? "text-green-400"
+              : acos < 35
+              ? "text-yellow-400"
+              : "text-red-400";
+          return (
+            <div className={`text-right font-mono tabular-nums text-xs ${colorClass}`}>
+              {formatPercent(acos)}
+            </div>
+          );
+        },
+      },
+      // Spend Timing
+      {
+        accessorKey: "spent_db_yesterday",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            DB<br/>Yest
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatCurrency(row.getValue("spent_db_yesterday"))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "spent_yesterday",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Spent<br/>Yest
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {formatCurrency(row.getValue("spent_yesterday"))}
+          </div>
+        ),
+      },
+      // Impression Shares
+      {
+        accessorKey: "impression_share_30d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            LAST<br/>30D
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {row.getValue("impression_share_30d")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "impression_share_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            LAST<br/>7D
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {row.getValue("impression_share_7d")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "impression_share_yesterday",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            YEST
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right font-mono tabular-nums text-xs">
+            {row.getValue("impression_share_yesterday")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "placement_type",
+        header: "Placement",
+        cell: ({ row }) => {
+          const placement = row.getValue("placement_type") as string;
+          return <PlacementBadge placement={placement} />;
+        },
+      },
+      {
+        accessorKey: "bid_adjustment",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+          >
+            Multiplier
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const adjustment = row.getValue("bid_adjustment") as number;
+          return (
+            <div className="text-right font-mono tabular-nums text-xs">
+              {adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "changes_in_placement",
+        header: ({ column }) => (
+           <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="font-mono text-xs uppercase tracking-wider h-8 px-2 text-primary"
+          >
+            Changes
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+            const val = row.getValue("changes_in_placement") as string;
+            return (
+                <Input 
+                    className="h-7 w-20 text-xs text-right" 
+                    value={val}
+                    onChange={(e) => onEdit?.(row.original.id, e.target.value)}
+                />
+            )
+        }
+      }
+    ],
+    [onEdit]
+  );
 
   const table = useReactTable({
     data,
-    columns: placementColumns,
+    columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -292,13 +517,25 @@ export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) 
           className="max-w-sm bg-background"
         />
         <div className="flex items-center gap-2">
+          {onSubmit && (
+              <Button onClick={onSubmit} disabled={submitting} className="gap-2">
+                  {submitting ? (
+                      "Submitting..."
+                  ) : (
+                      <>
+                        <Rocket className="h-4 w-4" />
+                        Submit to Amazon
+                      </>
+                  )}
+              </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 h-96 overflow-y-auto">
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
@@ -311,7 +548,7 @@ export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) 
                       column.toggleVisibility(!!value)
                     }
                   >
-                    {column.id.replace("_", " ")}
+                    {column.id.replace(/_/g, " ")}
                   </DropdownMenuCheckboxItem>
                 ))}
             </DropdownMenuContent>
@@ -330,7 +567,7 @@ export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) 
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-border/50 hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-card/50">
+                  <TableHead key={header.id} className="bg-card/50 px-2 h-10">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -351,7 +588,7 @@ export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) 
                   className="border-border/50 hover:bg-card/30"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="px-2 py-2">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -363,7 +600,7 @@ export function PlacementDataTable({ data, onExport }: PlacementDataTableProps) 
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={placementColumns.length}
+                  colSpan={columns.length}
                   className="h-24 text-center"
                 >
                   <div className="text-muted-foreground">
