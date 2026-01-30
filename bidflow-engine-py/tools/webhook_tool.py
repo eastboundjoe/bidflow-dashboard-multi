@@ -9,7 +9,7 @@ def notify_frontend(tenant_id, status, message, extra_data=None):
     # Sends a POST request back to your website or Vercel app.
  
     # This would be your Vercel/Website endpoint
-    url = "https://dashboard.bidflow.app/api/sync-callback"
+    url = "https://bidflow.app/api/sync-callback"
     
     payload = {
         "tenant_id": tenant_id,
