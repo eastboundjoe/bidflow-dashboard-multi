@@ -377,13 +377,29 @@ export function SankeyChart({ data, width = 800, height = 400 }: SankeyChartProp
     );
   }
 
+  // Debug: Show sankey data transformation result
+  const sankeyDebug = transformToSankeyData(data);
+  const debugInfo = {
+    nodes: sankeyDebug.nodes.length,
+    links: sankeyDebug.links.length,
+    nodeNames: sankeyDebug.nodes.map(n => n.name).join(', '),
+    linkValues: sankeyDebug.links.map(l => l.value.toFixed(2)).join(', ')
+  };
+
   return (
     <div ref={containerRef} className="relative w-full">
+      {/* Debug info */}
+      <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
+        Debug: {debugInfo.nodes} nodes, {debugInfo.links} links |
+        Nodes: {debugInfo.nodeNames} |
+        Spend: ${debugTotals.spend.toFixed(2)}, Sales: ${debugTotals.sales.toFixed(2)}
+      </div>
       <svg
         ref={svgRef}
         width={dimensions.width}
         height={dimensions.height}
         className="overflow-visible"
+        style={{ border: '1px dashed gray', minHeight: '300px' }}
       />
       {tooltip.visible && (
         <div
