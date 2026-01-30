@@ -1,0 +1,268 @@
+{
+  "name": "(Multi) 0. Daily Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        20,
+        260
+      ],
+      "id": "3dc71196-a5d4-4495-915a-7d2118b4174d",
+      "name": "Daily 3:00 AM UTC"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  c.tenant_id,\n  c.amazon_profile_id,\n  c.report_day,\n  c.report_hour\nFROM credentials c\nWHERE c.status = 'active'\n  AND c.subscription_status IN ('active', 'trialing')\n  AND LOWER(TRIM(TO_CHAR(NOW() AT TIME ZONE 'UTC', 'Day'))) = c.report_day;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        260
+      ],
+      "id": "96cb3d85-b5b3-4093-b241-cad21f648d2a",
+      "name": "Find Tenants for Today",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-has-tenants",
+              "leftValue": "={{ $json.tenant_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        260
+      ],
+      "id": "32ab0832-9430-452c-b5fd-5a822ed2e08a",
+      "name": "Has Tenants?"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        680,
+        240
+      ],
+      "id": "98d67be7-b752-4ec1-b980-519506e21313",
+      "name": "Process Each Tenant"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.bidflow.app/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tenant_id\": \"{{ $json.tenant_id }}\",\n  \"trigger_source\": \"daily_scheduler\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        240
+      ],
+      "id": "b0cdd43d-16cb-4250-9d7e-52f5ced5f5c3",
+      "name": "Trigger Flow 1 for Tenant"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        240
+      ],
+      "id": "1ff850aa-58f0-450c-914d-7a711de6a0fa",
+      "name": "Wait 5sec (Rate Limit)",
+      "webhookId": "rate-limit-scheduler"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO scheduler_log (tenant_id, triggered_at, status, trigger_source)\nVALUES ('{{ $json.tenant_id }}', NOW(), 'triggered', 'daily_scheduler')\nON CONFLICT DO NOTHING;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1360,
+        240
+      ],
+      "id": "aabe2782-754c-4bf0-adfd-0c12979dcd2b",
+      "name": "Log Trigger (Optional)",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "# Flow 0: Daily Scheduler\n\nRuns daily at 3:00 AM UTC.\n\n1. Queries database for tenants whose report_day = today\n2. Loops through each tenant\n3. Triggers Flow 1 for each tenant\n4. 5-second delay between triggers to avoid rate limits",
+        "height": 340,
+        "width": 400,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "851f8063-4ed6-4762-815c-3db3068909e6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## No tenants scheduled for today\nThis is normal - not every day has tenants scheduled.",
+        "height": 120,
+        "width": 280,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        460,
+        440
+      ],
+      "typeVersion": 1,
+      "id": "affd5681-16c7-4734-a839-852b009412c7",
+      "name": "Sticky Note No Tenants"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily 3:00 AM UTC": {
+      "main": [
+        [
+          {
+            "node": "Find Tenants for Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Tenants for Today": {
+      "main": [
+        [
+          {
+            "node": "Has Tenants?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Tenants?": {
+      "main": [
+        [
+          {
+            "node": "Process Each Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Tenant": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Trigger Flow 1 for Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Flow 1 for Tenant": {
+      "main": [
+        [
+          {
+            "node": "Wait 5sec (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5sec (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Log Trigger (Optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Trigger (Optional)": {
+      "main": [
+        [
+          {
+            "node": "Process Each Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a05bec49-cd14-46ba-a1c1-67929e2fabb4",
+  "meta": {
+    "instanceId": "fa4bcb378ee210d5f1fb5de6ab50587326b68defa808af6512b2ad539bf43873"
+  },
+  "id": "XRv9KHcAf3xr0v63",
+  "tags": []
+}

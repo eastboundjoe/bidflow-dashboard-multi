@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PlacementBadge } from "@/components/placement-badge";
+import { cn } from "@/lib/utils";
 import type { PlacementData } from "@/types";
 
 interface PlacementDataTableProps {
@@ -55,6 +56,65 @@ const formatPercent = (value: number) =>
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("en-US").format(value);
 
+// Sub-component for editable changes with focus preservation and Bezos warning
+function ChangesInput({ 
+    id, 
+    initialValue, 
+    onEdit 
+}: { 
+    id: string; 
+    initialValue: string; 
+    onEdit?: (id: string, value: string) => void 
+}) {
+    const [localValue, setLocalValue] = React.useState(initialValue);
+    const [showWarning, setShowWarning] = React.useState(false);
+
+    React.useEffect(() => {
+        setLocalValue(initialValue);
+    }, [initialValue]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setLocalValue(val);
+        const num = parseFloat(val);
+        setShowWarning(!isNaN(num) && num > 900);
+    };
+
+    const handleBlur = () => {
+        if (localValue !== initialValue) {
+            onEdit?.(id, localValue);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            onEdit?.(id, localValue);
+            (e.target as HTMLInputElement).blur();
+        }
+    };
+
+    return (
+        <div className="relative group">
+            <Input 
+                className={cn(
+                    "h-7 w-20 text-xs text-right transition-colors",
+                    localValue !== "0" && localValue !== "" && "border-primary bg-primary/5",
+                    showWarning && "border-red-500 animate-pulse"
+                )} 
+                value={localValue}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+            />
+            {showWarning && (
+                <div className="absolute bottom-full right-0 mb-2 z-50 bg-red-600 text-white text-[10px] font-bold py-1 px-2 rounded shadow-lg whitespace-nowrap animate-bounce pointer-events-none">
+                    💸 DANGER! YOU ARE BUYING BEZOS ANOTHER YACHT! 🛥️
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function PlacementDataTable({ 
   data, 
   onExport,
@@ -63,22 +123,53 @@ export function PlacementDataTable({
   submitting = false
 }: PlacementDataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "spend", desc: true },
+    { id: "campaign_name", desc: false },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
-        // Hide some 7d columns by default to reduce clutter
         clicks_7d: false,
         spend_7d: false,
         orders_7d: false,
         cvr_7d: false,
         acos_7d: false,
         spent_db_yesterday: false,
+        campaign_budget: false,
+        portfolio_name: false,
     });
   const [globalFilter, setGlobalFilter] = React.useState("");
+  
+  // State for expanding campaign names and placement badges
+  const [expandedCampaigns, setExpandedCampaigns] = React.useState<Set<string>>(new Set());
+  const [isPlacementsExpanded, setIsPlacementsExpanded] = React.useState(false);
+
+  const toggleCampaign = (id: string) => {
+    const next = new Set(expandedCampaigns);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setExpandedCampaigns(next);
+  };
+
+  // Custom sort: Campaign Name ASC, then Placement Type (TOP > ROS > PP)
+  const sortedData = React.useMemo(() => {
+    return [...data].sort((a, b) => {
+        // First sort by Campaign Name
+        const campComp = a.campaign_name.localeCompare(b.campaign_name);
+        if (campComp !== 0) return campComp;
+
+        // Then by Placement Type order
+        const getOrder = (p: string) => {
+            const lower = p.toLowerCase();
+            if (lower.includes("top")) return 1;
+            if (lower.includes("rest")) return 2;
+            if (lower.includes("product")) return 3;
+            return 4;
+        };
+        return getOrder(a.placement_type) - getOrder(b.placement_type);
+    });
+  }, [data]);
 
   const columns = React.useMemo<ColumnDef<PlacementData>[]>(
     () => [
@@ -94,11 +185,23 @@ export function PlacementDataTable({
             <ArrowUpDown className="ml-2 h-3 w-3" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="max-w-[150px] truncate font-medium text-xs" title={row.getValue("campaign_name")}>
-            {row.getValue("campaign_name")}
-          </div>
-        ),
+        cell: ({ row }) => {
+            const name = row.getValue("campaign_name") as string;
+            const isExpanded = expandedCampaigns.has(row.original.campaign_id || row.original.id);
+            return (
+                <div 
+                    className={cn(
+                        "cursor-pointer font-medium text-xs transition-all",
+                        !isExpanded && "max-w-[150px] truncate",
+                        isExpanded && "whitespace-normal break-all"
+                    )} 
+                    onClick={() => toggleCampaign(row.original.campaign_id || row.original.id)}
+                    title={name}
+                >
+                    {name}
+                </div>
+            );
+        },
       },
       {
         accessorKey: "portfolio_name",
@@ -234,7 +337,6 @@ export function PlacementDataTable({
           );
         },
       },
-      // 7 Day Metrics
       {
         accessorKey: "clicks_7d",
         header: ({ column }) => (
@@ -334,7 +436,6 @@ export function PlacementDataTable({
           );
         },
       },
-      // Spend Timing
       {
         accessorKey: "spent_db_yesterday",
         header: ({ column }) => (
@@ -371,7 +472,6 @@ export function PlacementDataTable({
           </div>
         ),
       },
-      // Impression Shares
       {
         accessorKey: "impression_share_30d",
         header: ({ column }) => (
@@ -431,7 +531,13 @@ export function PlacementDataTable({
         header: "Placement",
         cell: ({ row }) => {
           const placement = row.getValue("placement_type") as string;
-          return <PlacementBadge placement={placement} />;
+          return (
+            <PlacementBadge 
+                placement={placement} 
+                expanded={isPlacementsExpanded} 
+                onClick={() => setIsPlacementsExpanded(!isPlacementsExpanded)}
+            />
+          );
         },
       },
       {
@@ -467,23 +573,20 @@ export function PlacementDataTable({
             <ArrowUpDown className="ml-2 h-3 w-3" />
           </Button>
         ),
-        cell: ({ row }) => {
-            const val = row.getValue("changes_in_placement") as string;
-            return (
-                <Input 
-                    className="h-7 w-20 text-xs text-right" 
-                    value={val}
-                    onChange={(e) => onEdit?.(row.original.id, e.target.value)}
-                />
-            )
-        }
+        cell: ({ row }) => (
+            <ChangesInput 
+                id={row.original.id} 
+                initialValue={row.getValue("changes_in_placement") as string} 
+                onEdit={onEdit} 
+            />
+        )
       }
     ],
-    [onEdit]
+    [onEdit, expandedCampaigns, isPlacementsExpanded]
   );
 
   const table = useReactTable({
-    data,
+    data: sortedData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -502,7 +605,7 @@ export function PlacementDataTable({
     },
     initialState: {
       pagination: {
-        pageSize: 20,
+        pageSize: 30,
       },
     },
   });
@@ -535,7 +638,7 @@ export function PlacementDataTable({
                 Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 h-96 overflow-y-auto">
+            <DropdownMenuContent align="end" className="w-48 h-96 overflow-y-auto bg-white dark:bg-slate-950 border-2 shadow-xl opacity-100 z-[100]">
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
@@ -581,22 +684,31 @@ export function PlacementDataTable({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="border-border/50 hover:bg-card/30"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-2 py-2">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
+              table.getRowModel().rows.map((row, idx) => {
+                // Check if this is a new campaign group to potentially add visual separation
+                const prevRow = idx > 0 ? table.getRowModel().rows[idx - 1] : null;
+                const isNewCampaign = !prevRow || prevRow.original.campaign_name !== row.original.campaign_name;
+
+                return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={cn(
+                        "border-border/50 hover:bg-card/30 transition-colors",
+                        isNewCampaign && idx > 0 && "border-t-2 border-t-primary/10"
                       )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="px-2 py-2">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell

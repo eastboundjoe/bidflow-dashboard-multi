@@ -69,7 +69,7 @@ export function WeekSelector({
             <SelectValue placeholder="Select week" />
           </div>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white dark:bg-slate-950 opacity-100 shadow-xl border-2 z-50">
           {weeks.map((week) => (
             <SelectItem key={week.id} value={week.id}>
               <div className="flex flex-col">
