@@ -136,36 +136,6 @@ export function PlacementDataTable({
   const [expandedCampaigns, setExpandedCampaigns] = React.useState<Set<string>>(new Set());
   const [isPlacementsExpanded, setIsPlacementsExpanded] = React.useState(false);
 
-  // Refs for synchronized horizontal scrolling
-  const topScrollRef = React.useRef<HTMLDivElement>(null);
-  const tableScrollRef = React.useRef<HTMLDivElement>(null);
-  const [scrollWidth, setScrollWidth] = React.useState(0);
-
-  // Sync scroll positions between top scrollbar and table
-  const handleTopScroll = () => {
-    if (tableScrollRef.current && topScrollRef.current) {
-      tableScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
-    }
-  };
-
-  const handleTableScroll = () => {
-    if (topScrollRef.current && tableScrollRef.current) {
-      topScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
-    }
-  };
-
-  // Update scroll width when table renders
-  React.useEffect(() => {
-    const updateScrollWidth = () => {
-      if (tableScrollRef.current) {
-        setScrollWidth(tableScrollRef.current.scrollWidth);
-      }
-    };
-    updateScrollWidth();
-    window.addEventListener('resize', updateScrollWidth);
-    return () => window.removeEventListener('resize', updateScrollWidth);
-  }, [data, columnVisibility]);
-
   const toggleCampaign = (id: string) => {
     const next = new Set(expandedCampaigns);
     if (next.has(id)) next.delete(id);
@@ -626,7 +596,7 @@ export function PlacementDataTable({
     },
     initialState: {
       pagination: {
-        pageSize: 30,
+        pageSize: 12,
       },
     },
   });
@@ -685,20 +655,7 @@ export function PlacementDataTable({
           )}
         </div>
       </div>
-      {/* Top scrollbar for horizontal scrolling */}
-      <div
-        ref={topScrollRef}
-        onScroll={handleTopScroll}
-        className="overflow-x-auto overflow-y-hidden mb-1"
-        style={{ height: '12px' }}
-      >
-        <div style={{ width: scrollWidth, height: '1px' }} />
-      </div>
-      <div
-        ref={tableScrollRef}
-        onScroll={handleTableScroll}
-        className="overflow-auto rounded-lg border border-border/50 max-h-[70vh]"
-      >
+      <div className="overflow-x-auto rounded-lg border border-border/50">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
