@@ -455,6 +455,31 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         </CardContent>
       </Card>
 
+      {/* Debug Panel - Remove after fixing */}
+      <Card className="bg-yellow-500/10 border-yellow-500/50">
+        <CardHeader className="py-3">
+          <CardTitle className="text-sm">Debug Info (temp)</CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs font-mono space-y-1">
+          <p>Total rows: {filteredData.length}</p>
+          <p>Total spend: ${filteredData.reduce((sum, r) => sum + (r.spend || 0), 0).toFixed(2)}</p>
+          <p>Total sales: ${filteredData.reduce((sum, r) => sum + (r.sales || 0), 0).toFixed(2)}</p>
+          <p>Total clicks: {filteredData.reduce((sum, r) => sum + (r.clicks || 0), 0)}</p>
+          <p>Placements: {[...new Set(filteredData.map(r => r.placement_type))].join(', ')}</p>
+          <p>Week IDs: {[...new Set(filteredData.map(r => r.week_id))].join(', ')}</p>
+          {filteredData.length > 0 && (
+            <p className="mt-2 text-[10px] break-all">
+              Sample row: {JSON.stringify({
+                spend: filteredData[0].spend,
+                sales: filteredData[0].sales,
+                clicks: filteredData[0].clicks,
+                placement_type: filteredData[0].placement_type
+              })}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Ad Spend Flow Visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sankey Chart - Takes 2 columns */}
