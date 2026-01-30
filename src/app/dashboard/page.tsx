@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const { data: placements } = await supabase
     .from("view_placement_optimization_report")
     .select("*")
-    .order("Spend", { ascending: false });
+    .order("Spend_30", { ascending: false });
 
   return <DashboardContent initialData={placements || []} />;
 }

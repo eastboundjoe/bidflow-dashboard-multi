@@ -73,11 +73,11 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
       const mappedData: PlacementData[] = (placements || []).map((row: any) => {
-        const spend = parseFloat(row.Spend) || 0;
-        const acos = parseFloat(row.ACoS) || 0;
-        const orders = parseInt(row.Orders) || 0;
-        const clicks = parseInt(row.Clicks) || 0;
-        const cvr = parseFloat(row.CVR) || 0;
+        const spend = parseFloat(row.Spend_30) || 0;
+        const acos = parseFloat(row.ACoS_30) || 0;
+        const orders = parseInt(row.Orders_30) || 0;
+        const clicks = parseInt(row.Clicks_30) || 0;
+        const cvr = parseFloat(row.CVR_30) || 0;
         const bidAdjustment = parseInt(row["Increase bids by placement"]) || 0;
 
         // Calculate sales from Spend and ACoS (Spend / (ACoS/100))
