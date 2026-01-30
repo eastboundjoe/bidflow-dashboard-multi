@@ -301,7 +301,7 @@ AMAZON_CLIENT_ID=your-client-id
 AMAZON_CLIENT_SECRET=your-client-secret
 
 # App
-NEXT_PUBLIC_APP_URL=https://app.bidflow.app
+NEXT_PUBLIC_APP_URL=https://bidflow.app
 ```
 
 ---
