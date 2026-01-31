@@ -15,7 +15,7 @@ export function AdvancedSankeyAnimation() {
   // Animation state
   const particlesRef = useRef<any[]>([])
   const cacheRef = useRef<any>({})
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | null>(null)
   const elapsedRef = useRef(0)
 
   useEffect(() => {
