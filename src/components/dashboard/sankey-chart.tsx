@@ -18,11 +18,11 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const cacheRef = useRef<Record<string, { points: { x: number; y: number }[] }>>({});
   const animationRef = useRef<number | undefined>(undefined);
   const elapsedRef = useRef(0);
-  const spendCounterRef = useRef<Record<string, number>>({});
+  const spendCounterRef = useRef<Record<string, { sales: number; noSales: number }>>({});
 
   // Calculate placement stats from data
   const placementData = React.useMemo(() => {
-    const stats: Record<string, { clicks: number; spend: number; sales: number; cvr: number }> = {};
+    const stats: Record<string, { clicks: number; spend: number; sales: number; orders: number; cvr: number }> = {};
 
     data.forEach(row => {
       let key = "";
@@ -32,17 +32,18 @@ export function SankeyChart({ data }: SankeyChartProps) {
       else return;
 
       if (!stats[key]) {
-        stats[key] = { clicks: 0, spend: 0, sales: 0, cvr: 0 };
+        stats[key] = { clicks: 0, spend: 0, sales: 0, orders: 0, cvr: 0 };
       }
       stats[key].clicks += row.clicks || 0;
       stats[key].spend += row.spend || 0;
       stats[key].sales += row.sales || 0;
+      stats[key].orders += row.orders || 0;
     });
 
-    // Calculate CVR for each placement
+    // Calculate CVR for each placement (orders / clicks)
     Object.keys(stats).forEach(key => {
       const s = stats[key];
-      s.cvr = s.clicks > 0 ? (s.sales / s.spend) * 100 : 0;
+      s.cvr = s.clicks > 0 ? (s.orders / s.clicks) * 100 : 0;
     });
 
     return stats;
@@ -149,7 +150,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       const totalClicks = leaf.targets.reduce((sum: number, t: any) => sum + t.value, 0);
       cpcByPlacement[leaf.node.name] = totalClicks > 0 ? leaf.spend / totalClicks : 0;
       if (!spendCounterRef.current[leaf.node.name]) {
-        spendCounterRef.current[leaf.node.name] = 0;
+        spendCounterRef.current[leaf.node.name] = { sales: 0, noSales: 0 };
       }
     });
 
@@ -309,13 +310,15 @@ export function SankeyChart({ data }: SankeyChartProps) {
 
       // Spend header
       const s4 = g.append("g")
-        .attr("transform", `translate(${width - margin.left + 30}, ${leaves[0].node.y0 - 40})`)
+        .attr("transform", `translate(${width - margin.left + 10}, ${leaves[0].node.y0 - 40})`)
         .style("font-family", "monospace")
         .style("font-size", "11px")
         .attr("text-anchor", "end")
         .attr("fill", "#9ca3af");
 
       s4.append("text").text("SPEND");
+      s4.append("text").attr("y", 16).attr("fill", "#00ff94").style("font-weight", "bold").text("→ sales");
+      s4.append("text").attr("y", 30).attr("fill", "#ff3366").style("font-weight", "bold").text("→ no sales");
     }
 
     // Progress bars and metrics for each placement
@@ -401,17 +404,29 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .attr("fill", "#ff3366")
       .text("0");
 
-    // Spend value
+    // Spend values - separate for sales and no sales
     barGroups.append("text")
-      .attr("class", "spend-value")
-      .attr("x", barWidth + 170)
-      .attr("y", barHeight * 0.5)
+      .attr("class", "spend-green")
+      .attr("x", barWidth + 130)
+      .attr("y", barHeight * 0.25)
       .attr("dy", "0.3em")
       .attr("text-anchor", "end")
       .style("font-family", "monospace")
-      .style("font-size", "13px")
+      .style("font-size", "11px")
       .style("font-weight", "bold")
-      .attr("fill", "#ff9500")
+      .attr("fill", "#00ff94")
+      .text("$0");
+
+    barGroups.append("text")
+      .attr("class", "spend-red")
+      .attr("x", barWidth + 130)
+      .attr("y", barHeight * 0.75)
+      .attr("dy", "0.3em")
+      .attr("text-anchor", "end")
+      .style("font-family", "monospace")
+      .style("font-size", "11px")
+      .style("font-weight", "bold")
+      .attr("fill", "#ff3366")
       .text("$0");
 
     // Animation tick function
@@ -442,15 +457,22 @@ export function SankeyChart({ data }: SankeyChartProps) {
         const exp = d3.sum(d.targets, (t: any) => t.value) || 1;
         const placementName = d.node.name;
 
-        // Count completed particles for spend
+        // Count completed particles for spend - separate by outcome
         const completedNow = particlesRef.current.filter((p: any) =>
           p.target.name === placementName && p.pos >= p.length && !p.counted
         );
 
         completedNow.forEach((p: any) => {
           if (cpcByPlacement[placementName]) {
-            spendCounterRef.current[placementName] =
-              (spendCounterRef.current[placementName] || 0) + cpcByPlacement[placementName];
+            const cpc = cpcByPlacement[placementName];
+            if (!spendCounterRef.current[placementName]) {
+              spendCounterRef.current[placementName] = { sales: 0, noSales: 0 };
+            }
+            if (p.target.group === "clicks to sales") {
+              spendCounterRef.current[placementName].sales += cpc;
+            } else {
+              spendCounterRef.current[placementName].noSales += cpc;
+            }
           }
           p.counted = true;
         });
@@ -476,11 +498,14 @@ export function SankeyChart({ data }: SankeyChartProps) {
         d3.select(this).select(".c-green").text(kf);
         d3.select(this).select(".c-red").text(af);
 
-        // Update spend
-        const currentSpend = spendCounterRef.current[placementName] || 0;
+        // Update spend - separate for sales vs no sales
+        const spendData = spendCounterRef.current[placementName] || { sales: 0, noSales: 0 };
         const maxSpend = d.spend || 0;
-        const displaySpend = Math.min(currentSpend, maxSpend);
-        d3.select(this).select(".spend-value").text("$" + displaySpend.toFixed(0));
+        const totalSpendSoFar = spendData.sales + spendData.noSales;
+        const ratio = maxSpend > 0 && totalSpendSoFar > 0 ? Math.min(1, maxSpend / totalSpendSoFar) : 1;
+
+        d3.select(this).select(".spend-green").text("$" + Math.round(spendData.sales * ratio));
+        d3.select(this).select(".spend-red").text("$" + Math.round(spendData.noSales * ratio));
       });
 
       // Move particles
@@ -598,15 +623,11 @@ export function SankeyChart({ data }: SankeyChartProps) {
       <div className="flex flex-wrap items-center justify-center gap-6 mt-4 text-xs">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded" style={{ backgroundColor: "#00ff94" }} />
-          <span className="text-muted-foreground">Clicks → Sales</span>
+          <span className="text-muted-foreground">Clicks → Sales (orders)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded" style={{ backgroundColor: "#ff3366" }} />
           <span className="text-muted-foreground">Clicks → No Sales</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#ff9500" }} />
-          <span className="text-muted-foreground">Spend</span>
         </div>
       </div>
     </div>
