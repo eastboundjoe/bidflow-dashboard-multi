@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useRef } from "react";
+import * as d3 from "d3";
+import { sankey, sankeyJustify } from "d3-sankey";
 import type { PlacementData } from "@/types";
 
 interface SankeyChartProps {
@@ -9,37 +12,357 @@ interface SankeyChartProps {
   height?: number;
 }
 
-// SVG-based Flow Diagram
+// D3-based Animated Flow Diagram
 export function SankeyChart({ data }: SankeyChartProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const particlesRef = useRef<any[]>([]);
+  const cacheRef = useRef<any>({});
+  const animationRef = useRef<number | undefined>(undefined);
+  const elapsedRef = useRef(0);
+
+  // Calculate stats from data
   const stats = React.useMemo(() => {
-    const byPlacement: Record<string, { spend: number; sales: number; clicks: number; cvr: number }> = {};
+    const byPlacement: Record<string, { spend: number; sales: number; clicks: number }> = {};
 
     data.forEach(row => {
       const placement = row.placement_type || "Unknown";
       if (!byPlacement[placement]) {
-        byPlacement[placement] = { spend: 0, sales: 0, clicks: 0, cvr: 0 };
+        byPlacement[placement] = { spend: 0, sales: 0, clicks: 0 };
       }
       byPlacement[placement].spend += row.spend || 0;
       byPlacement[placement].sales += row.sales || 0;
       byPlacement[placement].clicks += row.clicks || 0;
     });
 
-    // Calculate CVR for each placement
-    Object.keys(byPlacement).forEach(key => {
-      const p = byPlacement[key];
-      p.cvr = p.clicks > 0 ? (p.sales / p.spend) * 100 : 0;
-    });
-
     const totalSpend = Object.values(byPlacement).reduce((sum, s) => sum + s.spend, 0);
     const totalSales = Object.values(byPlacement).reduce((sum, s) => sum + s.sales, 0);
-    const totalClicks = Object.values(byPlacement).reduce((sum, s) => sum + s.clicks, 0);
 
-    return { byPlacement, totalSpend, totalSales, totalClicks };
+    return { byPlacement, totalSpend, totalSales };
   }, [data]);
+
+  useEffect(() => {
+    if (!svgRef.current || data.length === 0 || stats.totalSpend === 0) return;
+
+    // Configuration
+    const width = 700;
+    const height = 350;
+    const psize = 6;
+    const margin = { top: 40, right: 100, bottom: 20, left: 10 };
+    const bandHeight = 50;
+    const padding = 30;
+    const speed = 0.8;
+    const density = 5;
+
+    // Placement colors
+    const placementColors: Record<string, string> = {
+      "Top of Search": "#00ff94",
+      "Rest of Search": "#0095ff",
+      "Product Page": "#ff9500",
+    };
+
+    // Build node/link structure: Ad Spend -> Placements -> Sales
+    const placements = ["Top of Search", "Rest of Search", "Product Page"];
+
+    const nodes = [
+      { name: "Ad Spend" },
+      ...placements.map(p => ({ name: p })),
+      { name: "Sales" }
+    ];
+
+    // Links: Ad Spend to each placement, each placement to Sales
+    const links: any[] = [];
+    placements.forEach(p => {
+      const placementData = stats.byPlacement[p] || { spend: 0, sales: 0 };
+      if (placementData.spend > 0) {
+        links.push({ source: "Ad Spend", target: p, value: placementData.spend });
+        links.push({ source: p, target: "Sales", value: placementData.sales });
+      }
+    });
+
+    // Prepare data for Sankey layout
+    const dataForSankey = {
+      nodes: nodes.map(n => ({ ...n, fixedValue: 1 })),
+      links: links.map(l => ({ ...l, value: Math.max(l.value, 1) })),
+    };
+
+    // Create Sankey layout
+    const sankeyLayout = sankey()
+      .nodeId((d: any) => d.name)
+      .nodeAlign(sankeyJustify)
+      .nodeWidth(40)
+      .nodePadding(padding)
+      .size([width - margin.left - margin.right, height - margin.top - margin.bottom]);
+
+    const sankeyData = sankeyLayout(dataForSankey as any);
+
+    // Generate routes
+    const walkRoutes = (n: any): any[] => {
+      const subroutes = n.sourceLinks.flatMap((d: any) => walkRoutes(d.target));
+      return subroutes.length ? subroutes.map((r: any) => [n, ...r]) : [[n]];
+    };
+
+    const root = sankeyData.nodes.find((d: any) => d.targetLinks?.length === 0);
+    const routes = root ? walkRoutes(root) : [];
+
+    // Create particle targets based on spend proportion
+    const targets: any[] = [];
+    placements.forEach(p => {
+      const placementData = stats.byPlacement[p] || { spend: 0, sales: 0 };
+      if (placementData.spend > 0) {
+        const proportion = placementData.spend / stats.totalSpend;
+        targets.push({
+          name: p,
+          path: `/Ad Spend/${p}/Sales`,
+          value: proportion,
+          color: placementColors[p],
+        });
+      }
+    });
+
+    const totalParticles = 200;
+    const thresholds = d3.range(targets.length).map(i =>
+      d3.sum(targets.slice(0, i + 1).map(r => r.value))
+    );
+    const targetScale = d3.scaleThreshold<number, any>().domain(thresholds).range(targets);
+
+    // Scales
+    const offsetScale = d3.scaleLinear().range([-bandHeight / 2 + psize, bandHeight / 2 - psize]);
+    const speedScale = d3.scaleLinear().range([speed, speed + 0.4]);
+
+    // Clear previous
+    d3.select(svgRef.current).selectAll("*").remove();
+    particlesRef.current = [];
+    cacheRef.current = {};
+    elapsedRef.current = 0;
+
+    // Create SVG
+    const svg = d3.select(svgRef.current)
+      .attr("viewBox", [0, 0, width, height])
+      .style("overflow", "visible");
+
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Custom path generator
+    function sankeyLinkCustom(nodes: any[]) {
+      const p = d3.path();
+      const h = bandHeight / 2;
+      nodes.forEach((n, i) => {
+        if (i === 0) {
+          p.moveTo(n.x0, n.y0 + h);
+        }
+        p.lineTo(n.x1, n.y0 + h);
+        const nn = nodes[i + 1];
+        if (nn) {
+          const w = nn.x0 - n.x1;
+          p.bezierCurveTo(n.x1 + w / 2, n.y0 + h, n.x1 + w / 2, nn.y0 + h, nn.x0, nn.y0 + h);
+        }
+      });
+      return p.toString();
+    }
+
+    // Draw paths
+    const route = g.append("g")
+      .attr("class", "routes")
+      .attr("fill", "none")
+      .attr("stroke-opacity", 0.15)
+      .attr("stroke", "#888")
+      .selectAll("path")
+      .data(routes)
+      .join("path")
+      .attr("d", sankeyLinkCustom)
+      .attr("stroke-width", bandHeight);
+
+    // Cache path points
+    route.each(function(nodes: any) {
+      const path = this as SVGPathElement;
+      const length = path.getTotalLength();
+      const points = d3.range(length).map(l => {
+        const point = path.getPointAtLength(l);
+        return { x: point.x, y: point.y };
+      });
+      const key = "/" + nodes.map((n: any) => n.name).join("/");
+      cacheRef.current[key] = { points };
+    });
+
+    // Particle container
+    const particlesContainer = g.append("g");
+
+    // Node labels and boxes
+    sankeyData.nodes.forEach((node: any) => {
+      const isPlacement = placements.includes(node.name);
+      const color = isPlacement ? placementColors[node.name] :
+                    node.name === "Ad Spend" ? "#00ff94" : "#10b981";
+
+      const nodeG = g.append("g")
+        .attr("transform", `translate(${node.x0}, ${node.y0})`);
+
+      // Node rectangle
+      nodeG.append("rect")
+        .attr("width", node.x1 - node.x0)
+        .attr("height", bandHeight)
+        .attr("fill", "#1f2937")
+        .attr("stroke", color)
+        .attr("stroke-width", 2)
+        .attr("rx", 6);
+
+      // Node label
+      nodeG.append("text")
+        .attr("x", (node.x1 - node.x0) / 2)
+        .attr("y", bandHeight / 2 - 8)
+        .attr("text-anchor", "middle")
+        .attr("fill", color)
+        .attr("font-size", "11px")
+        .attr("font-family", "monospace")
+        .attr("font-weight", "bold")
+        .text(node.name === "Top of Search" ? "TOP" :
+              node.name === "Rest of Search" ? "ROS" :
+              node.name === "Product Page" ? "PP" : node.name.toUpperCase());
+
+      // Value label
+      const value = node.name === "Ad Spend" ? stats.totalSpend :
+                    node.name === "Sales" ? stats.totalSales :
+                    stats.byPlacement[node.name]?.spend || 0;
+
+      nodeG.append("text")
+        .attr("x", (node.x1 - node.x0) / 2)
+        .attr("y", bandHeight / 2 + 10)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "12px")
+        .attr("font-family", "monospace")
+        .attr("font-weight", "bold")
+        .text(value.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }));
+    });
+
+    // ROAS indicator
+    const roas = stats.totalSpend > 0 ? (stats.totalSales / stats.totalSpend).toFixed(2) : "0.00";
+    const salesNode = sankeyData.nodes.find((n: any) => n.name === "Sales");
+    if (salesNode && salesNode.x0 !== undefined) {
+      const roasG = g.append("g")
+        .attr("transform", `translate(${(salesNode.x0 || 0) + 10}, ${(salesNode.y1 || 0) + 15})`);
+
+      roasG.append("rect")
+        .attr("width", 60)
+        .attr("height", 30)
+        .attr("fill", "#1f2937")
+        .attr("stroke", "#6366f1")
+        .attr("stroke-width", 1)
+        .attr("rx", 4);
+
+      roasG.append("text")
+        .attr("x", 30)
+        .attr("y", 12)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#9ca3af")
+        .attr("font-size", "8px")
+        .attr("font-family", "monospace")
+        .text("ROAS");
+
+      roasG.append("text")
+        .attr("x", 30)
+        .attr("y", 24)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#6366f1")
+        .attr("font-size", "12px")
+        .attr("font-family", "monospace")
+        .attr("font-weight", "bold")
+        .text(`${roas}x`);
+    }
+
+    // Animation functions
+    function addParticlesMaybe(t: number) {
+      const particlesToAdd = Math.round(Math.random() * density);
+      for (let i = 0; i < particlesToAdd && particlesRef.current.length < totalParticles; i++) {
+        const target = targetScale(Math.random());
+        if (!target || !cacheRef.current[target.path]) continue;
+
+        const length = cacheRef.current[target.path].points.length;
+        const particle = {
+          id: `${t}_${i}`,
+          speed: speedScale(Math.random()),
+          color: target.color,
+          offset: offsetScale(Math.random()),
+          pos: 0,
+          createdAt: t,
+          length,
+          target,
+        };
+        particlesRef.current.push(particle);
+      }
+    }
+
+    function moveParticles(t: number) {
+      particlesContainer
+        .selectAll<SVGRectElement, any>(".particle")
+        .data(particlesRef.current, (d: any) => d.id)
+        .join(
+          enter => enter
+            .append("rect")
+            .attr("class", "particle")
+            .attr("opacity", 0.9)
+            .attr("fill", (d: any) => d.color)
+            .attr("width", psize)
+            .attr("height", psize)
+            .attr("rx", 2),
+          update => update,
+          exit => exit.remove()
+        )
+        .each(function(d: any) {
+          const localTime = t - d.createdAt;
+          d.pos = localTime * d.speed;
+          const index = Math.floor(d.pos);
+
+          if (d.pos >= d.length) {
+            // Particle finished - fade out
+            const lastPoint = cacheRef.current[d.target.path].points[d.length - 1];
+            d3.select(this)
+              .attr("x", lastPoint.x)
+              .attr("y", lastPoint.y + d.offset)
+              .attr("opacity", 0.3);
+          } else {
+            const coo = cacheRef.current[d.target.path].points[index];
+            const nextCoo = cacheRef.current[d.target.path].points[index + 1];
+
+            if (coo && nextCoo) {
+              const delta = d.pos - index;
+              const x = coo.x + (nextCoo.x - coo.x) * delta;
+              const y = coo.y + (nextCoo.y - coo.y) * delta;
+
+              d3.select(this)
+                .attr("x", x - psize / 2)
+                .attr("y", y + d.offset - psize / 2)
+                .attr("opacity", 0.9);
+            }
+          }
+        });
+    }
+
+    function tick(t: number) {
+      addParticlesMaybe(t);
+      moveParticles(t);
+
+      // Remove finished particles after a delay
+      particlesRef.current = particlesRef.current.filter(p => p.pos < p.length + 50);
+    }
+
+    // Animation loop
+    function animate() {
+      tick(elapsedRef.current++);
+      animationRef.current = requestAnimationFrame(animate);
+    }
+    animate();
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [data, stats]);
 
   if (data.length === 0 || stats.totalSpend === 0) {
     return (
-      <div className="flex items-center justify-center h-[400px] text-muted-foreground">
+      <div className="flex items-center justify-center h-[350px] text-muted-foreground">
         <div className="text-center">
           <div className="text-4xl mb-4">📈</div>
           <p className="text-sm">No spend data available</p>
@@ -48,165 +371,24 @@ export function SankeyChart({ data }: SankeyChartProps) {
     );
   }
 
-  const placements = [
-    { key: "Top of Search", color: "#00ff94", label: "TOP", shortLabel: "T" },
-    { key: "Rest of Search", color: "#0095ff", label: "ROS", shortLabel: "R" },
-    { key: "Product Page", color: "#ff9500", label: "PP", shortLabel: "P" },
-  ];
-
-  const formatCurrency = (val: number) =>
-    val.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-
-  // Calculate flow widths based on spend proportion
-  const getFlowWidth = (spend: number) => {
-    const minWidth = 8;
-    const maxWidth = 60;
-    const proportion = stats.totalSpend > 0 ? spend / stats.totalSpend : 0;
-    return minWidth + proportion * (maxWidth - minWidth);
-  };
-
-  // SVG dimensions
-  const width = 700;
-  const height = 400;
-  const centerX = width / 2;
-
   return (
     <div className="w-full">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" style={{ minHeight: '350px' }}>
-        <defs>
-          {/* Gradients for flows */}
-          <linearGradient id="flowGradientTop" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#00ff94" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#00ff94" stopOpacity="0.3" />
-          </linearGradient>
-          <linearGradient id="flowGradientRos" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0095ff" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#0095ff" stopOpacity="0.3" />
-          </linearGradient>
-          <linearGradient id="flowGradientPp" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ff9500" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#ff9500" stopOpacity="0.3" />
-          </linearGradient>
-          <linearGradient id="salesGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0.7" />
-          </linearGradient>
-
-          {/* Glow filter */}
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Background */}
-        <rect width={width} height={height} fill="transparent" />
-
-        {/* AD SPEND Node */}
-        <g transform={`translate(60, ${height/2})`}>
-          <rect x="-50" y="-30" width="100" height="60" rx="8" fill="#1f2937" stroke="#00ff94" strokeWidth="2" />
-          <text x="0" y="-8" textAnchor="middle" fill="#9ca3af" fontSize="10" fontFamily="monospace">AD SPEND</text>
-          <text x="0" y="12" textAnchor="middle" fill="#00ff94" fontSize="16" fontWeight="bold" fontFamily="monospace">
-            {formatCurrency(stats.totalSpend)}
-          </text>
-        </g>
-
-        {/* Flow paths from AD SPEND to placements */}
-        {placements.map((p, i) => {
-          const placementData = stats.byPlacement[p.key] || { spend: 0, clicks: 0, sales: 0 };
-          const flowWidth = getFlowWidth(placementData.spend);
-          const yOffset = (i - 1) * 100; // -100, 0, 100 for vertical spread
-          const startY = height / 2;
-          const endY = height / 2 + yOffset;
-          const gradientId = i === 0 ? "flowGradientTop" : i === 1 ? "flowGradientRos" : "flowGradientPp";
-
-          return (
-            <g key={p.key}>
-              {/* Flow path */}
-              <path
-                d={`M 110 ${startY}
-                    C 200 ${startY}, 250 ${endY}, 340 ${endY}`}
-                fill="none"
-                stroke={`url(#${gradientId})`}
-                strokeWidth={flowWidth}
-                strokeLinecap="round"
-                opacity="0.8"
-              />
-
-              {/* Animated particles effect (CSS animation) */}
-              <circle r="4" fill={p.color} filter="url(#glow)">
-                <animateMotion
-                  dur={`${2 + i * 0.5}s`}
-                  repeatCount="indefinite"
-                  path={`M 110 ${startY} C 200 ${startY}, 250 ${endY}, 340 ${endY}`}
-                />
-              </circle>
-              <circle r="4" fill={p.color} filter="url(#glow)">
-                <animateMotion
-                  dur={`${2 + i * 0.5}s`}
-                  repeatCount="indefinite"
-                  begin={`${0.5 + i * 0.2}s`}
-                  path={`M 110 ${startY} C 200 ${startY}, 250 ${endY}, 340 ${endY}`}
-                />
-              </circle>
-
-              {/* Placement Node */}
-              <g transform={`translate(380, ${endY})`}>
-                <rect x="-40" y="-35" width="120" height="70" rx="8" fill="#1f2937" stroke={p.color} strokeWidth="2" />
-                <text x="20" y="-15" textAnchor="middle" fill={p.color} fontSize="14" fontWeight="bold" fontFamily="monospace">
-                  {p.label}
-                </text>
-                <text x="20" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" fontFamily="monospace">
-                  {formatCurrency(placementData.spend)}
-                </text>
-                <text x="20" y="22" textAnchor="middle" fill="#9ca3af" fontSize="9" fontFamily="monospace">
-                  {placementData.clicks.toLocaleString()} clicks
-                </text>
-              </g>
-
-              {/* Flow to outcomes */}
-              <path
-                d={`M 500 ${endY} C 550 ${endY}, 580 ${height/2 - 40}, 620 ${height/2 - 40}`}
-                fill="none"
-                stroke="url(#salesGradient)"
-                strokeWidth={flowWidth * 0.6}
-                strokeLinecap="round"
-                opacity="0.6"
-              />
-            </g>
-          );
-        })}
-
-        {/* SALES Node */}
-        <g transform={`translate(${width - 60}, ${height/2 - 40})`}>
-          <rect x="-50" y="-30" width="100" height="60" rx="8" fill="#1f2937" stroke="#10b981" strokeWidth="2" />
-          <text x="0" y="-8" textAnchor="middle" fill="#9ca3af" fontSize="10" fontFamily="monospace">SALES</text>
-          <text x="0" y="12" textAnchor="middle" fill="#10b981" fontSize="16" fontWeight="bold" fontFamily="monospace">
-            {formatCurrency(stats.totalSales)}
-          </text>
-        </g>
-
-        {/* ROAS indicator */}
-        <g transform={`translate(${width - 60}, ${height/2 + 50})`}>
-          <rect x="-40" y="-20" width="80" height="40" rx="6" fill="#1f2937" stroke="#6366f1" strokeWidth="1" />
-          <text x="0" y="-2" textAnchor="middle" fill="#9ca3af" fontSize="9" fontFamily="monospace">ROAS</text>
-          <text x="0" y="14" textAnchor="middle" fill="#6366f1" fontSize="14" fontWeight="bold" fontFamily="monospace">
-            {(stats.totalSales / stats.totalSpend).toFixed(2)}x
-          </text>
-        </g>
-      </svg>
+      <svg ref={svgRef} className="w-full" style={{ minHeight: '350px' }} />
 
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-4 mt-4 text-xs">
-        {placements.map(({ key, color }) => (
-          <div key={key} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
-            <span className="text-muted-foreground">{key}</span>
-          </div>
-        ))}
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#00ff94" }} />
+          <span className="text-muted-foreground">Top of Search</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#0095ff" }} />
+          <span className="text-muted-foreground">Rest of Search</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#ff9500" }} />
+          <span className="text-muted-foreground">Product Page</span>
+        </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-green-500" />
           <span className="text-muted-foreground">Sales</span>
@@ -216,7 +398,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   );
 }
 
-// Simple bar-based spend distribution chart
+// Simple bar-based spend distribution chart (fallback)
 export function SpendFlowChart({ data }: { data: PlacementData[] }) {
   const stats = React.useMemo(() => {
     const byPlacement = data.reduce(
@@ -257,7 +439,6 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
 
   return (
     <div className="space-y-6">
-      {/* Spend Distribution */}
       <div>
         <h4 className="text-sm font-medium mb-3">Spend by Placement</h4>
         <div className="space-y-3">
@@ -291,7 +472,6 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         </div>
       </div>
 
-      {/* Conversion Summary */}
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
         <div className="text-center">
           <div className="text-2xl font-bold text-primary">
@@ -315,7 +495,6 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         </div>
       </div>
 
-      {/* ROAS indicator */}
       <div className="text-center pt-4 border-t border-border">
         <div className="text-3xl font-bold">
           <span
