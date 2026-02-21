@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Rounded Rect Background -->
+  <rect width="28" height="28" x="2" y="2" rx="6" fill="#0F172A"/> 
+  
+  <!-- Flow/Growth Lines (Abstract 'B' for BidFlow) -->
+  <path d="M8 22 V10 Q8 8 11 8 H16 Q20 8 20 12 Q20 16 16 16 H8" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M11 16 H16 Q21 16 21 20 Q21 24 16 24 H11" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- "Optimized" indicator dot -->
+  <circle cx="24" cy="8" r="3" fill="#10B981">
+    <animate attributeName="opacity" values="1;0.4;1" dur="3s" repeatCount="indefinite" />
+  </circle>
+</svg>
