@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     "ACOS",
     "Bid Management",
   ],
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
