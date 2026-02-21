@@ -3,7 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { StatsSummary } from "@/types";
-import { TrendingUp, TrendingDown, DollarSign, MousePointerClick, Eye, ShoppingCart } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  MousePointerClick,
+  Eye,
+  ShoppingCart,
+} from "lucide-react";
 
 interface StatsGridProps {
   stats: StatsSummary | null;
@@ -32,35 +39,48 @@ interface StatCardProps {
   loading?: boolean;
 }
 
-function StatCard({ title, value, subtitle, icon, trend, loading }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  trend,
+  loading,
+}: StatCardProps) {
   return (
-    <Card className="card-hover">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xs font-mono uppercase text-muted-foreground tracking-wider">
+    <Card className="relative overflow-hidden border-zinc-800 bg-zinc-900/50 card-glow">
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
+        <CardTitle className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">
           {title}
         </CardTitle>
-        <div className="text-muted-foreground">{icon}</div>
+        <div className="text-zinc-600">{icon}</div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-4 px-5">
         {loading ? (
           <>
-            <Skeleton className="h-8 w-24 mb-1" />
-            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-9 w-28 mb-2 bg-zinc-800" />
+            <Skeleton className="h-3 w-16 bg-zinc-800" />
           </>
         ) : (
           <>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primary">{value}</span>
+            <div className="flex items-end gap-2 mb-1">
+              <span className="text-3xl font-bold font-data leading-none text-foreground">
+                {value}
+              </span>
               {trend && trend !== "neutral" && (
-                trend === "up" ? (
-                  <TrendingUp className="h-4 w-4 text-green-400" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-400" />
-                )
+                <div className="mb-0.5">
+                  {trend === "up" ? (
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-400" />
+                  )}
+                </div>
               )}
             </div>
             {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
+              <p className="text-xs text-zinc-600">{subtitle}</p>
             )}
           </>
         )}
@@ -73,16 +93,18 @@ export function StatsGrid({ stats, loading = false }: StatsGridProps) {
   if (!stats && !loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <StatCard
-            key={i}
-            title={["Total Spend", "Total Sales", "ACOS", "ROAS"][i]}
-            value="$0"
-            subtitle="No data"
-            icon={<DollarSign className="h-4 w-4" />}
-            loading={false}
-          />
-        ))}
+        {(["Total Spend", "Total Sales", "ACoS", "ROAS"] as const).map(
+          (title) => (
+            <StatCard
+              key={title}
+              title={title}
+              value="—"
+              subtitle="No data yet"
+              icon={<DollarSign className="h-4 w-4" />}
+              loading={false}
+            />
+          )
+        )}
       </div>
     );
   }
@@ -104,7 +126,7 @@ export function StatsGrid({ stats, loading = false }: StatsGridProps) {
         loading={loading}
       />
       <StatCard
-        title="ACOS"
+        title="ACoS"
         value={loading ? "" : formatPercent(stats?.avgAcos ?? 0)}
         subtitle="Avg across placements"
         icon={<TrendingDown className="h-4 w-4" />}
@@ -113,7 +135,7 @@ export function StatsGrid({ stats, loading = false }: StatsGridProps) {
       />
       <StatCard
         title="ROAS"
-        value={loading ? "" : `${(stats?.avgRoas ?? 0).toFixed(2)}x`}
+        value={loading ? "" : `${(stats?.avgRoas ?? 0).toFixed(2)}×`}
         subtitle="Return on ad spend"
         icon={<TrendingUp className="h-4 w-4" />}
         trend={stats && stats.avgRoas > 4 ? "up" : "down"}
@@ -156,7 +178,7 @@ export function StatsGridExtended({ stats, loading = false }: StatsGridProps) {
         loading={loading}
       />
       <StatCard
-        title="ACOS"
+        title="ACoS"
         value={loading ? "" : formatPercent(stats?.avgAcos ?? 0)}
         subtitle="Avg cost of sale"
         icon={<TrendingDown className="h-4 w-4" />}
@@ -165,7 +187,7 @@ export function StatsGridExtended({ stats, loading = false }: StatsGridProps) {
       />
       <StatCard
         title="ROAS"
-        value={loading ? "" : `${(stats?.avgRoas ?? 0).toFixed(2)}x`}
+        value={loading ? "" : `${(stats?.avgRoas ?? 0).toFixed(2)}×`}
         subtitle="Return on ad spend"
         icon={<TrendingUp className="h-4 w-4" />}
         trend={stats && stats.avgRoas > 4 ? "up" : "down"}
@@ -176,7 +198,19 @@ export function StatsGridExtended({ stats, loading = false }: StatsGridProps) {
 }
 
 // Calculate stats from placement data
-export function calculateStats(data: Array<{ spend: number; sales: number; clicks: number; impressions: number; orders: number; acos: number; roas: number; ctr: number; cvr: number }>): StatsSummary {
+export function calculateStats(
+  data: Array<{
+    spend: number;
+    sales: number;
+    clicks: number;
+    impressions: number;
+    orders: number;
+    acos: number;
+    roas: number;
+    ctr: number;
+    cvr: number;
+  }>
+): StatsSummary {
   if (data.length === 0) {
     return {
       totalSpend: 0,
@@ -194,7 +228,10 @@ export function calculateStats(data: Array<{ spend: number; sales: number; click
   const totalSpend = data.reduce((sum, row) => sum + (row.spend || 0), 0);
   const totalSales = data.reduce((sum, row) => sum + (row.sales || 0), 0);
   const totalClicks = data.reduce((sum, row) => sum + (row.clicks || 0), 0);
-  const totalImpressions = data.reduce((sum, row) => sum + (row.impressions || 0), 0);
+  const totalImpressions = data.reduce(
+    (sum, row) => sum + (row.impressions || 0),
+    0
+  );
   const totalOrders = data.reduce((sum, row) => sum + (row.orders || 0), 0);
 
   return {
@@ -205,7 +242,8 @@ export function calculateStats(data: Array<{ spend: number; sales: number; click
     totalOrders,
     avgAcos: totalSales > 0 ? (totalSpend / totalSales) * 100 : 0,
     avgRoas: totalSpend > 0 ? totalSales / totalSpend : 0,
-    avgCtr: totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0,
+    avgCtr:
+      totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0,
     avgCvr: totalClicks > 0 ? (totalOrders / totalClicks) * 100 : 0,
   };
 }
