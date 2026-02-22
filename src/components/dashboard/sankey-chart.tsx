@@ -335,28 +335,28 @@ export function SankeyChart({ data }: SankeyChartProps) {
 
     // Labels — start at 0, animated to correct final values by tick()
     barGroups.append("text")
-      .attr("class", "p-green")
-      .attr("x", barWidth + 10).attr("y", barHeight * 0.25).attr("dy", "0.3em")
-      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
-      .attr("fill", "#3b82f6").text("0%");
-
-    barGroups.append("text")
-      .attr("class", "p-red")
-      .attr("x", barWidth + 10).attr("y", barHeight * 0.75).attr("dy", "0.3em")
-      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
-      .attr("fill", "#ef4444").text("0%");
-
-    barGroups.append("text")
       .attr("class", "c-green")
-      .attr("x", barWidth + 50).attr("y", barHeight * 0.25).attr("dy", "0.3em")
+      .attr("x", barWidth + 10).attr("y", barHeight * 0.25).attr("dy", "0.3em")
       .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#3b82f6").text("0");
 
     barGroups.append("text")
       .attr("class", "c-red")
-      .attr("x", barWidth + 50).attr("y", barHeight * 0.75).attr("dy", "0.3em")
+      .attr("x", barWidth + 10).attr("y", barHeight * 0.75).attr("dy", "0.3em")
       .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#ef4444").text("0");
+
+    barGroups.append("text")
+      .attr("class", "p-green")
+      .attr("x", barWidth + 50).attr("y", barHeight * 0.25).attr("dy", "0.3em")
+      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
+      .attr("fill", "#3b82f6").text("0%");
+
+    barGroups.append("text")
+      .attr("class", "p-red")
+      .attr("x", barWidth + 50).attr("y", barHeight * 0.75).attr("dy", "0.3em")
+      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
+      .attr("fill", "#ef4444").text("0%");
 
 
     // Animation tick function
@@ -660,19 +660,14 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                 })}
                 {/* Totals row */}
                 {(() => {
-                  const totalClicks = totalCS + totalCN;
-                  const totalPctS = totalClicks > 0 ? Math.round(totalCS / totalClicks * 100) : 0;
-                  const totalPctN = totalClicks > 0 ? Math.round(totalCN / totalClicks * 100) : 0;
                   return (
                     <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-t-2 border-slate-300 dark:border-slate-600 mt-0.5 items-center">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</span>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs font-bold tabular-nums text-blue-500">{totalPctS}%</span>
-                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{totalCS}</span>
+                        <span className="text-xs font-bold tabular-nums text-blue-500">{totalCS}</span>
                       </div>
                       <div className="flex flex-col items-center">
-                        <span className="text-xs font-bold tabular-nums text-red-500">{totalPctN}%</span>
-                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{totalCN}</span>
+                        <span className="text-xs font-bold tabular-nums text-red-500">{totalCN}</span>
                       </div>
                       <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(totalSS)}</div>
                       <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(totalSN)}</div>
