@@ -191,7 +191,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           impression_share_yesterday: row["Yesterday"] ?? row["yesterday"] ?? "0%",
 
           bid_adjustment: bidAdjustment,
-          changes_in_placement: "0",
+          changes_in_placement: "",
 
           // Get proper week info
           ...(() => {
@@ -272,7 +272,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         alert("✅ Changes submitted successfully to Amazon!");
         // Reset changes after successful submission
         setData((prev) =>
-          prev.map((row) => ({ ...row, changes_in_placement: "0" }))
+          prev.map((row) => ({ ...row, changes_in_placement: "" }))
         );
       } else {
         alert("❌ Failed to submit changes. Please try again.");

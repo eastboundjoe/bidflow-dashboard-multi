@@ -99,9 +99,10 @@ function ChangesInput({
             <Input 
                 className={cn(
                     "h-7 w-20 text-xs text-right transition-colors font-bold",
-                    localValue !== "0" && localValue !== "" && "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20",
+                    localValue !== "" && "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20",
                     showWarning && "border-red-500 animate-pulse"
                 )} 
+                placeholder="0"
                 value={localValue}
                 onChange={handleChange}
                 onBlur={handleBlur}
