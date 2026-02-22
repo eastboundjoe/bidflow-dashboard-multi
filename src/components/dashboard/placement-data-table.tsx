@@ -98,14 +98,15 @@ function ChangesInput({
         <div className="relative group">
             <Input 
                 className={cn(
-                    "h-7 w-20 text-xs text-right transition-colors",
-                    localValue !== "0" && localValue !== "" && "border-primary bg-primary/5",
+                    "h-7 w-20 text-xs text-right transition-colors font-bold",
+                    localValue !== "0" && localValue !== "" && "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20",
                     showWarning && "border-red-500 animate-pulse"
                 )} 
                 value={localValue}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
+                onFocus={(e) => e.target.select()}
             />
             {showWarning && (
                 <div className="absolute bottom-full right-0 mb-2 z-50 bg-red-600 text-white text-[10px] font-bold py-1 px-2 rounded shadow-lg whitespace-nowrap animate-bounce pointer-events-none">
@@ -662,6 +663,7 @@ export function PlacementDataTable({
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: "includesString",
+    autoResetPageIndex: false,
     state: {
       sorting,
       columnFilters,
