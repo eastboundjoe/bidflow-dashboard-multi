@@ -34,10 +34,10 @@ export function SankeyChart({ data }: SankeyChartProps) {
       if (!stats[key]) {
         stats[key] = { clicks: 0, spend: 0, sales: 0, orders: 0, cvr: 0 };
       }
-      stats[key].clicks += row.clicks || 0;
-      stats[key].spend += row.spend || 0;
-      stats[key].sales += row.sales || 0;
-      stats[key].orders += row.orders || 0;
+      stats[key].clicks += row.clicks_7d || 0;
+      stats[key].spend += row.spend_7d || 0;
+      stats[key].sales += row.sales_7d || 0;
+      stats[key].orders += row.orders_7d || 0;
     });
 
     // Calculate CVR for each placement (orders / clicks)
@@ -643,8 +643,8 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         if (!acc[placement]) {
           acc[placement] = { spend: 0, sales: 0 };
         }
-        acc[placement].spend += row.spend || 0;
-        acc[placement].sales += row.sales || 0;
+        acc[placement].spend += row.spend_7d || 0;
+        acc[placement].sales += row.sales_7d || 0;
         return acc;
       },
       {} as Record<string, { spend: number; sales: number }>
