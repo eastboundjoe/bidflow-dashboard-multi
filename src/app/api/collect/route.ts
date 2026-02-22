@@ -15,10 +15,11 @@ export async function POST() {
   }
 
   // Get user's tenant and credentials
+  // In this system, tenant_id is the user's ID
   const { data: credentials, error: credsError } = await supabase
     .from('credentials')
     .select('tenant_id')
-    .eq('user_id', user.id)
+    .eq('tenant_id', user.id)
     .single();
 
   if (credsError || !credentials?.tenant_id) {
