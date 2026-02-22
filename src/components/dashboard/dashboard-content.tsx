@@ -272,9 +272,24 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
       if (response.ok) {
         alert("✅ Changes submitted successfully to Amazon!");
-        // Reset changes after successful submission
+        // Update bid_adjustment to the submitted value, then clear changes
         setData((prev) =>
-          prev.map((row) => ({ ...row, changes_in_placement: "" }))
+          prev.map((row) => {
+            const hasChange =
+              row.changes_in_placement &&
+              row.changes_in_placement !== "0" &&
+              row.changes_in_placement !== "0%" &&
+              row.changes_in_placement.trim() !== "";
+            if (hasChange) {
+              const newVal = parseInt(row.changes_in_placement!.replace("%", ""));
+              return {
+                ...row,
+                bid_adjustment: isNaN(newVal) ? row.bid_adjustment : newVal,
+                changes_in_placement: "",
+              };
+            }
+            return { ...row, changes_in_placement: "" };
+          })
         );
       } else {
         alert("❌ Failed to submit changes. Please try again.");
