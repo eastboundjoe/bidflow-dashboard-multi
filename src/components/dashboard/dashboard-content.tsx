@@ -98,14 +98,25 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
     try {
       const supabase = createClient();
-      const { data: placements, error: fetchError } = await supabase
-        .from("view_placement_optimization_report")
-        .select("*")
-        .order("Spend", { ascending: false });
+
+      // Fetch placements and change tracking in parallel
+      const [{ data: placements, error: fetchError }, { data: bidsData }] = await Promise.all([
+        supabase
+          .from("view_placement_optimization_report")
+          .select("*")
+          .order("Spend", { ascending: false }),
+        supabase
+          .from("placement_bids")
+          .select("campaign_id, last_changed_at_top, last_changed_to_top, last_changed_at_rest, last_changed_to_rest, last_changed_at_product, last_changed_to_product"),
+      ]);
 
       if (fetchError) {
         throw new Error(fetchError.message);
       }
+
+      // Build lookup map: campaign_id -> change tracking columns
+      const bidsMap: Record<string, any> = {};
+      (bidsData || []).forEach((b: any) => { bidsMap[b.campaign_id] = b; });
 
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
@@ -154,10 +165,32 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         const portfolioName = getVal("Portfolio") || "No Portfolio";
         const portfolioId = row.portfolio_id || portfolioName;
 
+        // Derive change tracking from placement_bids
+        const campaignId = row.campaign_id || "";
+        const bids = bidsMap[campaignId];
+        const placementSuffix =
+          placement_type === "Top of Search" ? "top" :
+          placement_type === "Rest of Search" ? "rest" :
+          placement_type === "Product Page" ? "product" : null;
+
+        let changed_at: string | undefined;
+        let changes_in_placement = "";
+        if (bids && placementSuffix) {
+          const changedAt = bids[`last_changed_at_${placementSuffix}`];
+          const changedTo = bids[`last_changed_to_${placementSuffix}`];
+          if (changedAt) {
+            const d = new Date(changedAt);
+            changed_at = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+          }
+          if (changedTo !== null && changedTo !== undefined && changedTo !== 0) {
+            changes_in_placement = changedTo.toString();
+          }
+        }
+
         return {
           id: `${getVal("Campaign") || row.campaign_name}-${rawPlacement}`,
           tenant_id: row.tenant_id,
-          campaign_id: row.campaign_id || "",
+          campaign_id: campaignId,
           campaign_name: getVal("Campaign") || row.campaign_name || "Unknown",
           campaign_budget: getVal("Budget") ? parseFloat(getVal("Budget")) : null,
           
@@ -198,7 +231,8 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           impression_share_yesterday: row["Yesterday"] ?? row["yesterday"] ?? "0%",
 
           bid_adjustment: bidAdjustment,
-          changes_in_placement: "",
+          changes_in_placement,
+          changed_at,
 
           // Get proper week info
           ...(() => {
@@ -290,7 +324,30 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       if (response.ok) {
         alert("✅ Changes submitted successfully to Amazon!");
         const today = new Date();
+        const now = today.toISOString();
         const dateLabel = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+
+        // Persist change tracking to placement_bids
+        const supabaseClient = createClient();
+        const updatesByCampaign: Record<string, Record<string, any>> = {};
+        pendingChanges.forEach((change) => {
+          const suffix =
+            change.placement.toLowerCase().includes("top") ? "top" :
+            change.placement.toLowerCase().includes("rest") ? "rest" :
+            change.placement.toLowerCase().includes("product") ? "product" : null;
+          if (!suffix || !change.campaignId) return;
+          const val = parseInt(String(change.newMultiplier).replace("%", ""));
+          if (isNaN(val)) return;
+          if (!updatesByCampaign[change.campaignId]) updatesByCampaign[change.campaignId] = {};
+          updatesByCampaign[change.campaignId][`last_changed_at_${suffix}`] = now;
+          updatesByCampaign[change.campaignId][`last_changed_to_${suffix}`] = val;
+        });
+        await Promise.all(
+          Object.entries(updatesByCampaign).map(([campaignId, updates]) =>
+            supabaseClient.from("placement_bids").update(updates).eq("campaign_id", campaignId)
+          )
+        );
+
         // Update bid_adjustment to submitted value, keep changes value, mark changed_at
         setData((prev) =>
           prev.map((row) => {
