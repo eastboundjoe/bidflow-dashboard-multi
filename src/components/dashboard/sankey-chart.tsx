@@ -144,16 +144,6 @@ export function SankeyChart({ data }: SankeyChartProps) {
         spend: raw[n.name]?.spend || 0
       }));
 
-    // Initialize CPC for each placement
-    const cpcByPlacement: Record<string, number> = {};
-    leaves.forEach((leaf: any) => {
-      const totalClicks = leaf.targets.reduce((sum: number, t: any) => sum + t.value, 0);
-      cpcByPlacement[leaf.node.name] = totalClicks > 0 ? leaf.spend / totalClicks : 0;
-      if (!spendCounterRef.current[leaf.node.name]) {
-        spendCounterRef.current[leaf.node.name] = { sales: 0, noSales: 0 };
-      }
-    });
-
     // Clear and setup SVG
     d3.select(svgRef.current).selectAll("*").remove();
     cacheRef.current = {};
@@ -358,7 +348,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .attr("fill", "#ef4444")
       .attr("rx", 2);
 
-    // Percentage labels
+    // Static labels — show final values immediately so they match Spend Distribution
     barGroups.append("text")
       .attr("class", "p-green")
       .attr("x", barWidth + 10)
@@ -368,7 +358,12 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-size", "12px")
       .style("font-weight", "bold")
       .attr("fill", "#3b82f6")
-      .text("0%");
+      .text((d: any) => {
+        const r = raw[d.node.name];
+        if (!r) return "0%";
+        const tot = r["clicks to sales"] + r["clicks no sales"];
+        return tot > 0 ? Math.round(r["clicks to sales"] / tot * 100) + "%" : "0%";
+      });
 
     barGroups.append("text")
       .attr("class", "p-red")
@@ -379,7 +374,12 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-size", "12px")
       .style("font-weight", "bold")
       .attr("fill", "#ef4444")
-      .text("0%");
+      .text((d: any) => {
+        const r = raw[d.node.name];
+        if (!r) return "0%";
+        const tot = r["clicks to sales"] + r["clicks no sales"];
+        return tot > 0 ? Math.round(r["clicks no sales"] / tot * 100) + "%" : "0%";
+      });
 
     // Click counts
     barGroups.append("text")
@@ -391,7 +391,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-size", "12px")
       .style("font-weight", "bold")
       .attr("fill", "#3b82f6")
-      .text("0");
+      .text((d: any) => raw[d.node.name]?.["clicks to sales"] ?? 0);
 
     barGroups.append("text")
       .attr("class", "c-red")
@@ -402,9 +402,9 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-size", "12px")
       .style("font-weight", "bold")
       .attr("fill", "#ef4444")
-      .text("0");
+      .text((d: any) => raw[d.node.name]?.["clicks no sales"] ?? 0);
 
-    // Spend values - separate for sales and no sales
+    // Spend values — static final split
     barGroups.append("text")
       .attr("class", "spend-green")
       .attr("x", barWidth + 130)
@@ -415,7 +415,13 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-size", "11px")
       .style("font-weight", "bold")
       .attr("fill", "#3b82f6")
-      .text("$0");
+      .text((d: any) => {
+        const r = raw[d.node.name];
+        if (!r) return "$0";
+        const tot = r["clicks to sales"] + r["clicks no sales"];
+        const spendSales = tot > 0 ? r.spend * (r["clicks to sales"] / tot) : 0;
+        return "$" + Math.round(spendSales);
+      });
 
     barGroups.append("text")
       .attr("class", "spend-red")
@@ -427,7 +433,13 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-size", "11px")
       .style("font-weight", "bold")
       .attr("fill", "#ef4444")
-      .text("$0");
+      .text((d: any) => {
+        const r = raw[d.node.name];
+        if (!r) return "$0";
+        const tot = r["clicks to sales"] + r["clicks no sales"];
+        const spendNoSales = tot > 0 ? r.spend * (r["clicks no sales"] / tot) : 0;
+        return "$" + Math.round(spendNoSales);
+      });
 
     // Animation tick function
     function tick(t: number) {
@@ -452,30 +464,10 @@ export function SankeyChart({ data }: SankeyChartProps) {
         });
       }
 
-      // Update bars and metrics
+      // Animate progress bars only (labels are static final values)
       barGroups.each(function(d: any) {
         const exp = d3.sum(d.targets, (t: any) => t.value) || 1;
         const placementName = d.node.name;
-
-        // Count completed particles for spend - separate by outcome
-        const completedNow = particlesRef.current.filter((p: any) =>
-          p.target.name === placementName && p.pos >= p.length && !p.counted
-        );
-
-        completedNow.forEach((p: any) => {
-          if (cpcByPlacement[placementName]) {
-            const cpc = cpcByPlacement[placementName];
-            if (!spendCounterRef.current[placementName]) {
-              spendCounterRef.current[placementName] = { sales: 0, noSales: 0 };
-            }
-            if (p.target.group === "clicks to sales") {
-              spendCounterRef.current[placementName].sales += cpc;
-            } else {
-              spendCounterRef.current[placementName].noSales += cpc;
-            }
-          }
-          p.counted = true;
-        });
 
         const af = particlesRef.current.filter((p: any) =>
           p.target.name === placementName && p.target.group === "clicks no sales" && p.pos >= p.length
@@ -484,28 +476,11 @@ export function SankeyChart({ data }: SankeyChartProps) {
           p.target.name === placementName && p.target.group === "clicks to sales" && p.pos >= p.length
         ).length;
 
-        // Update bars
         d3.select(this).select(".bar-green")
           .attr("height", Math.min(barHeight, (kf / exp) * barHeight));
         d3.select(this).select(".bar-red")
           .attr("y", barHeight - Math.min(barHeight, (af / exp) * barHeight))
           .attr("height", Math.min(barHeight, (af / exp) * barHeight));
-
-        // Update labels
-        const tot = af + kf;
-        d3.select(this).select(".p-green").text(tot > 0 ? (kf / tot * 100).toFixed(0) + "%" : "0%");
-        d3.select(this).select(".p-red").text(tot > 0 ? (af / tot * 100).toFixed(0) + "%" : "0%");
-        d3.select(this).select(".c-green").text(kf);
-        d3.select(this).select(".c-red").text(af);
-
-        // Update spend - separate for sales vs no sales
-        const spendData = spendCounterRef.current[placementName] || { sales: 0, noSales: 0 };
-        const maxSpend = d.spend || 0;
-        const totalSpendSoFar = spendData.sales + spendData.noSales;
-        const ratio = maxSpend > 0 && totalSpendSoFar > 0 ? Math.min(1, maxSpend / totalSpendSoFar) : 1;
-
-        d3.select(this).select(".spend-green").text("$" + Math.round(spendData.sales * ratio));
-        d3.select(this).select(".spend-red").text("$" + Math.round(spendData.noSales * ratio));
       });
 
       // Move particles
