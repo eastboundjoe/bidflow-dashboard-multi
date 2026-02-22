@@ -606,16 +606,23 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         </div>
       </div>
 
-      {/* Click Outcomes — mirrors the Sankey OUTCOMES/SPEND columns */}
+      {/* Click Outcomes — mirrors the Sankey OUTCOMES columns */}
       <div className="pt-2 border-t border-border">
-        <h4 className="text-sm font-medium mb-3">Click Outcomes</h4>
-        <div className="w-full text-xs font-mono">
-          <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 mb-1.5 text-muted-foreground">
+        <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Click Outcomes</h4>
+        <div className="w-full">
+          {/* Header row */}
+          <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 mb-1 px-1">
             <span />
-            <div className="flex flex-col items-center text-blue-500"><span>sales</span><span className="text-muted-foreground">clicks</span></div>
-            <div className="flex flex-col items-center text-red-500"><span>no sale</span><span className="text-muted-foreground">clicks</span></div>
-            <span className="text-right text-blue-500">→ sales</span>
-            <span className="text-right text-red-500">→ no sale</span>
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider">sales</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">clicks</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-semibold text-red-500 uppercase tracking-wider">no sale</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">clicks</span>
+            </div>
+            <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider text-right">→ sales</span>
+            <span className="text-xs font-semibold text-red-500 uppercase tracking-wider text-right">→ no sale</span>
           </div>
           {placements.map(({ key, short, color }) => {
             const p = stats.byPlacement[key];
@@ -628,18 +635,18 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
             const pctSales   = p.clicks > 0 ? (cvr * 100).toFixed(0) : "0";
             const pctNoSales = p.clicks > 0 ? ((1 - cvr) * 100).toFixed(0) : "0";
             return (
-              <div key={key} className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-1.5 border-b border-border/40 last:border-0 items-center">
-                <span className="font-bold" style={{ color }}>{short}</span>
-                <div className="text-center">
-                  <div className="font-bold text-blue-500">{pctSales}%</div>
-                  <div className="text-muted-foreground">{clicksSales}</div>
+              <div key={key} className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-b border-slate-100 dark:border-slate-800 last:border-0 items-center">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100" style={{ color }}>{short}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
+                  <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksSales}</span>
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-red-500">{pctNoSales}%</div>
-                  <div className="text-muted-foreground">{clicksNoSales}</div>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs font-bold tabular-nums text-red-500">{pctNoSales}%</span>
+                  <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksNoSales}</span>
                 </div>
-                <div className="text-right text-blue-500">${Math.round(spendSales)}</div>
-                <div className="text-right text-red-500">${Math.round(spendNoSales)}</div>
+                <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
+                <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</div>
               </div>
             );
           })}
