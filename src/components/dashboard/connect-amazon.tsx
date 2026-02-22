@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { AMAZON_CLIENT_ID, AMAZON_SCOPE } from "@/lib/constants";
 import type { Credentials } from "@/types";
 
