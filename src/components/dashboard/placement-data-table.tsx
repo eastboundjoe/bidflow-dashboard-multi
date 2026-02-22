@@ -102,7 +102,6 @@ function ChangesInput({
                     localValue !== "" && "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20",
                     showWarning && "border-red-500 animate-pulse"
                 )} 
-                placeholder="0"
                 value={localValue}
                 onChange={handleChange}
                 onBlur={handleBlur}
