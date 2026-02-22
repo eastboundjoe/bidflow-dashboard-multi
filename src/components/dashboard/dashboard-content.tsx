@@ -290,7 +290,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       if (response.ok) {
         alert("✅ Changes submitted successfully to Amazon!");
         const today = new Date();
-        const dateLabel = `${today.getMonth() + 1}/${today.getDate()}`;
+        const dateLabel = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
         // Update bid_adjustment to submitted value, keep changes value, mark changed_at
         setData((prev) =>
           prev.map((row) => {
