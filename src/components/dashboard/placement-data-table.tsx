@@ -95,7 +95,7 @@ function ChangesInput({
     };
 
     return (
-        <div className="relative group">
+        <div className="relative group" onClick={(e) => e.stopPropagation()}>
             <Input 
                 className={cn(
                     "h-7 w-20 text-xs text-right transition-colors font-bold",
@@ -106,7 +106,12 @@ function ChangesInput({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
-                onFocus={(e) => e.target.select()}
+                onFocus={(e) => {
+                    e.stopPropagation();
+                    e.target.select();
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
             />
             {showWarning && (
                 <div className="absolute bottom-full right-0 mb-2 z-50 bg-red-600 text-white text-[10px] font-bold py-1 px-2 rounded shadow-lg whitespace-nowrap animate-bounce pointer-events-none">
