@@ -43,20 +43,20 @@ function isToday(date: Date): boolean {
   );
 }
 
-function isThisWeek(date: Date): boolean {
-  const now = new Date();
-  const monday = new Date(now);
-  const day = now.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  monday.setDate(now.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
-  return date >= monday;
+interface CollectionStatus {
+  lastCollectedAt: Date | null;
+  lastWeekId: string | null;
+  collectedThisWeek: boolean;
 }
 
 export function DashboardNav({ user }: DashboardNavProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [lastCollectedAt, setLastCollectedAt] = useState<Date | null>(null);
+  const [status, setStatus] = useState<CollectionStatus>({
+    lastCollectedAt: null,
+    lastWeekId: null,
+    collectedThisWeek: false,
+  });
   const [showWarning, setShowWarning] = useState(false);
 
   const userInitial = user.email?.[0]?.toUpperCase() || "U";
@@ -67,9 +67,11 @@ export function DashboardNav({ user }: DashboardNavProps) {
     fetch("/api/collect/status")
       .then((r) => r.json())
       .then((data) => {
-        if (data.lastCollectedAt) {
-          setLastCollectedAt(new Date(data.lastCollectedAt));
-        }
+        setStatus({
+          lastCollectedAt: data.lastCollectedAt ? new Date(data.lastCollectedAt) : null,
+          lastWeekId: data.lastWeekId ?? null,
+          collectedThisWeek: data.collectedThisWeek ?? false,
+        });
       })
       .catch(() => {/* silent — button still works */});
   }, []);
@@ -96,7 +98,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
         throw new Error(data.error || "Failed to trigger data collection");
       }
 
-      setLastCollectedAt(new Date());
+      setStatus((prev) => ({ ...prev, lastCollectedAt: new Date(), collectedThisWeek: true }));
       toast.success("Data collection started successfully!");
     } catch (error) {
       console.error("Error collecting data:", error);
@@ -107,14 +109,14 @@ export function DashboardNav({ user }: DashboardNavProps) {
   };
 
   const handleCollectData = () => {
-    if (lastCollectedAt && isThisWeek(lastCollectedAt)) {
+    if (status.collectedThisWeek) {
       setShowWarning(true);
       return;
     }
     triggerCollection();
   };
 
-  const collectedToday = lastCollectedAt ? isToday(lastCollectedAt) : false;
+  const collectedToday = status.lastCollectedAt ? isToday(status.lastCollectedAt) : false;
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
@@ -167,8 +169,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                 <span className="text-xs text-amber-800 dark:text-amber-300 font-medium hidden sm:block">
                   {collectedToday
-                    ? "Already collected today"
-                    : `Collected ${formatCollectionDate(lastCollectedAt!)}`}
+                    ? `Already collected today${status.lastWeekId ? ` (${status.lastWeekId})` : ""}`
+                    : `Collected ${status.lastCollectedAt ? formatCollectionDate(status.lastCollectedAt) : ""}${status.lastWeekId ? ` · ${status.lastWeekId}` : ""}`}
                 </span>
                 <div className="flex items-center gap-1.5 ml-1">
                   <Button
