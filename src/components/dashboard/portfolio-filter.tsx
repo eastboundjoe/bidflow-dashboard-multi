@@ -34,16 +34,16 @@ export function PortfolioFilter({
       onValueChange={(value) => onPortfolioChange(value === "all" ? null : value)}
       disabled={disabled}
     >
-      <SelectTrigger className="w-[180px] bg-background">
+      <SelectTrigger className="w-[180px] h-9 bg-background border-slate-200 hover:border-blue-400 transition-all">
         <div className="flex items-center gap-2">
-          <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          <FolderOpen className="h-4 w-4 text-slate-400" />
           <SelectValue placeholder="All portfolios" />
         </div>
       </SelectTrigger>
-      <SelectContent className="bg-white dark:bg-slate-950 opacity-100 shadow-xl border-2 z-50">
-        <SelectItem value="all">All Portfolios</SelectItem>
+      <SelectContent className="bg-white dark:bg-slate-950 opacity-100 shadow-xl border-2 z-50 rounded-xl p-1">
+        <SelectItem value="all" className="rounded-lg focus:bg-blue-50 dark:focus:bg-blue-900/20 focus:text-blue-600 transition-colors font-medium">All Portfolios</SelectItem>
         {portfolios.map((portfolio) => (
-          <SelectItem key={portfolio.id} value={portfolio.id}>
+          <SelectItem key={portfolio.id} value={portfolio.id} className="rounded-lg focus:bg-blue-50 dark:focus:bg-blue-900/20 focus:text-blue-600 transition-colors font-medium">
             {portfolio.name}
           </SelectItem>
         ))}

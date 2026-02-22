@@ -53,7 +53,7 @@ export function WeekSelector({
         size="icon"
         onClick={handlePrevious}
         disabled={disabled || currentIndex >= weeks.length - 1}
-        className="h-8 w-8"
+        className="h-9 w-9 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -63,18 +63,18 @@ export function WeekSelector({
         onValueChange={onWeekChange}
         disabled={disabled}
       >
-        <SelectTrigger className="w-[200px] bg-background">
+        <SelectTrigger className="w-[200px] h-9 bg-background border-slate-200 hover:border-blue-400 transition-all">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-slate-400" />
             <SelectValue placeholder="Select week" />
           </div>
         </SelectTrigger>
-        <SelectContent className="bg-white dark:bg-slate-950 opacity-100 shadow-xl border-2 z-50">
+        <SelectContent className="bg-white dark:bg-slate-950 opacity-100 shadow-xl border-2 z-50 rounded-xl p-1">
           {weeks.map((week) => (
-            <SelectItem key={week.id} value={week.id}>
-              <div className="flex flex-col">
-                <span className="font-medium">{week.label}</span>
-                <span className="text-xs text-muted-foreground">
+            <SelectItem key={week.id} value={week.id} className="rounded-lg focus:bg-blue-50 dark:focus:bg-blue-900/20 focus:text-blue-600 transition-colors">
+              <div className="flex flex-col py-0.5">
+                <span className="font-bold text-sm">{week.label}</span>
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono">
                   {week.startDate} - {week.endDate}
                 </span>
               </div>
@@ -88,7 +88,7 @@ export function WeekSelector({
         size="icon"
         onClick={handleNext}
         disabled={disabled || currentIndex <= 0}
-        className="h-8 w-8"
+        className="h-9 w-9 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

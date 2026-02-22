@@ -130,7 +130,10 @@ export function PlacementDataTable({
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+      roas: false,
+      roas_7d: false,
+    });
   const [globalFilter, setGlobalFilter] = React.useState("");
   
   // State for expanding campaign names and placement badges
@@ -682,32 +685,20 @@ export function PlacementDataTable({
           className="max-w-sm bg-background"
         />
         <div className="flex items-center gap-2">
-          {onSubmit && (
-              <Button onClick={onSubmit} disabled={submitting} className="gap-2">
-                  {submitting ? (
-                      "Submitting..."
-                  ) : (
-                      <>
-                        <Rocket className="h-4 w-4" />
-                        Submit to Amazon
-                      </>
-                  )}
-              </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              <Button variant="outline" size="sm" className="h-9 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all font-medium">
+                Columns <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 h-96 overflow-y-auto bg-white dark:bg-slate-950 border-2 shadow-xl opacity-100 z-[100]">
+            <DropdownMenuContent align="end" className="w-48 h-96 overflow-y-auto bg-white dark:bg-slate-950 border-2 shadow-xl opacity-100 z-[100] rounded-xl p-1">
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.id}
-                    className="capitalize"
+                    className="capitalize rounded-lg focus:bg-blue-50 dark:focus:bg-blue-900/20 focus:text-blue-600 transition-colors"
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) =>
                       column.toggleVisibility(!!value)
@@ -719,10 +710,22 @@ export function PlacementDataTable({
             </DropdownMenuContent>
           </DropdownMenu>
           {onExport && (
-            <Button variant="outline" size="sm" onClick={onExport}>
-              <Download className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={onExport} className="h-9 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all font-medium">
+              <Download className="mr-2 h-4 w-4 opacity-70" />
               Export
             </Button>
+          )}
+          {onSubmit && (
+              <Button onClick={onSubmit} disabled={submitting} className="h-9 btn-gradient font-bold px-5 shadow-sm hover:shadow-md transition-all gap-2">
+                  {submitting ? (
+                      "Submitting..."
+                  ) : (
+                      <>
+                        <Rocket className="h-4 w-4" />
+                        Submit to Amazon
+                      </>
+                  )}
+              </Button>
           )}
         </div>
       </div>
@@ -797,18 +800,20 @@ export function PlacementDataTable({
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all"
           >
             Previous
           </Button>
-          <div className="text-sm text-muted-foreground">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+          <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            Page <span className="text-slate-900 dark:text-slate-100">{table.getState().pagination.pageIndex + 1}</span> of{" "}
+            <span className="text-slate-900 dark:text-slate-100">{table.getPageCount()}</span>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all"
           >
             Next
           </Button>

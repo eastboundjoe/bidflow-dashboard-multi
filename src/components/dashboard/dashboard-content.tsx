@@ -362,6 +362,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           size="sm"
           onClick={fetchData}
           disabled={loading}
+          className="h-9 border-slate-200 hover:border-blue-400 hover:text-blue-600 transition-all font-medium"
         >
           <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Refresh
