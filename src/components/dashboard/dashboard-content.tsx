@@ -91,6 +91,12 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
   // Calculate stats from filtered data
   const stats = React.useMemo(() => calculateStats(filteredData), [filteredData]);
 
+  // All weeks but portfolio-filtered — used for sparklines and WoW trend
+  const portfolioFilteredData = React.useMemo(() => {
+    if (!selectedPortfolio) return data;
+    return data.filter((row) => row.portfolio_id === selectedPortfolio);
+  }, [data, selectedPortfolio]);
+
   // Fetch data from Supabase
   const fetchData = React.useCallback(async () => {
     setLoading(true);
@@ -484,7 +490,12 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       )}
 
       {/* Stats Grid */}
-      <StatsGrid stats={stats} loading={loading} />
+      <StatsGrid
+        stats={stats}
+        loading={loading}
+        allPlacementData={portfolioFilteredData}
+        currentWeekId={selectedWeek}
+      />
 
       {/* Performance Trends Chart */}
       {!loading && data.length > 0 && (
