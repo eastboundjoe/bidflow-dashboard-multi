@@ -262,13 +262,18 @@
     },
     "IF-Snapshot Complete": {
       "main": [
-        [],
+        [{ "node": "Loop Over Weeks", "type": "main", "index": 0 }],
         [{ "node": "Call Flow 1 - Collect Week", "type": "main", "index": 0 }]
       ]
     },
     "Call Flow 1 - Collect Week": {
       "main": [
         [{ "node": "Wait Between Weeks", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait Between Weeks": {
+      "main": [
+        [{ "node": "Loop Over Weeks", "type": "main", "index": 0 }]
       ]
     }
   },
