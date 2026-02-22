@@ -258,13 +258,15 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
     setSubmitting(true);
     try {
+      const user = (await createClient().auth.getUser()).data.user;
       const response = await fetch(N8N_WEBHOOKS.SUBMISSION, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          tenant_id: user?.id,
+          user_id: user?.id,
           changes: changesData,
           timestamp: new Date().toISOString(),
-          user_id: (await createClient().auth.getUser()).data.user?.id
         }),
       });
 
