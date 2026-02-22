@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,11 +39,17 @@ export function DashboardNav({ user }: DashboardNavProps) {
       const response = await fetch("/api/collect", {
         method: "POST",
       });
+      
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to trigger data collection");
+        throw new Error(data.error || "Failed to trigger data collection");
       }
+
+      toast.success("Data collection started successfully!");
     } catch (error) {
       console.error("Error collecting data:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to trigger data collection");
     } finally {
       setLoading(false);
     }

@@ -15,12 +15,18 @@ export async function POST() {
   }
 
   // Get user's tenant and credentials
-  // TODO: Fetch actual credentials from database
-  // const { data: credentials } = await supabase
-  //   .from('credentials')
-  //   .select('*')
-  //   .eq('user_id', user.id)
-  //   .single();
+  const { data: credentials, error: credsError } = await supabase
+    .from('credentials')
+    .select('tenant_id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (credsError || !credentials?.tenant_id) {
+    return NextResponse.json(
+      { error: "Amazon account not connected or tenant not found" },
+      { status: 400 }
+    );
+  }
 
   // Trigger n8n webhook for data collection
   const webhookUrl = process.env.N8N_COLLECTION_WEBHOOK;
@@ -39,10 +45,11 @@ export async function POST() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        tenant_id: credentials.tenant_id,
         user_id: user.id,
         email: user.email,
-        // tenant_id: credentials?.tenant_id,
-        triggered_at: new Date().toISOString(),
+        trigger_source: "bidflow_ui",
+        timestamp: new Date().toISOString(),
       }),
     });
 
