@@ -4,7 +4,7 @@ import * as React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info, Play, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AMAZON_CLIENT_ID, AMAZON_SCOPE } from "@/lib/constants";
@@ -101,44 +101,57 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
 
   return (
     <div className="space-y-6">
-      <Card className={cn("overflow-hidden card-hover transition-all duration-300", isConnected ? "border-blue-500/50 shadow-md" : "border-slate-200 dark:border-slate-800")}>
-        <CardHeader className={cn("border-b", isConnected ? "bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20" : "bg-slate-50/50 dark:bg-slate-900/20 border-slate-100 dark:border-slate-800")}>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
-              <div className="bg-orange-500 p-2 rounded-lg shadow-sm">
-                <img 
-                  src="https://www.amazon.com/favicon.ico" 
-                  alt="Amazon" 
-                  className="w-4 h-4 invert brightness-0"
-                />
+      <Card className={cn("overflow-hidden card-hover transition-all duration-300", isConnected ? "border-green-500/50 shadow-md" : "border-slate-200 dark:border-slate-800")}>
+        <CardHeader className={cn("border-b", isConnected ? "bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/20" : "bg-slate-50/50 dark:bg-slate-900/20 border-slate-100 dark:border-slate-800")}>
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "p-2 rounded-lg shadow-sm transition-colors",
+                  isConnected ? "bg-green-500" : "bg-orange-500"
+                )}>
+                  {isConnected ? (
+                    <Play className="w-4 h-4 text-white fill-current" />
+                  ) : (
+                    <img 
+                      src="https://www.amazon.com/favicon.ico" 
+                      alt="Amazon" 
+                      className="w-4 h-4 invert brightness-0"
+                    />
+                  )}
+                </div>
+                <CardTitle className="text-xl font-bold tracking-tight">
+                  Amazon Advertising
+                </CardTitle>
               </div>
-              Amazon Advertising
-            </CardTitle>
-            <Badge 
-              variant={isConnected ? "default" : "secondary"}
-              className={cn(
-                "font-bold px-3 py-0.5 uppercase text-[10px] tracking-widest",
-                isConnected ? "bg-blue-600 hover:bg-blue-600 shadow-sm" : "bg-slate-200 text-slate-600"
-              )}
-            >
-              {isConnected ? "Connected" : "Not Connected"}
-            </Badge>
+              <div className="ml-11">
+                <Badge 
+                  variant={isConnected ? "default" : "secondary"}
+                  className={cn(
+                    "font-bold px-3 py-0.5 uppercase text-[10px] tracking-widest transition-colors",
+                    isConnected ? "bg-green-600 hover:bg-green-600 shadow-sm text-white" : "bg-slate-200 text-slate-600"
+                  )}
+                >
+                  {isConnected ? "Connected" : "Not Connected"}
+                </Badge>
+              </div>
+            </div>
           </div>
-          <CardDescription className="mt-2 text-slate-600 dark:text-slate-400">
+          <CardDescription className="mt-4 text-slate-600 dark:text-slate-400">
             Connect your Amazon Advertising account to automatically collect and optimize your placement data.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           {isConnected ? (
             <div className="space-y-4">
-              <div className="rounded-xl bg-blue-50/50 dark:bg-blue-900/10 p-5 border border-blue-100 dark:border-blue-900/30 flex items-start gap-4 shadow-sm">
-                <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
-                    <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="rounded-xl bg-green-50/50 dark:bg-green-900/10 p-5 border border-green-100 dark:border-green-900/30 flex items-start gap-4 shadow-sm">
+                <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-bold text-slate-900 dark:text-white">Your account is successfully linked</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Amazon Profile ID: <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400">{effectiveProfileId || "Not selected"}</span>
+                    Amazon Profile ID: <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-green-600 dark:text-green-400">{effectiveProfileId || "Not selected"}</span>
                   </p>
                 </div>
               </div>
@@ -205,20 +218,20 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
           <CardContent className="pt-6">
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                <div className="h-6 w-6 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </div>
                 <span className="font-medium">Read advertising campaigns and performance data</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                <div className="h-6 w-6 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </div>
                 <span className="font-medium">Update placement bid adjustments</span>
               </li>
               <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                <div className="h-6 w-6 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                 </div>
                 <span className="font-medium">Manage portfolios</span>
               </li>
