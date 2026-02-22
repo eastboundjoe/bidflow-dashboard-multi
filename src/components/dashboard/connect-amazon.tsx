@@ -4,10 +4,11 @@ import * as React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info, Play, PlayCircle } from "lucide-react";
+import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info, Play, History, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { AMAZON_CLIENT_ID, AMAZON_SCOPE } from "@/lib/constants";
+import { AMAZON_CLIENT_ID, AMAZON_SCOPE, N8N_WEBHOOKS } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import type { Credentials } from "@/types";
 
 interface ConnectAmazonProps {
@@ -16,6 +17,8 @@ interface ConnectAmazonProps {
 
 export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
   const [loading, setLoading] = React.useState(false);
+  const [backfillLoading, setBackfillLoading] = React.useState(false);
+  const [backfillStatus, setBackfillStatus] = React.useState<"idle" | "started" | "error">("idle");
 
   const isConnected = 
     credentials?.status === "active" && 
@@ -74,6 +77,63 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
       console.error("Disconnect error:", error);
       toast.error("Failed to disconnect account.");
       setLoading(false);
+    }
+  };
+
+  const handleRunBackfill = async () => {
+    setBackfillLoading(true);
+    setBackfillStatus("idle");
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Delete existing weekly_snapshots so the backfill re-processes all weeks
+      // (overwrite behavior — safe because raw data uses upsert)
+      await supabase
+        .from("weekly_snapshots")
+        .delete()
+        .eq("tenant_id", user.id);
+
+      // Fire the backfill webhook — it runs for ~8-12 min for 4 weeks.
+      // We don't wait for it to finish; just confirm it started.
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      try {
+        const response = await fetch(N8N_WEBHOOKS.BACKFILL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_id: user.id,
+            max_weeks: 4,
+            trigger_source: "connect_page",
+            timestamp: new Date().toISOString(),
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        // Flow 1 responds immediately with "collecting" status
+        if (response.ok || response.status === 200) {
+          setBackfillStatus("started");
+        } else {
+          setBackfillStatus("error");
+        }
+      } catch (fetchErr: any) {
+        clearTimeout(timeout);
+        // Timeout = flow is running but takes longer than 8s to first respond — that's OK
+        if (fetchErr.name === "AbortError") {
+          setBackfillStatus("started");
+        } else {
+          throw fetchErr;
+        }
+      }
+    } catch (err) {
+      console.error("Backfill error:", err);
+      setBackfillStatus("error");
+      toast.error("Failed to start backfill. Check that the n8n backfill flow is active.");
+    } finally {
+      setBackfillLoading(false);
     }
   };
 
@@ -237,6 +297,83 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
               </li>
             </ul>
           </CardContent>
+        </Card>
+      )}
+
+      {isConnected && effectiveProfileId && (
+        <Card className={cn(
+          "card-hover overflow-hidden border-blue-200/60 dark:border-blue-900/40",
+          backfillStatus === "started" && "border-green-300/60 dark:border-green-800/40"
+        )}>
+          <CardHeader className="bg-blue-50/30 dark:bg-blue-900/10 border-b border-blue-100/50 dark:border-blue-900/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40">
+                <History className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-bold tracking-tight">Historical Data</CardTitle>
+                <CardDescription className="text-xs mt-0.5">
+                  Load up to 4 weeks of past placement data to populate trend charts and sparklines.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-5 space-y-4">
+            {backfillStatus === "idle" && (
+              <div className="rounded-xl bg-blue-50/50 dark:bg-blue-900/10 p-4 border border-blue-100 dark:border-blue-900/30 flex items-start gap-3">
+                <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1 font-medium">
+                  <p>Triggers Amazon to generate placement reports for the last 4 weeks.</p>
+                  <p>Reports take <span className="font-bold text-slate-700 dark:text-slate-300">10–15 minutes</span> to collect. Refresh your dashboard after.</p>
+                  <p className="text-slate-500 dark:text-slate-500">Running this again will overwrite any existing data — safe to use as a refresh.</p>
+                </div>
+              </div>
+            )}
+
+            {backfillStatus === "started" && (
+              <div className="rounded-xl bg-green-50/60 dark:bg-green-900/10 p-4 border border-green-200 dark:border-green-800/40 flex items-start gap-3">
+                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                <div className="text-xs font-medium space-y-1">
+                  <p className="text-green-700 dark:text-green-400 font-bold">Backfill is running in the background.</p>
+                  <p className="text-slate-500 dark:text-slate-400">Amazon is generating your reports. Come back in 10–15 minutes and refresh your dashboard to see 4 weeks of trend data.</p>
+                </div>
+              </div>
+            )}
+
+            {backfillStatus === "error" && (
+              <div className="rounded-xl bg-red-50/60 dark:bg-red-900/10 p-4 border border-red-200 dark:border-red-800/40 flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+                <div className="text-xs font-medium space-y-1">
+                  <p className="text-red-700 dark:text-red-400 font-bold">Could not start backfill.</p>
+                  <p className="text-slate-500 dark:text-slate-400">Make sure the Historical Backfill flow is active in n8n, then try again.</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/20 px-6 py-4 border-t border-slate-100 dark:border-slate-800">
+            {backfillStatus === "started" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBackfillStatus("idle")}
+                className="font-bold text-slate-600"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Run Again
+              </Button>
+            ) : (
+              <Button
+                onClick={handleRunBackfill}
+                disabled={backfillLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white border-none font-bold px-6 shadow-md"
+              >
+                {backfillLoading
+                  ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Starting...</>
+                  : <><History className="h-4 w-4 mr-2" />Load Historical Data</>
+                }
+              </Button>
+            )}
+          </CardFooter>
         </Card>
       )}
     </div>
