@@ -64,9 +64,11 @@ export function LoginForm() {
       <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-                <BarChart3 className="h-5 w-5 text-primary-foreground" />
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="h-9 w-9 rounded-xl bg-[#0F172A] flex items-center justify-center shadow-sm group-hover:shadow-md transition-all border border-slate-800">
+                <svg viewBox="0 0 32 32" className="h-6 w-6">
+                  <path d="M9 7h8.5a5.5 5.5 0 0 1 0 11H9V7zm0 18h9.5a5.5 5.5 0 0 0 0-11H9v11z" fill="#10B981" transform="scale(0.85) translate(2.5, 2.5)"/>
+                </svg>
               </div>
               <span className="text-xl font-bold tracking-tight">BidFlow</span>
             </Link>

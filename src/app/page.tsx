@@ -28,9 +28,11 @@ export default function HomePage() {
       <nav className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-950/80 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
-                <BarChart3 className="h-5 w-5 text-primary-foreground" />
+            <div className="flex items-center gap-2 group">
+              <div className="h-9 w-9 rounded-xl bg-[#0F172A] flex items-center justify-center shadow-sm group-hover:shadow-md transition-all border border-slate-800">
+                <svg viewBox="0 0 32 32" className="h-6 w-6">
+                  <path d="M9 7h8.5a5.5 5.5 0 0 1 0 11H9V7zm0 18h9.5a5.5 5.5 0 0 0 0-11H9v11z" fill="#10B981" transform="scale(0.85) translate(2.5, 2.5)"/>
+                </svg>
               </div>
               <span className="text-xl font-bold tracking-tight">BidFlow</span>
             </div>
@@ -248,7 +250,11 @@ export default function HomePage() {
           {/* App Nav */}
           <div className="bg-white dark:bg-gray-900 border-b border-slate-100 dark:border-slate-800 px-6 flex items-center gap-6 pt-3">
             <div className="flex items-center gap-2 pb-3 border-b-2 border-primary">
-              <BarChart3 className="h-4 w-4 text-primary" />
+              <div className="h-4 w-4 bg-[#0F172A] rounded flex items-center justify-center">
+                <svg viewBox="0 0 32 32" className="h-2.5 w-2.5">
+                  <path d="M9 7h8.5a5.5 5.5 0 0 1 0 11H9V7zm0 18h9.5a5.5 5.5 0 0 0 0-11H9v11z" fill="#10B981" transform="scale(0.85) translate(2.5, 2.5)"/>
+                </svg>
+              </div>
               <span className="text-sm font-semibold text-primary">Dashboard</span>
             </div>
             <div className="flex items-center gap-2 pb-3 text-slate-400">
@@ -453,7 +459,11 @@ export default function HomePage() {
           <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-shadow relative z-10">
             <CardHeader>
               <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
-                <BarChart3 className="h-7 w-7 text-primary" />
+                <div className="h-7 w-7 bg-[#0F172A] rounded-lg flex items-center justify-center">
+                  <svg viewBox="0 0 32 32" className="h-5 w-5">
+                    <path d="M9 7h8.5a5.5 5.5 0 0 1 0 11H9V7zm0 18h9.5a5.5 5.5 0 0 0 0-11H9v11z" fill="#10B981" transform="scale(0.85) translate(2.5, 2.5)"/>
+                  </svg>
+                </div>
               </div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Step 2</span>
@@ -693,8 +703,10 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-12 items-center">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded bg-primary flex items-center justify-center shadow-sm">
-                  <BarChart3 className="h-5 w-5 text-primary-foreground" />
+                <div className="h-8 w-8 rounded-lg bg-[#0F172A] flex items-center justify-center shadow-sm border border-slate-800">
+                  <svg viewBox="0 0 32 32" className="h-5 w-5">
+                    <path d="M9 7h8.5a5.5 5.5 0 0 1 0 11H9V7zm0 18h9.5a5.5 5.5 0 0 0 0-11H9v11z" fill="#10B981" transform="scale(0.85) translate(2.5, 2.5)"/>
+                  </svg>
                 </div>
                 <span className="font-bold text-xl tracking-tight">BidFlow</span>
               </div>
