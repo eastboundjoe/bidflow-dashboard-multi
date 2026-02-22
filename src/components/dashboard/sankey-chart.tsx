@@ -18,6 +18,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const cacheRef = useRef<Record<string, { points: { x: number; y: number }[] }>>({});
   const animationRef = useRef<number | undefined>(undefined);
   const elapsedRef = useRef(0);
+  const expandedRef = useRef<Set<string>>(new Set());
 
   // Calculate placement stats from data
   const placementData = React.useMemo(() => {
@@ -245,8 +246,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
                           d.name === "ROS" ? "Rest of Search" :
                           d.name === "PP" ? "Product Page" : d.name;
 
-          // Badge text
-          group.append("text")
+          // Badge text — clickable to toggle short/full name
+          const textEl = group.append("text")
             .attr("x", -40)
             .attr("y", 4)
             .attr("text-anchor", "middle")
@@ -254,7 +255,21 @@ export function SankeyChart({ data }: SankeyChartProps) {
             .style("font-family", "inherit")
             .style("font-size", "12px")
             .style("font-weight", "bold")
+            .style("cursor", "pointer")
             .text(d.name);
+
+          group
+            .style("cursor", "pointer")
+            .on("click", function() {
+              const isExpanded = expandedRef.current.has(d.name);
+              if (isExpanded) {
+                expandedRef.current.delete(d.name);
+                textEl.style("font-size", "12px").text(d.name);
+              } else {
+                expandedRef.current.add(d.name);
+                textEl.style("font-size", "9px").text(fullName);
+              }
+            });
         }
       });
 
@@ -608,7 +623,7 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Click Outcomes</h4>
         <div className="w-full">
           {/* Header row */}
-          <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 mb-1 px-1">
+          <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr] gap-x-2 mb-1 px-1">
             <span />
             <div className="flex flex-col items-center">
               <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider">sales</span>
@@ -640,25 +655,33 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                   totalSS += spendSales;
                   totalSN += spendNoSales;
                   return (
-                    <div key={key} className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-b border-slate-100 dark:border-slate-800 items-center">
-                      <span className="text-xs font-bold" style={{ color }}>{short}</span>
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
-                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksSales}</span>
+                    <div key={key} className="border-b border-slate-100 dark:border-slate-800">
+                      <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr] gap-x-2 pt-2 pb-0.5 px-1 items-center">
+                        <span className="text-[10px] font-semibold leading-tight" style={{ color }}>{key}</span>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
+                          <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksSales}</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs font-bold tabular-nums text-red-500">{pctNoSales}%</span>
+                          <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksNoSales}</span>
+                        </div>
+                        <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
+                        <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</div>
                       </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs font-bold tabular-nums text-red-500">{pctNoSales}%</span>
-                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksNoSales}</span>
+                      <div className="h-1.5 mx-1 mb-1.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        <div className="h-full flex">
+                          <div className="h-full transition-all duration-500" style={{ width: `${pctSales}%`, backgroundColor: '#3b82f6' }} />
+                          <div className="h-full transition-all duration-500" style={{ width: `${pctNoSales}%`, backgroundColor: '#ef4444' }} />
+                        </div>
                       </div>
-                      <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
-                      <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</div>
                     </div>
                   );
                 })}
                 {/* Totals row */}
                 {(() => {
                   return (
-                    <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-t-2 border-slate-300 dark:border-slate-600 mt-0.5 items-center">
+                    <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-t-2 border-slate-300 dark:border-slate-600 mt-0.5 items-center">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</span>
                       <div className="flex flex-col items-center">
                         <span className="text-xs font-bold tabular-nums text-blue-500">{totalCS}</span>
