@@ -183,7 +183,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Campaign
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -213,7 +213,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Portfolio
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -231,7 +231,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Budget
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -248,7 +248,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Clicks<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -266,7 +266,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Spend<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -284,7 +284,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             ROAS<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -313,7 +313,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Orders<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -331,7 +331,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             CVR<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -349,7 +349,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             ACoS<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -378,7 +378,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Clicks<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -396,7 +396,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Spend<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -414,7 +414,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             ROAS<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -447,7 +447,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Orders<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -465,7 +465,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             CVR<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -483,7 +483,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             ACoS<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -512,7 +512,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             DB<br/>Yest
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -530,7 +530,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Spent<br/>Yest
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -548,7 +548,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             LAST<br/>30D
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -566,7 +566,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             LAST<br/>7D
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -584,7 +584,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             YEST
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -616,7 +616,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
           >
             Multiplier
             <ArrowUpDown className="ml-2 h-3 w-3" />

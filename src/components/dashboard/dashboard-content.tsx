@@ -4,7 +4,14 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { RefreshCw, AlertCircle, Rocket } from "lucide-react";
 import { StatsGrid, calculateStats } from "./stats-grid";
 import { PlacementDataTable } from "./placement-data-table";
 import { WeekSelector, generateWeekOptions } from "./week-selector";
@@ -221,19 +228,11 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
   }, [fetchData, initialData.length]);
 
   const [submitting, setSubmitting] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [pendingChanges, setPendingChanges] = React.useState<ReturnType<typeof buildChanges>>([]);
 
-  // Handle editing of Changes column
-  const handleEdit = (id: string, value: string) => {
-    setData((prev) =>
-      prev.map((row) =>
-        row.id === id ? { ...row, changes_in_placement: value } : row
-      )
-    );
-  };
-
-  // Submit changes to Amazon via n8n webhook
-  const handleSubmitChanges = async () => {
-    const changesData = data
+  const buildChanges = (rows: PlacementData[]) =>
+    rows
       .filter(
         (row) =>
           row.changes_in_placement &&
@@ -251,11 +250,29 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         campaignId: row.campaign_id,
       }));
 
-    if (changesData.length === 0) {
+  // Handle editing of Changes column
+  const handleEdit = (id: string, value: string) => {
+    setData((prev) =>
+      prev.map((row) =>
+        row.id === id ? { ...row, changes_in_placement: value } : row
+      )
+    );
+  };
+
+  // Step 1: build preview and open confirmation dialog
+  const handleSubmitChanges = () => {
+    const changes = buildChanges(data);
+    if (changes.length === 0) {
       alert("No changes to submit. Add multiplier percentages in the Changes column first.");
       return;
     }
+    setPendingChanges(changes);
+    setConfirmOpen(true);
+  };
 
+  // Step 2: confirmed — actually send to Amazon
+  const handleConfirmedSubmit = async () => {
+    setConfirmOpen(false);
     setSubmitting(true);
     try {
       const user = (await createClient().auth.getUser()).data.user;
@@ -265,7 +282,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         body: JSON.stringify({
           tenant_id: user?.id,
           user_id: user?.id,
-          changes: changesData,
+          changes: pendingChanges,
           timestamp: new Date().toISOString(),
         }),
       });
@@ -481,8 +498,8 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
               </p>
             </div>
           ) : (
-            <PlacementDataTable 
-              data={filteredData} 
+            <PlacementDataTable
+              data={filteredData}
               onExport={handleExport}
               onEdit={handleEdit}
               onSubmit={handleSubmitChanges}
@@ -491,6 +508,61 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Confirm Changes Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900 dark:text-white text-lg font-bold">
+              Confirm Bid Changes
+            </DialogTitle>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              The following multipliers will be sent to Amazon Ads:
+            </p>
+          </DialogHeader>
+
+          <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Campaign</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Placement</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Was</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">New</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingChanges.map((c, i) => (
+                  <tr key={i} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300 max-w-[160px] truncate text-xs font-medium" title={c.campaign}>
+                      {c.campaign}
+                    </td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">
+                      {c.placement.replace("Placement ", "")}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-slate-400 text-xs tabular-nums">
+                      +{c.currentMultiplier}%
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-xs font-bold tabular-nums text-orange-500">
+                      +{c.newMultiplier.replace("%", "")}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <DialogFooter className="mt-4 gap-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)} className="border-slate-200">
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmedSubmit} className="btn-gradient gap-2 font-bold">
+              <Rocket className="h-4 w-4" />
+              Confirm &amp; Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Ad Spend Flow Visualization */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
