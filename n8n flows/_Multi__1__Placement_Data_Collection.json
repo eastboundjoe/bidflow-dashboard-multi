@@ -1,0 +1,1979 @@
+{
+  "name": "(Multi) 1. Placement Data Collection",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00146f77-9f96-4556-b336-b462d50bef8f",
+              "name": "name",
+              "value": "={{ new Date().toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "e27dd269-221b-43b4-bcd1-c9bd60664abf",
+              "name": "startDate30",
+              "value": "={{ new Date(Date.now() - (32 + ($('Webhook from Vercel.com').first().json.body.week_offset || 0) * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "d86f5d5c-47e7-47e2-92cb-232a5083878d",
+              "name": "yesterday",
+              "value": "={{ new Date(Date.now() - (1 + ($('Webhook from Vercel.com').first().json.body.week_offset || 0) * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "495cdaf9-c097-4a67-847d-4ba7f5e48cbe",
+              "name": "dayBefore",
+              "value": "={{ new Date(Date.now() - (2 + ($('Webhook from Vercel.com').first().json.body.week_offset || 0) * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "b9563472-bf49-4bed-85ca-fcf273697b96",
+              "name": "endDate",
+              "value": "={{ new Date(Date.now() - (3 + ($('Webhook from Vercel.com').first().json.body.week_offset || 0) * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "43d6a6a6-62f5-4d12-93ae-79ade1b239b4",
+              "name": "today",
+              "value": "={{ new Date(Date.now() - ($('Webhook from Vercel.com').first().json.body.week_offset || 0) * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "9340bc67-742c-4744-8e98-c8119515397e",
+              "name": "startDate7",
+              "value": "={{ new Date(Date.now() - (9 + ($('Webhook from Vercel.com').first().json.body.week_offset || 0) * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1100,
+        1740
+      ],
+      "id": "24211c7f-7a38-46a5-b06b-ab2dff12335d",
+      "name": "Edit Fields",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/reporting/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('IF-Tenant Active').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"SP-Campaign-Yesterday-{{ $('Edit Fields').item.json.today }}\",\n  \"startDate\": \"{{ $('Edit Fields').item.json.yesterday }}\",\n  \"endDate\": \"{{ $('Edit Fields').item.json.yesterday }}\",\n  \"configuration\": {\n    \"adProduct\": \"SPONSORED_PRODUCTS\",\n    \"reportTypeId\": \"spCampaigns\",\n    \"timeUnit\": \"DAILY\",\n    \"format\": \"GZIP_JSON\",\n    \"groupBy\": [\"campaign\"],\n    \"columns\": [\n      \"campaignId\",\n      \"campaignName\",\n      \"campaignBudgetAmount\",\n      \"topOfSearchImpressionShare\",\n      \"campaignStatus\",\n      \"date\",\n      \"spend\"\n    ],\n \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
+        "options": {}
+      },
+      "id": "ed1a37f5-32b7-4237-9521-8ef0dd0ca4e4",
+      "name": "Create Report-Yesterday",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        440,
+        920
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/reporting/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('IF-Tenant Active').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"name\": \"SP-Campaign-DayBefore-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.dayBefore }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.dayBefore }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"DAILY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\"campaign\"],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignBudgetAmount\",\n        \"topOfSearchImpressionShare\",\n        \"campaignStatus\",\n        \"date\",\n        \"spend\"\n      ],\n      \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
+        "options": {}
+      },
+      "id": "e9d79903-8aa7-4616-a3af-3f0fff78b344",
+      "name": "Create Report-DB Yesterday",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        440,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/sp/campaigns/list",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('Get Tenant').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.spcampaign.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.spcampaign.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"stateFilter\": {\n    \"include\": [\"ENABLED\"]\n  },\n  \"includeExtendedDataFields\": true\n}",
+        "options": {}
+      },
+      "id": "bcdba286-2345-445f-8594-f18c371ec095",
+      "name": "Current Placement Bids",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        180,
+        1740
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  let data;\n  if (typeof item.json.data === 'string') {\n    data = JSON.parse(item.json.data);\n  } else {\n    data = item.json;\n  }\n\n  if (!data.campaigns || !Array.isArray(data.campaigns)) continue;\n\n  for (const campaign of data.campaigns) {\n    const campaignData = {\n      campaignId: campaign.campaignId,\n      campaignName: campaign.name || \"\",\n      campaignStatus: campaign.state || \"\",\n      campaignBudget: campaign.budget?.budget || 0,\n      portfolioId: campaign.portfolioId ? campaign.portfolioId.toString() : '',\n      // All 4 placements now included\n      placementTopOfSearch: 0,\n      placementRestOfSearch: 0,\n      placementProductPage: 0,\n      placementAmazonBusiness: 0,\n    };\n\n    if (campaign.dynamicBidding?.placementBidding) {\n      for (const placement of campaign.dynamicBidding.placementBidding) {\n        switch (placement.placement) {\n          case \"PLACEMENT_TOP\": // Amazon uses \"TOP\" for Top of Search\n            campaignData.placementTopOfSearch = placement.percentage;\n            break;\n          case \"PLACEMENT_REST_OF_SEARCH\":\n            campaignData.placementRestOfSearch = placement.percentage;\n            break;\n          case \"PLACEMENT_PRODUCT_PAGE\":\n            campaignData.placementProductPage = placement.percentage;\n            break;\n          case \"PLACEMENT_AMAZON_BUSINESS\":\n            campaignData.placementAmazonBusiness = placement.percentage;\n            break;\n        }\n      }\n    }\n    output.push({ json: campaignData });\n  }\n}\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        1740
+      ],
+      "id": "58fc27f2-d16e-4a84-9c07-ae577ed81bff",
+      "name": "Placement Bids Code",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/reporting/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('IF-Tenant Active').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"name\": \"SP-Placement-30Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate30 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\",\n        \"campaignPlacement\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignStatus\",\n        \"campaignBudgetAmount\",\n        \"placementClassification\",\n        \"impressions\",\n        \"clicks\",\n        \"spend\",\n        \"purchases30d\",\n        \"sales30d\"\n      ]\n    }\n  }",
+        "options": {}
+      },
+      "id": "78ae4b6c-5b42-4770-b5fd-c23b29c82e9b",
+      "name": "Create Placement Report – 30 Days",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        440,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/reporting/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('Get Tenant').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"name\": \"SP-Placement-7Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate7 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\",\n        \"campaignPlacement\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignStatus\",\n        \"placementClassification\",\n        \"clicks\",\n        \"spend\",\n        \"purchases7d\",\n        \"sales7d\"\n      ]\n    }\n  }",
+        "options": {}
+      },
+      "id": "6b1df404-467a-4eae-93dc-f000a5dc7598",
+      "name": "Create Placement Report – 7 Days",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        440,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst output = [];\n\n// This grabs the tenant_id from the very first item that entered this node\n// regardless of what the previous node was named.\nconst firstItem = $input.first();\nconst tenantId = $('IF-Tenant Active').first().json.tenant_id;\n\nif (!tenantId) {\n  throw new Error(\"Could not find tenant_id. Make sure the previous node is passing it through!\");\n}\n\nfor (const item of items) {\n  const portfolios = item.json.portfolios || [];\n  \n  for (const portfolio of portfolios) {\n    if (portfolio.state !== 'ENABLED') continue;\n    \n    if (portfolio.portfolioId && portfolio.name) {\n      output.push({\n        json: {\n          tenant_id: tenantId,\n          portfolio_id: portfolio.portfolioId.toString(),\n          name: portfolio.name,\n          budget_amount: portfolio.budget?.amount || 0,\n          currency: portfolio.budget?.currencyCode || 'USD',\n          status: portfolio.state,\n          updated_at: new Date().toISOString()\n        }\n      });\n    }\n  }\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        1540
+      ],
+      "id": "d9d352aa-4b16-4c41-9e97-aef4a370162d",
+      "name": "Process Portfolios",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/portfolios/list",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('Get Tenant').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.spcampaign.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.spcampaign.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"stateFilter\": {\n    \"include\": [\"ENABLED\"]\n  },\n  \"includeExtendedDataFields\": true\n}",
+        "options": {}
+      },
+      "id": "00556090-6c7e-4d15-9e42-a18d497683cb",
+      "name": "Get Portfolios",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        180,
+        1540
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Creates 6 Ad Reports, loads bid placement google sheets.\n## Client ID: SaaS app (doppler)\n## Client secret: SaaS app (doppler)\n## Refresh Token: Amazon Business Subscriber (supabase vault)",
+        "height": 1264,
+        "width": 1136,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "36206db1-4959-4f63-bda6-c672c4011b15",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        560
+      ],
+      "id": "7e17b129-d417-429d-8a82-21276b4c2e1e",
+      "name": "Rate Limit1",
+      "webhookId": "bc031fc9-a871-489a-bb1c-8caaf3b0114a"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        740
+      ],
+      "id": "5247bff3-9316-4f6f-b420-39460f87d2ad",
+      "name": "Rate Limit2",
+      "webhookId": "c30845e1-d248-4897-814a-d35a8d326e28"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        920
+      ],
+      "id": "a6714a6e-bfbc-4f7b-a10a-47aa0a79f1cc",
+      "name": "Rate Limit3",
+      "webhookId": "b2fc052e-beb9-421f-b27d-5319449f2eaf"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        1100
+      ],
+      "id": "6124cbdb-ec6d-44d0-9e13-4f2501b700c3",
+      "name": "Rate Limit4",
+      "webhookId": "33ec43a5-164a-46b6-8dfa-6d91361c197f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/reporting/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('IF-Tenant Active').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n    \"name\": \"SP-Campaign-30Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate30 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignBudgetAmount\",\n        \"impressions\",\n        \"clicks\",\n        \"spend\",\n        \"purchases30d\",\n        \"sales30d\",\n        \"purchases14d\",\n        \"sales14d\",\n        \"purchases7d\",\n        \"sales7d\",\n        \"topOfSearchImpressionShare\",\n        \"campaignStatus\"\n      ],\n      \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
+        "options": {}
+      },
+      "id": "eabd032a-e038-4a6e-93cd-5599f4d3aca0",
+      "name": "Create Campaign Report-30 Days",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        200,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        400
+      ],
+      "id": "8ad4c4e0-4b46-4347-a8b5-67eb18bfcfd8",
+      "name": "Rate Limit0",
+      "webhookId": "78096a1b-ef69-498b-a59a-da56ccbaa929"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/reporting/reports",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token_cache }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) ADS-API').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('IF-Tenant Active').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"name\": \"SP-Campaign-7Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate7 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignBudgetAmount\",\n        \"impressions\",\n        \"clicks\",\n        \"spend\",\n        \"purchases7d\",\n        \"sales7d\",\n        \"purchases14d\",\n        \"sales14d\",\n        \"purchases30d\",\n        \"sales30d\",\n        \"topOfSearchImpressionShare\",\n        \"campaignStatus\"\n      ],\n      \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
+        "options": {}
+      },
+      "id": "c7b750e7-ec2a-4f9a-af02-bf7804015df9",
+      "name": "Create Campaign Report-7 Days",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Add data to Supabase. Must load in Portfolio data first. \n## Client ID: SaaS app (doppler)\n## Client secret: SaaS app (doppler)\n## Refresh Token: Amazon Business Subscriber (supabase vault)",
+        "height": 704,
+        "width": 1136,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        1296
+      ],
+      "typeVersion": 1,
+      "id": "75d5b653-7250-4c94-ae5c-bc161567c55a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "tableId": "report_ledger",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $json.reportId }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.createdAt }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updatedAt }}"
+            },
+            {
+              "fieldId": "url",
+              "fieldValue": "={{ $json.url }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('IF-Tenant Active').item.json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        780,
+        220
+      ],
+      "id": "71303fd5-c902-47a6-b43b-b40faf7462af",
+      "name": "Report Ledger",
+      "executeOnce": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_ID",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        -3900,
+        1740
+      ],
+      "id": "70e01111-632a-423f-94b4-1b40eb597f5c",
+      "name": "Get Credentials (Doppler) ADS-API",
+      "executeOnce": true,
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f6b80bf4-2043-4eca-a98e-79b1b012ec04",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "active",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3480,
+        1740
+      ],
+      "id": "d2816a27-0312-444b-a82c-92c2df8e8eed",
+      "name": "IF-Tenant Active"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Sorry your account is not active",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3280,
+        1940
+      ],
+      "id": "f46a0836-7015-4020-ae39-b844cb9d05e0",
+      "name": "Respond to Webhook (account not active)"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Extract Tenant ID').item.json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3680,
+        1740
+      ],
+      "id": "ad557f60-1bac-4ecf-8093-2770a46c256e",
+      "name": "Get Tenant",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT regexp_replace(get_decrypted_refresh_token('{{ $json.tenant_id }}'), '\\s+', '', 'g') as refresh_token;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -3280,
+        1720
+      ],
+      "id": "14e33a8a-1e83-4fd3-8391-16e993557703",
+      "name": "SQL Decrypt Vault ID",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Client ID: SaaS app (doppler)\n## Client secret: SaaS app (doppler)\n\n## Refresh Token: Amazon Business Subscriber (supabase vault)\n# Checks if Access Token is Expired or Not\n",
+        "height": 580,
+        "width": 1580,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3060,
+        1420
+      ],
+      "typeVersion": 1,
+      "id": "0b1f01aa-a7d1-4130-87fd-a470f838d914",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        1740
+      ],
+      "id": "318c2c48-5640-4746-84f1-ffa54175da7a",
+      "name": "Wait for Data to Update",
+      "webhookId": "12fe16f8-3273-4b7e-91bf-a6c77c5017f2"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "staging_placement_bids",
+          "mode": "list",
+          "cachedResultName": "staging_placement_bids"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "campaign_budget": "={{ $json.campaignBudget }}",
+            "placement_product_page": "={{ $json.placementProductPage }}",
+            "placement_rest_of_search": "={{ $json.placementRestOfSearch }}",
+            "placement_top_of_search": "={{ $json.placementTopOfSearch }}",
+            "campaign_id": "={{ $json.campaignId }}",
+            "tenant_id": "={{ $('IF-Tenant Active').item.json.tenant_id }}",
+            "campaign_name": "={{ $json.campaignId }}",
+            "campaign_status": "={{ $json.campaignName }}",
+            "portfolio_id": "={{ $json.portfolioId }}"
+          },
+          "matchingColumns": [
+            "tenant_id",
+            "campaign_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "campaign_id",
+              "displayName": "campaign_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "campaign_name",
+              "displayName": "campaign_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "campaign_status",
+              "displayName": "campaign_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "campaign_budget",
+              "displayName": "campaign_budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "portfolio_id",
+              "displayName": "portfolio_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "placement_product_page",
+              "displayName": "placement_product_page",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "placement_rest_of_search",
+              "displayName": "placement_rest_of_search",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "placement_top_of_search",
+              "displayName": "placement_top_of_search",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        840,
+        1740
+      ],
+      "id": "62dec53a-0058-4afd-8ff9-2ee721920955",
+      "name": "2. Update Current Placement Bids",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "staging_portfolios",
+          "mode": "list",
+          "cachedResultName": "staging_portfolios"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "portfolio_id": "={{ $json.portfolio_id }}",
+            "tenant_id": "={{ $json.tenant_id }}",
+            "budget_amount": "={{ $json.budget_amount }}",
+            "currency": "={{ $json.currency }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "portfolio_name": "={{ $json.name }}",
+            "portfolio_state": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "tenant_id",
+            "portfolio_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "portfolio_id",
+              "displayName": "portfolio_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "portfolio_name",
+              "displayName": "portfolio_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "budget_amount",
+              "displayName": "budget_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "portfolio_state",
+              "displayName": "portfolio_state",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        1540
+      ],
+      "id": "66f30171-828f-4aac-b68b-5900cc01ec30",
+      "name": "1. Update Current Portfolios",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate webhook payload\nconst payload = $input.first().json.body || $input.first().json;\n\nif (!payload.tenant_id) {\n  throw new Error('Missing required field: tenant_id');\n}\n\n// UUID validation\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (!uuidRegex.test(payload.tenant_id)) {\n  throw new Error('Invalid tenant_id format');\n}\n\n// week_offset: 0 = current week, 1 = last week, 2 = two weeks ago, etc.\n// Sent by the historical backfill flow; defaults to 0 for normal weekly runs.\nconst weekOffset = parseInt(payload.week_offset || '0');\n\n// Return validated data\nreturn [{\n  json: {\n    tenant_id: payload.tenant_id,\n    week_offset: weekOffset,\n    trigger_source: payload.trigger_source || 'unknown',\n    triggered_at: payload.timestamp || new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4100,
+        1740
+      ],
+      "id": "a56a4466-e469-4c8e-8304-0211ba4b0d0c",
+      "name": "Extract Tenant ID"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Data collection started\",\n  \"week_id\": \"{{ $('Calculate Week ID').first().json.week_id }}\",\n  \"tenant_id\": \"{{ $('Calculate Week ID').first().json.tenant_id }}\",\n  \"snapshot_id\": \"{{ $('Create Weekly Snapshot').first().json.id }}\",\n  \"status\": \"collecting\",\n  \"start_date\": \"{{ $('Calculate Week ID').first().json.start_date }}\",\n  \"end_date\": \"{{ $('Calculate Week ID').first().json.end_date }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1700,
+        1740
+      ],
+      "id": "f8ab2ce0-8dcf-4b47-835f-ef1836dffb6f",
+      "name": "Respond to Webhook",
+      "executeOnce": true,
+      "notes": "This should send s reponse saying success of failure. To the front end user"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO weekly_snapshots (\n  tenant_id, \n  week_id, \n  year, \n  week_number, \n  start_date, \n  end_date, \n  workflow_execution_id, -- <--- ADDED THIS COLUMN\n  status\n)\nVALUES (\n  '{{ $('Calculate Week ID').item.json.tenant_id }}'::UUID,\n  '{{ $('Calculate Week ID').item.json.week_id }}',\n  {{ $('Calculate Week ID').item.json.year }},\n  {{ $('Calculate Week ID').item.json.week_number }},\n  '{{ $('Calculate Week ID').item.json.start_date }}',\n  '{{ $('Calculate Week ID').item.json.end_date }}',\n  '{{ $executionId }}',\n  'collecting'\n)\nON CONFLICT (tenant_id, week_id)\nDO UPDATE SET\n  status = 'collecting',\n  workflow_execution_id = EXCLUDED.workflow_execution_id, -- <--- UPDATES ID ON CONFLICT\n  created_at = NOW()\nRETURNING id, week_id, tenant_id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -580,
+        1740
+      ],
+      "id": "9aceae3a-5bbe-46de-8698-3e089ccbaf66",
+      "name": "Create Weekly Snapshot",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Calculates the week.\n## Then creates a snapshot of the weeks data.",
+        "height": 560,
+        "width": 460,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1160,
+        1420
+      ],
+      "typeVersion": 1,
+      "id": "6b8f385e-e686-417d-b85e-d985b360f9e1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/32328f48-51f5-4123-b693-af5455d3b29c",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tenant_id\": \"{{ $('Calculate Week ID').first().json.tenant_id }}\",\n  \"week_id\": \"{{ $('Calculate Week ID').first().json.week_id }}\",\n  \"snapshot_id\": \"{{ $('Create Weekly Snapshot').first().json.id }}\",\n  \"trigger_source\": \"flow_1_completion\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        1740
+      ],
+      "id": "82ac22fe-1c52-4731-ba2c-be61ca7fc4bd",
+      "name": "Trigger Flow 2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00146f77-9f96-4556-b336-b462d50bef8f",
+              "name": "name",
+              "value": "={{ new Date().toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "e27dd269-221b-43b4-bcd1-c9bd60664abf",
+              "name": "startDate30",
+              "value": "={{ new Date(Date.now() - 33 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "d86f5d5c-47e7-47e2-92cb-232a5083878d",
+              "name": "yesterday",
+              "value": "={{ new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "495cdaf9-c097-4a67-847d-4ba7f5e48cbe",
+              "name": "dayBefore",
+              "value": "={{ new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "b9563472-bf49-4bed-85ca-fcf273697b96",
+              "name": "endDate",
+              "value": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "43d6a6a6-62f5-4d12-93ae-79ade1b239b4",
+              "name": "today",
+              "value": "={{ new Date().toISOString().split('T')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "9340bc67-742c-4744-8e98-c8119515397e",
+              "name": "startDate7",
+              "value": "={{ new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4080,
+        2240
+      ],
+      "id": "e8e90def-8142-47ff-b409-d0e5009af66e",
+      "name": "Edit Fields, Week43 (for testing)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        1740
+      ],
+      "id": "460cb25e-9b25-4511-9395-58f3536d9fa5",
+      "name": "Wait 5sec",
+      "webhookId": "f236727d-2ef6-42da-80de-1c5a1357e438"
+    },
+    {
+      "parameters": {
+        "jsCode": "// week_offset from the validated webhook payload (0 = current week, 1 = last week, etc.)\nconst weekOffset = $('IF-Tenant Active').item.json.week_offset || 0;\n\n// Shift 'now' back by the offset so we calculate the correct historical week\nconst msPerDay = 24 * 60 * 60 * 1000;\nconst now = new Date(Date.now() - weekOffset * 7 * msPerDay);\n\n// Helper to get ISO Week (1-52)\nfunction getISOWeek(d) {\n  const date = new Date(d.getTime());\n  date.setHours(0, 0, 0, 0);\n  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);\n  const week1 = new Date(date.getFullYear(), 0, 4);\n  return 1 + Math.ceil(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);\n}\n\n// Get Monday of the target week\nconst day = now.getDay();\nconst diff = now.getDate() - day + (day === 0 ? -6 : 1);\nconst monday = new Date(now);\nmonday.setDate(diff);\nmonday.setHours(0, 0, 0, 0);\nconst sunday = new Date(monday);\nsunday.setDate(sunday.getDate() + 6);\n\nconst weekNum = getISOWeek(monday);\nconst year = monday.getFullYear();\n\nreturn [{\n  json: {\n    week_id: `${year}-W${String(weekNum).padStart(2, '0')}`,\n    year: year,\n    week_number: weekNum,\n    start_date: monday.toISOString().split('T')[0],\n    end_date: sunday.toISOString().split('T')[0],\n    week_offset: weekOffset,\n    tenant_id: $('IF-Tenant Active').item.json.tenant_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        1740
+      ],
+      "id": "e8881fdc-adc0-4af1-a7e1-a20524bf0a13",
+      "name": "Calculate Week ID"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuration\nconst BUFFER_MINUTES = 5; \n\n// 2. Get data from the current item ($json)\nconst data = $json;\n\nconst access_token_cache = data.access_token_cache;\nconst access_token_expires_at = data.access_token_expires_at;\nconst tenant_id = data.tenant_id;\n\n// 3. Logic\nconst now = new Date();\nconst expiryDate = access_token_expires_at ? new Date(access_token_expires_at) : null;\nconst bufferTimeMs = BUFFER_MINUTES * 60 * 1000;\n\n// A token is valid ONLY if it exists AND expires more than 5 mins from now\nconst hasToken = !!access_token_cache;\nconst isExpired = !expiryDate || (expiryDate.getTime() - now.getTime()) < bufferTimeMs;\nconst isValid = hasToken && !isExpired;\n\n// 4. Return result using your workflow's specific variable names\nreturn {\n  isValid: isValid,\n  needsNewToken: !isValid, \n  cachedToken: isValid ? access_token_cache : null, \n  tenant_id: tenant_id,\n  debug_info: {\n    now: now.toISOString(),\n    expires_at: access_token_expires_at || 'null',\n    time_left_minutes: expiryDate ? Math.round((expiryDate.getTime() - now.getTime()) / 60000) : 0\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2760,
+        1720
+      ],
+      "id": "9600c334-489a-4e37-a6eb-e56e352eaf11",
+      "name": "Check Token Validity1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f6b80bf4-2043-4eca-a98e-79b1b012ec04",
+              "leftValue": "={{ $json.needsNewToken === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2540,
+        1720
+      ],
+      "id": "980bfe02-5ed2-4341-a3eb-4ae1a06f1a2f",
+      "name": "IF-Access Token1",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('IF-Tenant Active').item.json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3000,
+        1720
+      ],
+      "id": "39a0d8fc-f395-44fd-950e-8d38ce084e03",
+      "name": "Get Access Token",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "project": "n8n-amazon",
+        "config": "dev",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        1500
+      ],
+      "id": "55c2d3a1-6524-4514-a01d-3e5ea24ae274",
+      "name": "Get Credentials (Doppler) ADS-API1",
+      "executeOnce": true,
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amazon.com/auth/o2/token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.secrets.ADS_REFRESH_TOKEN_RAMENBOMB_LLC.raw }}"
+            },
+            {
+              "name": "client_id",
+              "value": "={{ $json.secrets.APP_ADS_CLIENT_ID.raw }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $json.secrets.APP_ADS_CLIENT_SECRET.raw }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2000,
+        1500
+      ],
+      "id": "34c7b0f9-90a9-4d52-96eb-b15da3ec6455",
+      "name": "Get Access Token SP-API (n8n app)1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get Access Token').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "access_token_cache",
+              "fieldValue": "={{ $json.access_token }}"
+            },
+            {
+              "fieldId": "access_token_expires_at",
+              "fieldValue": "={{ new Date(Date.now() + ($json.expires_in * 1000)).toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1780,
+        1500
+      ],
+      "id": "86548e36-6119-4671-9877-52df9a7a12fc",
+      "name": "Save Token to Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d59d544f-b30e-415d-8d3b-3d6287f43c5d",
+              "name": "access_token_cache",
+              "value": "={{ $json.access_token_cache }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1380,
+        1740
+      ],
+      "id": "d6c60dc8-50d9-4443-accb-68e26378cd85",
+      "name": "Set Access Token"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    access_token_cache: $input.first().json.cachedToken\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2240,
+        1740
+      ],
+      "id": "b7e6c7be-ccb3-404d-bc46-3a14c7c8de6b",
+      "name": "Use Cached Token"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2adceec7-6c16-4e89-9ce1-bdf7ce184b3c",
+              "name": "tenant_id",
+              "value": "=a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+              "type": "string"
+            },
+            {
+              "id": "a80284a5-7215-40d8-9e24-a83485d02815",
+              "name": "week_id",
+              "value": "=2026-W03",
+              "type": "string"
+            },
+            {
+              "id": "69a460e8-d43e-4577-be3a-85f48b280ba0",
+              "name": "snapshot_id",
+              "value": "=0ff07e12-68dd-4d93-b9f8-95b76a8b639c",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4080,
+        2040
+      ],
+      "id": "594b47e2-917e-4db9-b39e-3fa25a57ea54",
+      "name": "🧪 TEST DATA - REMOVE BEFORE PRODUCTION"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d4a5a8ed-0382-44e8-b011-b14e48a89b87",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4320,
+        1740
+      ],
+      "id": "db7002de-bba2-45d3-83d2-b0dd13f31299",
+      "name": "Webhook from Vercel.com",
+      "webhookId": "481801ae-ca24-4b0c-9a85-43fe438dfa1b"
+    }
+  ],
+  "pinData": {
+    "Webhook from Vercel.com": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.bidflow.app",
+            "x-real-ip": "103.161.61.78",
+            "x-forwarded-for": "103.161.61.78",
+            "x-forwarded-proto": "https",
+            "content-length": "121",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "https://dashboard.bidflow.app",
+            "sec-fetch-site": "same-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "https://dashboard.bidflow.app/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "tenant_id": "a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+            "trigger_source": "bidflow_ui",
+            "timestamp": "2026-01-19T02:49:29.181Z"
+          },
+          "webhookUrl": "https://n8n.bidflow.app/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Calculate Week ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Report-Yesterday": {
+      "main": [
+        [
+          {
+            "node": "Report Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Report-DB Yesterday": {
+      "main": [
+        [
+          {
+            "node": "Report Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current Placement Bids": {
+      "main": [
+        [
+          {
+            "node": "Placement Bids Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Placement Bids Code": {
+      "main": [
+        [
+          {
+            "node": "Wait for Data to Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Placement Report – 30 Days": {
+      "main": [
+        [
+          {
+            "node": "Report Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Placement Report – 7 Days": {
+      "main": [
+        [
+          {
+            "node": "Report Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Portfolios": {
+      "main": [
+        [
+          {
+            "node": "1. Update Current Portfolios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Portfolios": {
+      "main": [
+        [
+          {
+            "node": "Process Portfolios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit1": {
+      "main": [
+        [
+          {
+            "node": "Create Placement Report – 30 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit2": {
+      "main": [
+        [
+          {
+            "node": "Create Placement Report – 7 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit3": {
+      "main": [
+        [
+          {
+            "node": "Create Report-Yesterday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit4": {
+      "main": [
+        [
+          {
+            "node": "Create Report-DB Yesterday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit0": {
+      "main": [
+        [
+          {
+            "node": "Create Campaign Report-7 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Campaign Report-7 Days": {
+      "main": [
+        [
+          {
+            "node": "Report Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Campaign Report-30 Days": {
+      "main": [
+        [
+          {
+            "node": "Report Ledger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Ledger": {
+      "main": [
+        []
+      ]
+    },
+    "Get Credentials (Doppler) ADS-API": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF-Tenant Active": {
+      "main": [
+        [
+          {
+            "node": "SQL Decrypt Vault ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (account not active)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant": {
+      "main": [
+        [
+          {
+            "node": "IF-Tenant Active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL Decrypt Vault ID": {
+      "main": [
+        [
+          {
+            "node": "Get Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Data to Update": {
+      "main": [
+        [
+          {
+            "node": "2. Update Current Placement Bids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Update Current Placement Bids": {
+      "main": [
+        [
+          {
+            "node": "Wait 5sec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Update Current Portfolios": {
+      "main": [
+        []
+      ]
+    },
+    "Extract Tenant ID": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) ADS-API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Weekly Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Create Campaign Report-30 Days",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rate Limit0",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rate Limit1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rate Limit2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rate Limit3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rate Limit4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Portfolios",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Current Placement Bids",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Trigger Flow 2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5sec": {
+      "main": [
+        [
+          {
+            "node": "Trigger Flow 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Week ID": {
+      "main": [
+        [
+          {
+            "node": "Create Weekly Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Token Validity1": {
+      "main": [
+        [
+          {
+            "node": "IF-Access Token1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF-Access Token1": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) ADS-API1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Use Cached Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token": {
+      "main": [
+        [
+          {
+            "node": "Check Token Validity1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Credentials (Doppler) ADS-API1": {
+      "main": [
+        [
+          {
+            "node": "Get Access Token SP-API (n8n app)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token SP-API (n8n app)1": {
+      "main": [
+        [
+          {
+            "node": "Save Token to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Token to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Set Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Access Token": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Cached Token": {
+      "main": [
+        [
+          {
+            "node": "Set Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 TEST DATA - REMOVE BEFORE PRODUCTION": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook from Vercel.com": {
+      "main": [
+        [
+          {
+            "node": "Extract Tenant ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "vKcoz8TDF55wHGPo"
+  },
+  "versionId": "e087f566-a58d-44f7-8635-4319b7773392",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fa4bcb378ee210d5f1fb5de6ab50587326b68defa808af6512b2ad539bf43873"
+  },
+  "id": "e4ynBTSM5qztZQYw",
+  "tags": []
+}
