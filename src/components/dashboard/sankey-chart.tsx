@@ -292,21 +292,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .attr("text-anchor", "end")
         .attr("fill", "#9ca3af");
 
-      s2.append("text").text("OUTCOMES");
-      s2.append("text").attr("y", 16).attr("fill", "#3b82f6").style("font-weight", "bold").text("sales");
-      s2.append("text").attr("y", 30).attr("fill", "#ef4444").style("font-weight", "bold").text("no sales");
-
-      // Spend header
-      const s4 = g.append("g")
-        .attr("transform", `translate(${width - margin.left + 10}, ${leaves[0].node.y0 - 40})`)
-        .style("font-family", "monospace")
-        .style("font-size", "11px")
-        .attr("text-anchor", "end")
-        .attr("fill", "#9ca3af");
-
-      s4.append("text").text("SPEND");
-      s4.append("text").attr("y", 16).attr("fill", "#3b82f6").style("font-weight", "bold").text("→ sales");
-      s4.append("text").attr("y", 30).attr("fill", "#ef4444").style("font-weight", "bold").text("→ no sales");
+      s2.append("text").attr("fill", "#3b82f6").style("font-weight", "bold").text("Clicks → Sales (orders)");
+      s2.append("text").attr("y", 16).attr("fill", "#ef4444").style("font-weight", "bold").text("Clicks → No Sales");
     }
 
     // Progress bars and metrics for each placement
@@ -371,19 +358,6 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#ef4444").text("0");
 
-    barGroups.append("text")
-      .attr("class", "spend-green")
-      .attr("x", barWidth + 130).attr("y", barHeight * 0.25).attr("dy", "0.3em")
-      .attr("text-anchor", "end")
-      .style("font-family", "monospace").style("font-size", "11px").style("font-weight", "bold")
-      .attr("fill", "#3b82f6").text("$0");
-
-    barGroups.append("text")
-      .attr("class", "spend-red")
-      .attr("x", barWidth + 130).attr("y", barHeight * 0.75).attr("dy", "0.3em")
-      .attr("text-anchor", "end")
-      .style("font-family", "monospace").style("font-size", "11px").style("font-weight", "bold")
-      .attr("fill", "#ef4444").text("$0");
 
     // Animation tick function
     function tick(t: number) {
@@ -435,11 +409,6 @@ export function SankeyChart({ data }: SankeyChartProps) {
         d3.select(this).select(".c-green").text(kf);
         d3.select(this).select(".c-red").text(af);
 
-        // Spend: proportional to arrived particles vs total expected — converges to exact split
-        const spendSales   = totalClicks > 0 ? (r?.spend || 0) * (kf / totalClicks) : 0;
-        const spendNoSales = totalClicks > 0 ? (r?.spend || 0) * (af / totalClicks) : 0;
-        d3.select(this).select(".spend-green").text("$" + Math.round(spendSales));
-        d3.select(this).select(".spend-red").text("$" + Math.round(spendNoSales));
       });
 
       // Move particles
