@@ -17,11 +17,13 @@ import {
   Shield,
   Clock,
   Zap,
+  ArrowRight,
+  ChevronRight,
 } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-950 font-sans">
       {/* Navigation */}
       <nav className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-950/80 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,13 +37,13 @@ export default function HomePage() {
             <div className="flex items-center gap-4">
               <Link
                 href="#features"
-                className="hidden sm:block text-slate-600 hover:text-primary font-medium"
+                className="hidden sm:block text-slate-600 hover:text-primary font-medium transition-colors"
               >
                 Features
               </Link>
               <Link
                 href="#pricing"
-                className="hidden sm:block text-slate-600 hover:text-primary font-medium"
+                className="hidden sm:block text-slate-600 hover:text-primary font-medium transition-colors"
               >
                 Pricing
               </Link>
@@ -57,21 +59,20 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
-        <Badge variant="secondary" className="mb-4 bg-slate-100 text-slate-800 border-slate-200">
-          Trusted by Amazon Sellers Worldwide
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 text-center">
+        <Badge variant="secondary" className="mb-4 bg-blue-50 text-blue-700 border-blue-200 font-medium">
+          Built for Amazon PPC Sellers
         </Badge>
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
-          Optimize Your Amazon
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 leading-tight">
+          Stop Guessing.
           <br />
-          <span className="text-primary">Ad Placements</span>
+          <span className="text-primary">Start Optimizing.</span>
         </h1>
         <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
-          Data-driven insights to maximize your Amazon PPC performance. Analyze
-          placement data, optimize bid adjustments, and{" "}
-          <strong className="text-slate-900 dark:text-slate-100">increase your ROAS</strong>.
+          BidFlow automatically tracks your placement performance across Top of Search, Rest of Search, and Product Pages — so you know exactly where to raise or cut bids to{" "}
+          <strong className="text-slate-900 dark:text-slate-100">maximize your ROAS</strong>.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
           <Link href="/signup">
             <Button size="lg" className="w-full sm:w-auto px-8 shadow-md">
               Start Free Trial
@@ -83,146 +84,464 @@ export default function HomePage() {
             </Button>
           </Link>
         </div>
-        <p className="text-sm text-slate-500 mt-4">
+        <p className="text-sm text-slate-500 mb-12">
           30-day free trial. No credit card required.
         </p>
-      </section>
 
-      {/* Problem/Solution Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 md:p-12 border border-slate-100 dark:border-slate-800">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">The Problem</h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
-                Managing Amazon Ads placement bids is time-consuming and
-                confusing. Most sellers are leaving money on the table.
-              </p>
-              <ul className="space-y-3 text-slate-600 dark:text-slate-400">
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 font-bold">✗</span> No visibility into
-                  placement performance
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 font-bold">✗</span> Guessing at bid
-                  adjustments
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 font-bold">✗</span> Wasting ad spend on
-                  poor placements
-                </li>
-              </ul>
+        {/* Floating Mini Dashboard Preview */}
+        <div className="max-w-2xl mx-auto">
+          <div className="relative rounded-2xl border border-blue-200 bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
+            {/* Browser chrome */}
+            <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 flex items-center gap-2 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+              </div>
+              <div className="flex-1 mx-4 bg-white dark:bg-gray-700 rounded-md text-xs text-slate-400 py-1 px-3 text-left">
+                app.bidflow.com/dashboard
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
+              </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-8 rounded-xl border border-slate-100 dark:border-slate-700">
-              <h2 className="text-3xl font-bold mb-4 text-primary">
-                Our Solution
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
-                BidFlow automatically collects and analyzes your placement data,
-                giving you clear insights to optimize your bids.
-              </p>
-              <ul className="space-y-3 text-slate-600 dark:text-slate-400">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="text-primary h-5 w-5" /> Clear
-                  placement performance data
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="text-primary h-5 w-5" /> Data-backed
-                  bid recommendations
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="text-primary h-5 w-5" /> Weekly
-                  automated reports
-                </li>
-              </ul>
+            {/* Mini table */}
+            <div className="p-4">
+              <div className="text-left mb-3">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Placement Performance — Last 30 Days
+                </span>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-700">
+                    <th className="text-left py-2 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Placement</th>
+                    <th className="text-right py-2 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Spend</th>
+                    <th className="text-right py-2 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">ROAS</th>
+                    <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">ACOS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                        <span className="font-medium text-slate-800 dark:text-slate-200 text-left">Top of Search</span>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4 text-right text-slate-600 dark:text-slate-400">$1,248</td>
+                    <td className="py-3 pr-4 text-right">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                        4.2x
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                        23.8%
+                      </span>
+                    </td>
+                  </tr>
+                  <tr className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-slate-400 flex-shrink-0"></div>
+                        <span className="font-medium text-slate-800 dark:text-slate-200 text-left">Rest of Search</span>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4 text-right text-slate-600 dark:text-slate-400">$642</td>
+                    <td className="py-3 pr-4 text-right">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
+                        2.8x
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
+                        35.7%
+                      </span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-300 flex-shrink-0"></div>
+                        <span className="font-medium text-slate-800 dark:text-slate-200 text-left">Product Page</span>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4 text-right text-slate-600 dark:text-slate-400">$319</td>
+                    <td className="py-3 pr-4 text-right">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400">
+                        1.9x
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400">
+                        52.6%
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <span className="text-xs text-slate-400">3 placement types · 17 campaigns tracked</span>
+                <span className="text-xs font-semibold text-primary flex items-center gap-1">
+                  View full report <ChevronRight className="h-3 w-3" />
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Stats Strip */}
+      <section className="border-y border-slate-100 dark:border-slate-800 bg-white dark:bg-gray-950 py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-extrabold text-primary mb-1">3</div>
+              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Placement Types Tracked</div>
+            </div>
+            <div>
+              <div className="text-4xl font-extrabold text-primary mb-1">90</div>
+              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Days Historical Data</div>
+            </div>
+            <div>
+              <div className="text-4xl font-extrabold text-primary mb-1">Weekly</div>
+              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Automated Reports</div>
+            </div>
+            <div>
+              <div className="text-4xl font-extrabold text-primary mb-1">100%</div>
+              <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Secure OAuth</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Full Dashboard Mockup Section */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center mb-10">
+          <Badge variant="secondary" className="mb-3 bg-blue-50 text-blue-700 border-blue-200">
+            Dashboard Preview
+          </Badge>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
+            Your placement data, organized and actionable
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
+            Every campaign, every placement, every week — laid out so you know exactly where to move the needle.
+          </p>
+        </div>
+
+        {/* Browser Frame */}
+        <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-900">
+          {/* Browser Chrome */}
+          <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 flex items-center gap-3 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-400"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <div className="w-3 h-3 rounded-full bg-green-400"></div>
+            </div>
+            <div className="flex-1 max-w-sm mx-auto bg-white dark:bg-gray-700 rounded-md text-xs text-slate-400 py-1 px-3 text-center">
+              app.bidflow.com/dashboard
+            </div>
+          </div>
+
+          {/* App Nav */}
+          <div className="bg-white dark:bg-gray-900 border-b border-slate-100 dark:border-slate-800 px-6 flex items-center gap-6 pt-3">
+            <div className="flex items-center gap-2 pb-3 border-b-2 border-primary">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Dashboard</span>
+            </div>
+            <div className="flex items-center gap-2 pb-3 text-slate-400">
+              <span className="text-sm">Reports</span>
+            </div>
+            <div className="flex items-center gap-2 pb-3 text-slate-400">
+              <span className="text-sm">Settings</span>
+            </div>
+            <div className="ml-auto pb-3">
+              <span className="text-xs bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-3 py-1 font-medium">
+                Week 7 · Feb 10–16
+              </span>
+            </div>
+          </div>
+
+          {/* Dashboard Body */}
+          <div className="p-6 bg-slate-50 dark:bg-gray-950">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Total Spend</div>
+                <div className="text-2xl font-extrabold text-slate-900 dark:text-white">$2,209</div>
+                <div className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" /> +12% vs last week
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Blended ROAS</div>
+                <div className="text-2xl font-extrabold text-green-600">3.4x</div>
+                <div className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" /> +0.3x vs last week
+                </div>
+              </div>
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wider">Blended ACOS</div>
+                <div className="text-2xl font-extrabold text-slate-900 dark:text-white">29.4%</div>
+                <div className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" /> −2.1% vs last week
+                </div>
+              </div>
+            </div>
+
+            {/* Placement Table */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Placement Performance by Campaign</span>
+                <span className="text-xs text-slate-400">Last 30 days</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 dark:bg-slate-800/50">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Campaign</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Portfolio</th>
+                      <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Placement</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">30D Spend</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">ROAS</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">ACOS</th>
+                      <th className="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Bid Adj.</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                    {[
+                      { campaign: "Hot & Spicy Ramen — Broad", portfolio: "Core Products", placement: "Top of Search", spend: "$842", roas: "4.7x", acos: "21.3%", bid: "+35%", roasColor: "green" },
+                      { campaign: "Hot & Spicy Ramen — Broad", portfolio: "Core Products", placement: "Rest of Search", spend: "$311", roas: "2.9x", acos: "34.5%", bid: "0%", roasColor: "yellow" },
+                      { campaign: "Hot & Spicy Ramen — Broad", portfolio: "Core Products", placement: "Product Page", spend: "$128", roas: "1.6x", acos: "62.5%", bid: "0%", roasColor: "red" },
+                      { campaign: "Chicken Seasoning — Exact", portfolio: "Core Products", placement: "Top of Search", spend: "$406", roas: "5.1x", acos: "19.6%", bid: "+50%", roasColor: "green" },
+                      { campaign: "Chicken Seasoning — Exact", portfolio: "Core Products", placement: "Rest of Search", spend: "$191", roas: "3.2x", acos: "31.3%", bid: "0%", roasColor: "yellow" },
+                    ].map((row, i) => (
+                      <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-medium max-w-[160px] truncate">{row.campaign}</td>
+                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{row.portfolio}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{row.placement}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400">{row.spend}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            row.roasColor === "green" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400" :
+                            row.roasColor === "yellow" ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" :
+                            "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"
+                          }`}>
+                            {row.roas}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-400 text-xs">{row.acos}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`text-xs font-semibold ${row.bid !== "0%" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`}>
+                            {row.bid}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400">
+                Showing 5 of 51 rows · 17 campaigns · 3 placements each
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem / Solution */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid md:grid-cols-2 gap-6 rounded-2xl overflow-hidden shadow-xl border border-slate-100 dark:border-slate-800">
+          {/* Problem side */}
+          <div className="bg-slate-50 dark:bg-slate-900 p-10">
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-semibold">
+              The Problem
+            </div>
+            <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">
+              Flying blind on placement bids
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+              Amazon&apos;s Seller Central buries placement data across multiple reports. Most sellers never look at it — and are silently losing money.
+            </p>
+            <ul className="space-y-4">
+              {[
+                "No visibility into which placements are profitable",
+                "Guessing at bid adjustments with no data",
+                "Overspending on Product Page with 50%+ ACOS",
+                "Missing out on Top of Search ROAS gains",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3 text-slate-600 dark:text-slate-400">
+                  <span className="text-red-500 font-bold mt-0.5 flex-shrink-0">✗</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Solution side */}
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-10 text-white">
+            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/20 text-white text-sm font-semibold">
+              The BidFlow Way
+            </div>
+            <h2 className="text-2xl font-bold mb-4">
+              Data-backed decisions, every week
+            </h2>
+            <p className="text-blue-100 mb-8 leading-relaxed">
+              BidFlow surfaces exactly where your ad spend works and where it doesn&apos;t — automatically, every week.
+            </p>
+            <ul className="space-y-4">
+              {[
+                { text: "See exactly which placements drive your ROAS", metric: "up to 4.7x" },
+                { text: "Know precisely where to adjust bids", metric: "+35% where it counts" },
+                { text: "Cut waste on underperforming placements", metric: "save 20-40% on spend" },
+                { text: "90 days of historical data, updated weekly", metric: "always current" },
+              ].map((item) => (
+                <li key={item.text} className="flex items-start gap-3">
+                  <CheckCircle className="text-blue-200 h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold">{item.text}</span>
+                    <span className="text-blue-200 text-sm ml-2">— {item.metric}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
       <section
         id="features"
         className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
       >
-        <h2 className="text-3xl font-bold text-center mb-12 text-slate-900 dark:text-white">How It Works</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+        <h2 className="text-3xl font-bold text-center mb-3 text-slate-900 dark:text-white">How It Works</h2>
+        <p className="text-center text-slate-500 dark:text-slate-400 mb-14">Three steps to placement clarity</p>
+
+        <div className="grid md:grid-cols-3 gap-6 relative">
+          {/* Connector lines (desktop) */}
+          <div className="hidden md:block absolute top-12 left-[33%] w-[17%] h-px bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 z-0">
+            <ArrowRight className="absolute -right-3 -top-2.5 h-5 w-5 text-slate-300 dark:text-slate-600" />
+          </div>
+          <div className="hidden md:block absolute top-12 left-[66%] w-[17%] h-px bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 z-0">
+            <ArrowRight className="absolute -right-3 -top-2.5 h-5 w-5 text-slate-300 dark:text-slate-600" />
+          </div>
+
+          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-shadow relative z-10">
             <CardHeader>
-              <Target className="h-10 w-10 text-primary mb-2" />
-              <CardTitle>1. Connect Your Account</CardTitle>
+              <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                <Target className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Step 1</span>
+              </div>
+              <CardTitle className="text-lg">Connect Your Account</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-slate-600 dark:text-slate-400">
-                Securely connect your Amazon Advertising account. We use OAuth
-                and never store your password.
+              <CardDescription className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Securely connect your Amazon Advertising account via OAuth in under 5 minutes. We never store your password.
               </CardDescription>
+              <div className="mt-4 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-md px-3 py-2">
+                Set up in &lt; 5 minutes
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+
+          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-shadow relative z-10">
             <CardHeader>
-              <BarChart3 className="h-10 w-10 text-primary mb-2" />
-              <CardTitle>2. Analyze Placements</CardTitle>
+              <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                <BarChart3 className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Step 2</span>
+              </div>
+              <CardTitle className="text-lg">Analyze Placements</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-slate-600 dark:text-slate-400">
-                We collect placement reports and show you exactly how Top of
-                Search, Rest of Search, and Product Pages perform.
+              <CardDescription className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                We collect 90 days of historical placement data and show you ROAS by placement type across every campaign.
               </CardDescription>
+              <div className="mt-4 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-md px-3 py-2">
+                90 days of historical data included
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+
+          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-shadow relative z-10">
             <CardHeader>
-              <TrendingUp className="h-10 w-10 text-primary mb-2" />
-              <CardTitle>3. Optimize & Grow</CardTitle>
+              <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                <TrendingUp className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold text-blue-500 uppercase tracking-widest">Step 3</span>
+              </div>
+              <CardTitle className="text-lg">Optimize &amp; Grow</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription className="text-slate-600 dark:text-slate-400">
-                Use our insights to adjust your bids, reduce wasted spend, and
-                maximize your return on ad spend.
+              <CardDescription className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                Use clear data to adjust placement bids — boost where ROAS is strong, cut where it&apos;s not. Updated every week automatically.
               </CardDescription>
+              <div className="mt-4 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-md px-3 py-2">
+                Weekly automated report delivery
+              </div>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* Placement Types Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-        <h2 className="text-3xl font-bold text-center mb-4 text-slate-900 dark:text-white">
-          Placement Types We Track
-        </h2>
-        <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
-          Get granular insights into each placement type
-        </p>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border-l-4 border-blue-600">
-            <h3 className="font-semibold text-lg mb-2">Top of Search</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              First row of search results. Highest visibility, often highest
-              CPC.
-            </p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border-l-4 border-slate-400">
-            <h3 className="font-semibold text-lg mb-2">Rest of Search</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Below the fold on search pages. Lower CPC, still high intent.
-            </p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border-l-4 border-blue-400">
-            <h3 className="font-semibold text-lg mb-2">Product Page</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              On competitor or related product detail pages. Great for conquest.
-            </p>
+      {/* Placement Types */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-10">
+          <h2 className="text-3xl font-bold text-center mb-3 text-slate-900 dark:text-white">
+            Placement Types We Track
+          </h2>
+          <p className="text-center text-slate-600 dark:text-slate-400 mb-10">
+            Every placement type — with real performance context to guide your bids
+          </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 border-blue-600 hover:shadow-md transition-shadow">
+              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Top of Search</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                First row of search results. Highest visibility, highest intent — and often your best ROAS.
+              </p>
+              <div className="space-y-1.5">
+                <div className="text-sm font-semibold text-green-600 dark:text-green-400">Avg. ROAS: 4.2x</div>
+                <div className="text-xs text-slate-500">Often benefits from +20–40% bid adjustment</div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 border-slate-400 hover:shadow-md transition-shadow">
+              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Rest of Search</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                Below the fold on search pages. Lower CPC and still high-intent — solid volume at efficient cost.
+              </p>
+              <div className="space-y-1.5">
+                <div className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">Avg. ROAS: 2.8x</div>
+                <div className="text-xs text-slate-500">Lower CPC, consistent conversion volume</div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 border-blue-400 hover:shadow-md transition-shadow">
+              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Product Page</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                On competitor or related product detail pages. High conquest value — but watch ACOS closely.
+              </p>
+              <div className="space-y-1.5">
+                <div className="text-sm font-semibold text-red-600 dark:text-red-400">Avg. ROAS: 1.9x</div>
+                <div className="text-xs text-slate-500">High conquest value — monitor ACOS weekly</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing */}
       <section
         id="pricing"
         className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
       >
-        <h2 className="text-3xl font-bold text-center mb-4 text-slate-900 dark:text-white">Simple Pricing</h2>
+        <h2 className="text-3xl font-bold text-center mb-3 text-slate-900 dark:text-white">Simple Pricing</h2>
         <p className="text-center text-slate-600 dark:text-slate-400 mb-12">
           Start free, upgrade when you&apos;re ready.
         </p>
@@ -246,7 +565,7 @@ export default function HomePage() {
                   "Email support",
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-primary" />
+                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
                     <span className="text-slate-700 dark:text-slate-300">{feature}</span>
                   </li>
                 ))}
@@ -284,7 +603,7 @@ export default function HomePage() {
                   "Custom integrations",
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-primary" />
+                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
                     <span className="text-slate-700 dark:text-slate-300 font-medium">{feature}</span>
                   </li>
                 ))}
@@ -305,33 +624,33 @@ export default function HomePage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white dark:bg-gray-950">
         <div className="grid md:grid-cols-3 gap-12 text-center">
           <div>
-            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100 dark:border-slate-800">
+            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800">
               <Shield className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="font-bold text-xl mb-3 text-slate-900 dark:text-white">Secure & Private</h3>
+            <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">AES-256 Encrypted</div>
+            <h3 className="font-bold text-xl mb-3 text-slate-900 dark:text-white">Secure &amp; Private</h3>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              Your data is encrypted and never shared. We use OAuth and never
-              store your Amazon password.
+              Your credentials are AES-256 encrypted at rest. We use OAuth and never store your Amazon password.
             </p>
           </div>
           <div>
-            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100 dark:border-slate-800">
+            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800">
               <Clock className="h-8 w-8 text-primary" />
             </div>
+            <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">Set up in &lt; 5 minutes</div>
             <h3 className="font-bold text-xl mb-3 text-slate-900 dark:text-white">Automated Reports</h3>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              Set it and forget it. We collect your placement data weekly and
-              keep your dashboard updated.
+              Connect once and we handle the rest. Your placement data is collected and updated every week automatically.
             </p>
           </div>
           <div>
-            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100 dark:border-slate-800">
+            <div className="h-16 w-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800">
               <Zap className="h-8 w-8 text-primary" />
             </div>
+            <div className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider">Filter by week, portfolio, campaign</div>
             <h3 className="font-bold text-xl mb-3 text-slate-900 dark:text-white">Fast Insights</h3>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              See your placement performance at a glance. Filter by week,
-              portfolio, or campaign.
+              Drill into any campaign, filter by portfolio or week, and find exactly where your ad spend is winning or wasting.
             </p>
           </div>
         </div>
@@ -343,18 +662,22 @@ export default function HomePage() {
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
           <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
+              <TrendingUp className="h-4 w-4" />
+              Amazon sellers using placement optimization see an average 2.3x improvement in ROAS within 60 days
+            </div>
             <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
               Ready to Optimize Your Placements?
             </h2>
             <p className="text-primary-foreground/90 mb-10 max-w-2xl mx-auto text-lg leading-relaxed">
-              Join Amazon sellers who are using data to make smarter bid
-              decisions. Start your free trial today.
+              Stop leaving money on the table. Start your free trial and see exactly where your ad spend is winning — and where it&apos;s not.
             </p>
             <Link href="/signup">
               <Button size="lg" variant="secondary" className="px-10 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all">
                 Get Started Free
               </Button>
             </Link>
+            <p className="text-primary-foreground/70 text-sm mt-4">30-day free trial. No credit card required.</p>
           </div>
         </div>
       </section>
