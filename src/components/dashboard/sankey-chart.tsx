@@ -18,7 +18,6 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const cacheRef = useRef<Record<string, { points: { x: number; y: number }[] }>>({});
   const animationRef = useRef<number | undefined>(undefined);
   const elapsedRef = useRef(0);
-  const spendCounterRef = useRef<Record<string, { sales: number; noSales: number }>>({});
 
   // Calculate placement stats from data
   const placementData = React.useMemo(() => {
@@ -52,7 +51,6 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const handleReset = () => {
     particlesRef.current = [];
     elapsedRef.current = 0;
-    spendCounterRef.current = {};
     if (svgRef.current) {
       d3.select(svgRef.current).selectAll(".p").remove();
     }
@@ -348,98 +346,44 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .attr("fill", "#ef4444")
       .attr("rx", 2);
 
-    // Static labels — show final values immediately so they match Spend Distribution
+    // Labels — start at 0, animated to correct final values by tick()
     barGroups.append("text")
       .attr("class", "p-green")
-      .attr("x", barWidth + 10)
-      .attr("y", barHeight * 0.25)
-      .attr("dy", "0.3em")
-      .style("font-family", "monospace")
-      .style("font-size", "12px")
-      .style("font-weight", "bold")
-      .attr("fill", "#3b82f6")
-      .text((d: any) => {
-        const r = raw[d.node.name];
-        if (!r) return "0%";
-        const tot = r["clicks to sales"] + r["clicks no sales"];
-        return tot > 0 ? Math.round(r["clicks to sales"] / tot * 100) + "%" : "0%";
-      });
+      .attr("x", barWidth + 10).attr("y", barHeight * 0.25).attr("dy", "0.3em")
+      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .attr("fill", "#3b82f6").text("0%");
 
     barGroups.append("text")
       .attr("class", "p-red")
-      .attr("x", barWidth + 10)
-      .attr("y", barHeight * 0.75)
-      .attr("dy", "0.3em")
-      .style("font-family", "monospace")
-      .style("font-size", "12px")
-      .style("font-weight", "bold")
-      .attr("fill", "#ef4444")
-      .text((d: any) => {
-        const r = raw[d.node.name];
-        if (!r) return "0%";
-        const tot = r["clicks to sales"] + r["clicks no sales"];
-        return tot > 0 ? Math.round(r["clicks no sales"] / tot * 100) + "%" : "0%";
-      });
+      .attr("x", barWidth + 10).attr("y", barHeight * 0.75).attr("dy", "0.3em")
+      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .attr("fill", "#ef4444").text("0%");
 
-    // Click counts
     barGroups.append("text")
       .attr("class", "c-green")
-      .attr("x", barWidth + 50)
-      .attr("y", barHeight * 0.25)
-      .attr("dy", "0.3em")
-      .style("font-family", "monospace")
-      .style("font-size", "12px")
-      .style("font-weight", "bold")
-      .attr("fill", "#3b82f6")
-      .text((d: any) => raw[d.node.name]?.["clicks to sales"] ?? 0);
+      .attr("x", barWidth + 50).attr("y", barHeight * 0.25).attr("dy", "0.3em")
+      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .attr("fill", "#3b82f6").text("0");
 
     barGroups.append("text")
       .attr("class", "c-red")
-      .attr("x", barWidth + 50)
-      .attr("y", barHeight * 0.75)
-      .attr("dy", "0.3em")
-      .style("font-family", "monospace")
-      .style("font-size", "12px")
-      .style("font-weight", "bold")
-      .attr("fill", "#ef4444")
-      .text((d: any) => raw[d.node.name]?.["clicks no sales"] ?? 0);
+      .attr("x", barWidth + 50).attr("y", barHeight * 0.75).attr("dy", "0.3em")
+      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .attr("fill", "#ef4444").text("0");
 
-    // Spend values — static final split
     barGroups.append("text")
       .attr("class", "spend-green")
-      .attr("x", barWidth + 130)
-      .attr("y", barHeight * 0.25)
-      .attr("dy", "0.3em")
+      .attr("x", barWidth + 130).attr("y", barHeight * 0.25).attr("dy", "0.3em")
       .attr("text-anchor", "end")
-      .style("font-family", "monospace")
-      .style("font-size", "11px")
-      .style("font-weight", "bold")
-      .attr("fill", "#3b82f6")
-      .text((d: any) => {
-        const r = raw[d.node.name];
-        if (!r) return "$0";
-        const tot = r["clicks to sales"] + r["clicks no sales"];
-        const spendSales = tot > 0 ? r.spend * (r["clicks to sales"] / tot) : 0;
-        return "$" + Math.round(spendSales);
-      });
+      .style("font-family", "monospace").style("font-size", "11px").style("font-weight", "bold")
+      .attr("fill", "#3b82f6").text("$0");
 
     barGroups.append("text")
       .attr("class", "spend-red")
-      .attr("x", barWidth + 130)
-      .attr("y", barHeight * 0.75)
-      .attr("dy", "0.3em")
+      .attr("x", barWidth + 130).attr("y", barHeight * 0.75).attr("dy", "0.3em")
       .attr("text-anchor", "end")
-      .style("font-family", "monospace")
-      .style("font-size", "11px")
-      .style("font-weight", "bold")
-      .attr("fill", "#ef4444")
-      .text((d: any) => {
-        const r = raw[d.node.name];
-        if (!r) return "$0";
-        const tot = r["clicks to sales"] + r["clicks no sales"];
-        const spendNoSales = tot > 0 ? r.spend * (r["clicks no sales"] / tot) : 0;
-        return "$" + Math.round(spendNoSales);
-      });
+      .style("font-family", "monospace").style("font-size", "11px").style("font-weight", "bold")
+      .attr("fill", "#ef4444").text("$0");
 
     // Animation tick function
     function tick(t: number) {
@@ -460,27 +404,42 @@ export function SankeyChart({ data }: SankeyChartProps) {
           createdAt: t,
           length: cacheRef.current[target.path].points.length,
           target,
-          counted: false
         });
       }
 
-      // Animate progress bars only (labels are static final values)
+      // Update bars and all labels as particles arrive
       barGroups.each(function(d: any) {
-        const exp = d3.sum(d.targets, (t: any) => t.value) || 1;
         const placementName = d.node.name;
+        const r = raw[placementName];
+        // Total expected clicks for this placement (from real data)
+        const totalClicks = r ? r["clicks to sales"] + r["clicks no sales"] : 1;
 
-        const af = particlesRef.current.filter((p: any) =>
-          p.target.name === placementName && p.target.group === "clicks no sales" && p.pos >= p.length
-        ).length;
         const kf = particlesRef.current.filter((p: any) =>
           p.target.name === placementName && p.target.group === "clicks to sales" && p.pos >= p.length
         ).length;
+        const af = particlesRef.current.filter((p: any) =>
+          p.target.name === placementName && p.target.group === "clicks no sales" && p.pos >= p.length
+        ).length;
+        const tot = kf + af;
 
+        // Bars animate based on arrived vs expected
         d3.select(this).select(".bar-green")
-          .attr("height", Math.min(barHeight, (kf / exp) * barHeight));
+          .attr("height", Math.min(barHeight, (kf / totalClicks) * barHeight));
         d3.select(this).select(".bar-red")
-          .attr("y", barHeight - Math.min(barHeight, (af / exp) * barHeight))
-          .attr("height", Math.min(barHeight, (af / exp) * barHeight));
+          .attr("y", barHeight - Math.min(barHeight, (af / totalClicks) * barHeight))
+          .attr("height", Math.min(barHeight, (af / totalClicks) * barHeight));
+
+        // Labels count up — percentages stabilise at correct final value
+        d3.select(this).select(".p-green").text(tot > 0 ? Math.round(kf / tot * 100) + "%" : "0%");
+        d3.select(this).select(".p-red").text(tot > 0 ? Math.round(af / tot * 100) + "%" : "0%");
+        d3.select(this).select(".c-green").text(kf);
+        d3.select(this).select(".c-red").text(af);
+
+        // Spend: proportional to arrived particles vs total expected — converges to exact split
+        const spendSales   = totalClicks > 0 ? (r?.spend || 0) * (kf / totalClicks) : 0;
+        const spendNoSales = totalClicks > 0 ? (r?.spend || 0) * (af / totalClicks) : 0;
+        d3.select(this).select(".spend-green").text("$" + Math.round(spendSales));
+        d3.select(this).select(".spend-red").text("$" + Math.round(spendNoSales));
       });
 
       // Move particles
