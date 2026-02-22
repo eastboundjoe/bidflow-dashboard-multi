@@ -641,13 +641,15 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
       (acc, row) => {
         const placement = row.placement_type || "Unknown";
         if (!acc[placement]) {
-          acc[placement] = { spend: 0, sales: 0 };
+          acc[placement] = { spend: 0, sales: 0, clicks: 0, orders: 0 };
         }
         acc[placement].spend += row.spend_7d || 0;
         acc[placement].sales += row.sales_7d || 0;
+        acc[placement].clicks += row.clicks_7d || 0;
+        acc[placement].orders += row.orders_7d || 0;
         return acc;
       },
-      {} as Record<string, { spend: number; sales: number }>
+      {} as Record<string, { spend: number; sales: number; clicks: number; orders: number }>
     );
 
     const totalSpend = Object.values(byPlacement).reduce((sum, s) => sum + s.spend, 0);
@@ -668,9 +670,9 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
   }
 
   const placements = [
-    { key: "Top of Search", color: "#1d4ed8" },
-    { key: "Rest of Search", color: "#3b82f6" },
-    { key: "Product Page", color: "#64748b" },
+    { key: "Top of Search", short: "TOP", color: "#1d4ed8" },
+    { key: "Rest of Search", short: "ROS", color: "#3b82f6" },
+    { key: "Product Page", short: "PP",  color: "#64748b" },
   ];
 
   return (
@@ -695,6 +697,46 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                     style={{ width: `${percentage}%`, backgroundColor: color }}
                   />
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Click Outcomes — mirrors the Sankey OUTCOMES/SPEND columns */}
+      <div className="pt-2 border-t border-border">
+        <h4 className="text-sm font-medium mb-3">Click Outcomes</h4>
+        <div className="w-full text-xs font-mono">
+          <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 mb-1.5 text-muted-foreground">
+            <span />
+            <span className="text-center text-blue-500">sales</span>
+            <span className="text-center text-red-500">no sale</span>
+            <span className="text-right text-blue-500">→ sales</span>
+            <span className="text-right text-red-500">→ no sale</span>
+          </div>
+          {placements.map(({ key, short, color }) => {
+            const p = stats.byPlacement[key];
+            if (!p) return null;
+            const cvr = p.clicks > 0 ? p.orders / p.clicks : 0;
+            const clicksSales   = Math.round(p.clicks * cvr);
+            const clicksNoSales = p.clicks - clicksSales;
+            const spendSales    = p.spend * cvr;
+            const spendNoSales  = p.spend - spendSales;
+            const pctSales   = p.clicks > 0 ? (cvr * 100).toFixed(0) : "0";
+            const pctNoSales = p.clicks > 0 ? ((1 - cvr) * 100).toFixed(0) : "0";
+            return (
+              <div key={key} className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-1.5 border-b border-border/40 last:border-0 items-center">
+                <span className="font-bold" style={{ color }}>{short}</span>
+                <div className="text-center">
+                  <div className="font-bold text-blue-500">{pctSales}%</div>
+                  <div className="text-muted-foreground">{clicksSales}</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-red-500">{pctNoSales}%</div>
+                  <div className="text-muted-foreground">{clicksNoSales}</div>
+                </div>
+                <div className="text-right text-blue-500">${Math.round(spendSales)}</div>
+                <div className="text-right text-red-500">${Math.round(spendNoSales)}</div>
               </div>
             );
           })}
