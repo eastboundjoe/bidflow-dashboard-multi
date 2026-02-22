@@ -129,7 +129,8 @@ export async function GET(request: Request) {
       .from("credentials")
       .upsert({
         tenant_id: user.id,
-        profile_id: profileId.toString(),
+        amazon_profile_id: profileId.toString(),
+        profile_id: profileId.toString(), // Backup for legacy column name
         status: "active",
         updated_at: new Date().toISOString(),
       }, {

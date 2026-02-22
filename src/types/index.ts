@@ -25,17 +25,22 @@ export interface SubscriptionStatus {
 
 // Credentials Types
 export interface Credentials {
-  id: string;
   tenant_id: string;
-  client_id: string | null;
-  client_secret: string | null;
+  amazon_profile_id: string | null;
+  profile_id: string | null; // Support both names for compatibility
+  vault_id_refresh_token: string | null;
+  vault_id_client_id: string | null;
+  vault_id_client_secret: string | null;
   refresh_token: string | null;
-  profile_id: string | null;
   status: "active" | "inactive";
   report_day: string;
   report_hour: number;
   created_at: string;
   updated_at: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_status: string | null;
+  subscription_tier: string | null;
 }
 
 export interface CredentialFormData {
