@@ -58,14 +58,16 @@ const formatNumber = (value: number) =>
   new Intl.NumberFormat("en-US").format(value);
 
 // Sub-component for editable changes with focus preservation and Bezos warning
-function ChangesInput({ 
-    id, 
-    initialValue, 
-    onEdit 
-}: { 
-    id: string; 
-    initialValue: string; 
-    onEdit?: (id: string, value: string) => void 
+function ChangesInput({
+    id,
+    initialValue,
+    isSubmitted,
+    onEdit
+}: {
+    id: string;
+    initialValue: string;
+    isSubmitted?: boolean;
+    onEdit?: (id: string, value: string) => void
 }) {
     const [localValue, setLocalValue] = React.useState(initialValue);
     const [showWarning, setShowWarning] = React.useState(false);
@@ -96,12 +98,13 @@ function ChangesInput({
 
     return (
         <div className="relative group" onClick={(e) => e.stopPropagation()}>
-            <Input 
+            <Input
                 className={cn(
                     "h-7 w-20 text-xs text-right transition-colors font-bold",
-                    localValue !== "" && "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20",
+                    isSubmitted && localValue !== "" && "border-orange-500 bg-orange-50/50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
+                    !isSubmitted && localValue !== "" && "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20",
                     showWarning && "border-red-500 animate-pulse"
-                )} 
+                )}
                 value={localValue}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -621,13 +624,16 @@ export function PlacementDataTable({
         ),
         cell: ({ row }) => {
           const adjustment = row.getValue("bid_adjustment") as number;
+          const changedAt = row.original.changed_at;
           const isNonZero = adjustment !== 0;
           return (
             <div className={cn(
                 "text-center text-xs font-bold",
+                changedAt ? "text-orange-500 dark:text-orange-400" :
                 isNonZero ? "text-blue-600 dark:text-blue-400" : "text-slate-400"
             )}>
               {adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`}
+              {changedAt && <span className="font-normal ml-1 opacity-75">({changedAt})</span>}
             </div>
           );
         },
@@ -645,10 +651,11 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-            <ChangesInput 
-                id={row.original.id} 
-                initialValue={row.getValue("changes_in_placement") as string} 
-                onEdit={onEdit} 
+            <ChangesInput
+                id={row.original.id}
+                initialValue={row.getValue("changes_in_placement") as string}
+                isSubmitted={!!row.original.changed_at}
+                onEdit={onEdit}
             />
         )
       }

@@ -101,7 +101,8 @@ export interface PlacementData {
   // Bid adjustments
   bid_adjustment: number;
   changes_in_placement: string;
-  
+  changed_at?: string; // e.g. "2/22" — set after successful submission
+
   week_id: string;
   date_range_start: string;
   date_range_end: string;

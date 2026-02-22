@@ -272,7 +272,9 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
 
       if (response.ok) {
         alert("✅ Changes submitted successfully to Amazon!");
-        // Update bid_adjustment to the submitted value, then clear changes
+        const today = new Date();
+        const dateLabel = `${today.getMonth() + 1}/${today.getDate()}`;
+        // Update bid_adjustment to submitted value, keep changes value, mark changed_at
         setData((prev) =>
           prev.map((row) => {
             const hasChange =
@@ -285,10 +287,10 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
               return {
                 ...row,
                 bid_adjustment: isNaN(newVal) ? row.bid_adjustment : newVal,
-                changes_in_placement: "",
+                changed_at: dateLabel,
               };
             }
-            return { ...row, changes_in_placement: "" };
+            return row;
           })
         );
       } else {
