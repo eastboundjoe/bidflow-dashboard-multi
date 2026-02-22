@@ -33,23 +33,25 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
 
     setSaving(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("credentials")
-        .update({
+      const response = await fetch("/api/user/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           report_day: settings.report_day,
           report_hour: settings.report_hour,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", credentials.id);
+        }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to update settings");
+      }
 
       toast.success("Settings saved successfully!");
       router.refresh();
     } catch (error) {
       console.error("Error saving settings:", error);
-      toast.error("Failed to save settings. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to save settings");
     } finally {
       setSaving(false);
     }
