@@ -557,7 +557,7 @@ export default function HomePage() {
         </p>
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Pro — matched to Enterprise styling */}
-          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg">
+          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg flex flex-col">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge variant="outline" className="bg-white dark:bg-gray-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 shadow-sm px-4">Most Popular</Badge>
             </div>
@@ -568,7 +568,7 @@ export default function HomePage() {
                 <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow">
               <ul className="space-y-3">
                 {[
                   "90 days historical data",
@@ -595,7 +595,7 @@ export default function HomePage() {
           </Card>
 
           {/* Enterprise — elevated secondary tier */}
-          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg">
+          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg flex flex-col">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge variant="outline" className="bg-white dark:bg-gray-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 shadow-sm px-4">Scale Up</Badge>
             </div>
@@ -606,7 +606,7 @@ export default function HomePage() {
                 <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow">
               <ul className="space-y-3">
                 {[
                   "Unlimited historical data",
