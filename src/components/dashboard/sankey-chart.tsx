@@ -127,10 +127,18 @@ export function SankeyChart({ data }: SankeyChartProps) {
       t.data.groups.map((g: any) => ({ name: t.data.name, path: t.data.path, group: g.key, value: g.value }))
     );
     const totalP = d3.sum(targetsAbsolute, (d: any) => d.value) || 1;
-    const thresholds = d3.range(targetsAbsolute.length).map((i) =>
-      d3.sum(targetsAbsolute.slice(0, i + 1).map((r: any) => r.value / totalP))
-    );
-    const targetScale = d3.scaleThreshold<number, any>().domain(thresholds).range(targetsAbsolute);
+
+    // Build a deterministic queue: exactly value[i] entries per bucket, then shuffle.
+    // This guarantees final counts match the data exactly (no random drift).
+    const particleQueue: any[] = [];
+    targetsAbsolute.forEach((t: any) => {
+      for (let i = 0; i < t.value; i++) particleQueue.push(t);
+    });
+    for (let i = particleQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [particleQueue[i], particleQueue[j]] = [particleQueue[j], particleQueue[i]];
+    }
+    let queueIndex = 0;
 
     const colorScale = d3.scaleOrdinal<string>().domain(["clicks to sales", "clicks no sales"]).range(["#3b82f6", "#ef4444"]);
 
@@ -363,10 +371,10 @@ export function SankeyChart({ data }: SankeyChartProps) {
     function tick(t: number) {
       const speedScale = d3.scaleLinear().domain([0, 1]).range([speed, speed + 0.5]);
 
-      // Add new particles
+      // Add new particles from the pre-shuffled deterministic queue
       const pToAdd = Math.round(Math.random() * 6);
-      for (let i = 0; i < pToAdd && particlesRef.current.length < totalP; i++) {
-        const target = targetScale(Math.random());
+      for (let i = 0; i < pToAdd && queueIndex < particleQueue.length; i++) {
+        const target = particleQueue[queueIndex++];
         if (!target || !cacheRef.current[target.path]) continue;
 
         particlesRef.current.push({
