@@ -1,0 +1,343 @@
+{
+  "name": "(Multi) 4. Update Placement Multipliers",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "481801ae-ca24-4b0c-9a85-43fe438dfa1b",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        200
+      ],
+      "id": "webhook-trigger",
+      "name": "Webhook from BidFlow"
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_ID",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        200
+      ],
+      "id": "get-client-id",
+      "name": "Get Client ID (Doppler)"
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_SECRET",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        200
+      ],
+      "id": "get-client-secret",
+      "name": "Get Client Secret (Doppler)"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $json.body.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        200
+      ],
+      "id": "get-tenant-meta",
+      "name": "Get Tenant Profile ID"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT get_decrypted_refresh_token('{{ $node[\"Webhook from BidFlow\"].json.body.tenant_id }}') as refresh_token;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -200,
+        200
+      ],
+      "id": "decrypt-token",
+      "name": "Decrypt Refresh Token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amazon.com/auth/o2/token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.refresh_token }}"
+            },
+            {
+              "name": "client_id",
+              "value": "={{ $node[\"Get Client ID (Doppler)\"].json.value.raw }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $node[\"Get Client Secret (Doppler)\"].json.value.raw }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        200
+      ],
+      "id": "get-access-token",
+      "name": "Get Access Token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/sp/campaigns/list",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $node[\"Get Client ID (Doppler)\"].json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $node[\"Get Tenant Profile ID\"].json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.spcampaign.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.spcampaign.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"stateFilter\": { \"include\": [\"ENABLED\"] },\n  \"includeExtendedDataFields\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        200
+      ],
+      "id": "list-campaigns",
+      "name": "Get Current Campaigns"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Parse Amazon Campaigns into a lookup map\nconst campaignsRaw = $node[\"Get Current Campaigns\"].json.campaigns || [];\nconst campaignMap = {};\ncampaignsRaw.forEach(c => { campaignMap[c.campaignId] = c; });\n\n// 2. Get changes from webhook\nconst changes = $node[\"Webhook from BidFlow\"].json.body.changes || [];\n\n// 3. Prepare updates\nconst updates = [];\n\nchanges.forEach(change => {\n  const campaign = campaignMap[change.campaignId];\n  if (!campaign) return;\n\n  // Determine Amazon placement string\n  let amzPlacement = '';\n  const p = change.placement.toLowerCase();\n  if (p.includes('top')) amzPlacement = 'PLACEMENT_TOP';\n  else if (p.includes('rest')) amzPlacement = 'PLACEMENT_REST_OF_SEARCH';\n  else if (p.includes('product')) amzPlacement = 'PLACEMENT_PRODUCT_PAGE';\n\n  if (!amzPlacement) return;\n\n  // Parse numeric multiplier\n  const multiplier = parseInt(String(change.newMultiplier).replace('%', ''));\n\n  // Ensure structure exists\n  if (!campaign.dynamicBidding) campaign.dynamicBidding = {};\n  if (!campaign.dynamicBidding.placementBidding) campaign.dynamicBidding.placementBidding = [];\n\n  // Update or Add\n  const existingIdx = campaign.dynamicBidding.placementBidding.findIndex(pb => pb.placement === amzPlacement);\n  if (existingIdx >= 0) {\n    campaign.dynamicBidding.placementBidding[existingIdx].percentage = multiplier;\n  } else {\n    campaign.dynamicBidding.placementBidding.push({ placement: amzPlacement, percentage: multiplier });\n  }\n\n  // Add to batch (Amazon allows batch updates, but we'll prepare them individually here for safety or batch later)\n  updates.push({\n    json: {\n      campaignId: campaign.campaignId,\n      name: campaign.name,\n      state: campaign.state,\n      budget: campaign.budget,\n      startDate: campaign.startDate,\n      portfolioId: campaign.portfolioId,\n      targetingType: campaign.targetingType,\n      dynamicBidding: campaign.dynamicBidding\n    }\n  });\n});\n\nreturn updates;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        200
+      ],
+      "id": "prepare-updates",
+      "name": "Match & Prepare Updates"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://advertising-api.amazon.com/sp/campaigns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $node[\"Get Access Token\"].json.access_token }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $node[\"Get Client ID (Doppler)\"].json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $node[\"Get Tenant Profile ID\"].json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.spcampaign.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.spcampaign.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"campaigns\": [ {{ JSON.stringify($json) }} ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        200
+      ],
+      "id": "amazon-put",
+      "name": "Update Amazon"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Multipliers updated successfully\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        200
+      ],
+      "id": "response",
+      "name": "Final Response"
+    }
+  ],
+  "connections": {
+    "Webhook from BidFlow": {
+      "main": [
+        [
+          {
+            "node": "Get Client ID (Doppler)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client ID (Doppler)": {
+      "main": [
+        [
+          {
+            "node": "Get Client Secret (Doppler)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client Secret (Doppler)": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant Profile ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant Profile ID": {
+      "main": [
+        [
+          {
+            "node": "Decrypt Refresh Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decrypt Refresh Token": {
+      "main": [
+        [
+          {
+            "node": "Get Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token": {
+      "main": [
+        [
+          {
+            "node": "Get Current Campaigns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Campaigns": {
+      "main": [
+        [
+          {
+            "node": "Match & Prepare Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match & Prepare Updates": {
+      "main": [
+        [
+          {
+            "node": "Update Amazon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Amazon": {
+      "main": [
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
