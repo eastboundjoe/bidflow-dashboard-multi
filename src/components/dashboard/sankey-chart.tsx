@@ -643,8 +643,8 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         <div className="w-full text-xs font-mono">
           <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 mb-1.5 text-muted-foreground">
             <span />
-            <span className="text-center text-blue-500">sales</span>
-            <span className="text-center text-red-500">no sale</span>
+            <div className="flex flex-col items-center text-blue-500"><span>sales</span><span className="text-muted-foreground">clicks</span></div>
+            <div className="flex flex-col items-center text-red-500"><span>no sale</span><span className="text-muted-foreground">clicks</span></div>
             <span className="text-right text-blue-500">→ sales</span>
             <span className="text-right text-red-500">→ no sale</span>
           </div>
