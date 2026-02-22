@@ -245,17 +245,6 @@ export function SankeyChart({ data }: SankeyChartProps) {
                           d.name === "ROS" ? "Rest of Search" :
                           d.name === "PP" ? "Product Page" : d.name;
 
-          // Badge background
-          group.append("rect")
-            .attr("x", -80)
-            .attr("y", -14)
-            .attr("width", 80)
-            .attr("height", 28)
-            .attr("rx", 4)
-            .attr("fill", "#1f2937")
-            .attr("stroke", color)
-            .attr("stroke-width", 2);
-
           // Badge text
           group.append("text")
             .attr("x", -40)
