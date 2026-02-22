@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { N8N_WEBHOOKS } from "@/lib/constants";
 
 export async function POST() {
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export async function POST() {
   }
 
   // Trigger n8n webhook for data collection
-  const webhookUrl = process.env.N8N_COLLECTION_WEBHOOK;
+  const webhookUrl = N8N_WEBHOOKS.COLLECTION;
 
   if (!webhookUrl) {
     return NextResponse.json(

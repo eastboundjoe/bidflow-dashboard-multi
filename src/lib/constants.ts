@@ -11,8 +11,8 @@ export const STRIPE_PRICES = {
 
 // n8n Webhooks
 export const N8N_WEBHOOKS = {
-  COLLECTION: process.env.N8N_COLLECTION_WEBHOOK || "",
-  SUBMISSION: process.env.N8N_SUBMISSION_WEBHOOK || "",
+  COLLECTION: process.env.N8N_COLLECTION_WEBHOOK || "https://n8n.bidflow.app/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87",
+  SUBMISSION: process.env.N8N_SUBMISSION_WEBHOOK || "https://n8n.bidflow.app/webhook/32328f48-51f5-4123-b693-af5455d3b29c",
 } as const;
 
 // Subscription Tiers
