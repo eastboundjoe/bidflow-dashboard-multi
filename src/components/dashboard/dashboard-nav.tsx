@@ -87,9 +87,9 @@ export function DashboardNav({ user }: DashboardNavProps) {
             {/* Status Badge */}
             <Badge
               variant="outline"
-              className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+              className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
             >
-              <div className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse" />
               Pro
             </Badge>
 

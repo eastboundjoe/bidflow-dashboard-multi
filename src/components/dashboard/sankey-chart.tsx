@@ -134,7 +134,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     );
     const targetScale = d3.scaleThreshold<number, any>().domain(thresholds).range(targetsAbsolute);
 
-    const colorScale = d3.scaleOrdinal<string>().domain(["clicks to sales", "clicks no sales"]).range(["#00ff94", "#ff3366"]);
+    const colorScale = d3.scaleOrdinal<string>().domain(["clicks to sales", "clicks no sales"]).range(["#3b82f6", "#ef4444"]);
 
     const leaves = sankeyData.nodes
       .filter((n: any) => n.sourceLinks.length === 0)
@@ -184,7 +184,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     const routeLayer = g.append("g")
       .attr("fill", "none")
       .attr("stroke-opacity", 0.3)
-      .attr("stroke", "#374151")
+      .attr("stroke", "#94a3b8")
       .selectAll("path")
       .data(routes)
       .join("path")
@@ -208,9 +208,9 @@ export function SankeyChart({ data }: SankeyChartProps) {
 
     // Placement colors
     const placementColors: Record<string, string> = {
-      "TOP": "#00ff94",
-      "ROS": "#0095ff",
-      "PP": "#ff9500"
+      "TOP": "#1d4ed8",
+      "ROS": "#3b82f6",
+      "PP": "#64748b"
     };
 
     // Labels for nodes
@@ -305,8 +305,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .attr("fill", "#9ca3af");
 
       s2.append("text").text("OUTCOMES");
-      s2.append("text").attr("y", 16).attr("fill", "#00ff94").style("font-weight", "bold").text("sales");
-      s2.append("text").attr("y", 30).attr("fill", "#ff3366").style("font-weight", "bold").text("no sales");
+      s2.append("text").attr("y", 16).attr("fill", "#3b82f6").style("font-weight", "bold").text("sales");
+      s2.append("text").attr("y", 30).attr("fill", "#ef4444").style("font-weight", "bold").text("no sales");
 
       // Spend header
       const s4 = g.append("g")
@@ -317,8 +317,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .attr("fill", "#9ca3af");
 
       s4.append("text").text("SPEND");
-      s4.append("text").attr("y", 16).attr("fill", "#00ff94").style("font-weight", "bold").text("→ sales");
-      s4.append("text").attr("y", 30).attr("fill", "#ff3366").style("font-weight", "bold").text("→ no sales");
+      s4.append("text").attr("y", 16).attr("fill", "#3b82f6").style("font-weight", "bold").text("→ sales");
+      s4.append("text").attr("y", 30).attr("fill", "#ef4444").style("font-weight", "bold").text("→ no sales");
     }
 
     // Progress bars and metrics for each placement
@@ -345,7 +345,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .attr("class", "bar-green")
       .attr("width", barWidth)
       .attr("height", 0)
-      .attr("fill", "#00ff94")
+      .attr("fill", "#3b82f6")
       .attr("rx", 2);
 
     // Red bar (no sales) - grows from bottom
@@ -355,7 +355,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .attr("y", barHeight)
       .attr("width", barWidth)
       .attr("height", 0)
-      .attr("fill", "#ff3366")
+      .attr("fill", "#ef4444")
       .attr("rx", 2);
 
     // Percentage labels
@@ -367,7 +367,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace")
       .style("font-size", "12px")
       .style("font-weight", "bold")
-      .attr("fill", "#00ff94")
+      .attr("fill", "#3b82f6")
       .text("0%");
 
     barGroups.append("text")
@@ -378,7 +378,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace")
       .style("font-size", "12px")
       .style("font-weight", "bold")
-      .attr("fill", "#ff3366")
+      .attr("fill", "#ef4444")
       .text("0%");
 
     // Click counts
@@ -390,7 +390,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace")
       .style("font-size", "12px")
       .style("font-weight", "bold")
-      .attr("fill", "#00ff94")
+      .attr("fill", "#3b82f6")
       .text("0");
 
     barGroups.append("text")
@@ -401,7 +401,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace")
       .style("font-size", "12px")
       .style("font-weight", "bold")
-      .attr("fill", "#ff3366")
+      .attr("fill", "#ef4444")
       .text("0");
 
     // Spend values - separate for sales and no sales
@@ -414,7 +414,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace")
       .style("font-size", "11px")
       .style("font-weight", "bold")
-      .attr("fill", "#00ff94")
+      .attr("fill", "#3b82f6")
       .text("$0");
 
     barGroups.append("text")
@@ -426,7 +426,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .style("font-family", "monospace")
       .style("font-size", "11px")
       .style("font-weight", "bold")
-      .attr("fill", "#ff3366")
+      .attr("fill", "#ef4444")
       .text("$0");
 
     // Animation tick function
@@ -622,11 +622,11 @@ export function SankeyChart({ data }: SankeyChartProps) {
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-6 mt-4 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#00ff94" }} />
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#3b82f6" }} />
           <span className="text-muted-foreground">Clicks → Sales (orders)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#ff3366" }} />
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "#ef4444" }} />
           <span className="text-muted-foreground">Clicks → No Sales</span>
         </div>
       </div>
@@ -668,9 +668,9 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
   }
 
   const placements = [
-    { key: "Top of Search", color: "#00ff94" },
-    { key: "Rest of Search", color: "#0095ff" },
-    { key: "Product Page", color: "#ff9500" },
+    { key: "Top of Search", color: "#1d4ed8" },
+    { key: "Rest of Search", color: "#3b82f6" },
+    { key: "Product Page", color: "#64748b" },
   ];
 
   return (

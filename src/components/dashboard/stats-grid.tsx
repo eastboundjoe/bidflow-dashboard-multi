@@ -34,12 +34,12 @@ interface StatCardProps {
 
 function StatCard({ title, value, subtitle, icon, trend, loading }: StatCardProps) {
   return (
-    <Card className="card-hover">
+    <Card className="card-hover border-slate-200/50 dark:border-slate-800/50">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xs font-mono uppercase text-muted-foreground tracking-wider">
+        <CardTitle className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-widest font-mono">
           {title}
         </CardTitle>
-        <div className="text-muted-foreground">{icon}</div>
+        <div className="text-slate-400 dark:text-slate-500">{icon}</div>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -50,17 +50,17 @@ function StatCard({ title, value, subtitle, icon, trend, loading }: StatCardProp
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primary">{value}</span>
+              <span className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">{value}</span>
               {trend && trend !== "neutral" && (
                 trend === "up" ? (
-                  <TrendingUp className="h-4 w-4 text-green-400" />
+                  <TrendingUp className="h-4 w-4 text-blue-500" />
                 ) : (
-                  <TrendingDown className="h-4 w-4 text-red-400" />
+                  <TrendingDown className="h-4 w-4 text-red-500" />
                 )
               )}
             </div>
             {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>
             )}
           </>
         )}

@@ -45,46 +45,46 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* Light theme (default) - Professional clean look */
+/* Light theme (default) - Professional blue/grey look similar to crba.app */
 :root {
   --radius: 0.5rem;
 
-  --background: 0 0% 100%;
+  --background: 210 20% 98%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
   --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  --primary: 142 76% 36%;
+  --primary: 221.2 83.2% 45%;
   --primary-foreground: 210 40% 98%;
   --secondary: 210 40% 96.1%;
   --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
+  --muted: 214.3 31.8% 91.4%;
   --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
+  --accent: 214.3 31.8% 91.4%;
   --accent-foreground: 222.2 47.4% 11.2%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 142 76% 36%;
+  --ring: 221.2 83.2% 45%;
 
-  /* Chart colors */
-  --chart-1: 142 76% 36%;
-  --chart-2: 199 89% 48%;
-  --chart-3: 35 92% 50%;
-  --chart-4: 262 83% 58%;
-  --chart-5: 340 75% 55%;
+  /* Chart colors - Using blues and greys */
+  --chart-1: 221.2 83.2% 45%;
+  --chart-2: 215 20% 65%;
+  --chart-3: 199 89% 48%;
+  --chart-4: 222.2 47.4% 11.2%;
+  --chart-5: 217 91% 60%;
 
   /* Sidebar */
-  --sidebar: 0 0% 98%;
+  --sidebar: 210 20% 96%;
   --sidebar-foreground: 222.2 84% 4.9%;
-  --sidebar-primary: 142 76% 36%;
+  --sidebar-primary: 221.2 83.2% 45%;
   --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 210 40% 96.1%;
+  --sidebar-accent: 214.3 31.8% 91.4%;
   --sidebar-accent-foreground: 222.2 47.4% 11.2%;
   --sidebar-border: 214.3 31.8% 91.4%;
-  --sidebar-ring: 142 76% 36%;
+  --sidebar-ring: 221.2 83.2% 45%;
 }
 
 /* Dark theme */
@@ -95,7 +95,7 @@
   --card-foreground: 210 40% 98%;
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
-  --primary: 142 76% 46%;
+  --primary: 217.2 91.2% 59.8%;
   --primary-foreground: 222.2 47.4% 11.2%;
   --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
@@ -107,24 +107,50 @@
   --destructive-foreground: 210 40% 98%;
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 142 76% 46%;
+  --ring: 224.3 76.3% 48%;
 
   /* Chart colors */
-  --chart-1: 142 76% 46%;
-  --chart-2: 199 89% 58%;
-  --chart-3: 35 92% 60%;
-  --chart-4: 262 83% 68%;
-  --chart-5: 340 75% 65%;
+  --chart-1: 217.2 91.2% 59.8%;
+  --chart-2: 215 20% 65%;
+  --chart-3: 199 89% 48%;
+  --chart-4: 224.3 76.3% 48%;
+  --chart-5: 221.2 83.2% 53.3%;
 
   /* Sidebar */
   --sidebar: 222.2 84% 4.9%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 142 76% 46%;
+  --sidebar-primary: 217.2 91.2% 59.8%;
   --sidebar-primary-foreground: 222.2 47.4% 11.2%;
   --sidebar-accent: 217.2 32.6% 17.5%;
   --sidebar-accent-foreground: 210 40% 98%;
   --sidebar-border: 217.2 32.6% 17.5%;
-  --sidebar-ring: 142 76% 46%;
+  --sidebar-ring: 224.3 76.3% 48%;
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600 dark:from-primary dark:to-blue-400;
+  }
+  
+  .btn-gradient {
+    @apply bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-primary-foreground shadow-sm transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:border-primary/20;
+  }
+
+  .badge-top {
+    @apply bg-blue-600/10 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-800;
+  }
+  
+  .badge-pp {
+    @apply bg-slate-600/10 text-slate-700 border border-slate-200 dark:bg-slate-500/20 dark:text-slate-300 dark:border-slate-800;
+  }
+  
+  .badge-ros {
+    @apply bg-sky-600/10 text-sky-700 border border-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:border-sky-800;
+  }
 }
 
 @layer base {
