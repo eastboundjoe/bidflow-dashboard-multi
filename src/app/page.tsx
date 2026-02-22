@@ -504,45 +504,63 @@ export default function HomePage() {
 
       {/* Placement Types */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-10">
-          <h2 className="text-3xl font-bold text-center mb-3 text-slate-900 dark:text-white">
+        <div className="text-center mb-12">
+          <Badge variant="secondary" className="mb-3 bg-blue-50 text-blue-700 border-blue-200">
+            Precision Tracking
+          </Badge>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
             Placement Types We Track
           </h2>
-          <p className="text-center text-slate-600 dark:text-slate-400 mb-10">
+          <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
             Every placement type — with real performance context to guide your bids
           </p>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 border-blue-600 hover:shadow-md transition-shadow">
-              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Top of Search</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all border-l-4 border-l-blue-600">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Top of Search</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
                 First row of search results. Highest visibility, highest intent — and often your best ROAS.
               </p>
-              <div className="space-y-1.5">
-                <div className="text-sm font-semibold text-green-600 dark:text-green-400">Avg. ROAS: 4.2x</div>
-                <div className="text-xs text-slate-500">Often benefits from +20–40% bid adjustment</div>
+              <div className="space-y-2 pt-4 border-t border-slate-50 dark:border-slate-800">
+                <div className="text-sm font-bold text-green-600 dark:text-green-400">Avg. ROAS: 4.2x</div>
+                <div className="text-xs text-slate-500 font-medium italic">Often benefits from +20–40% bid adjustment</div>
               </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 border-slate-400 hover:shadow-md transition-shadow">
-              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Rest of Search</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all border-l-4 border-l-slate-400">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Rest of Search</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
                 Below the fold on search pages. Lower CPC and still high-intent — solid volume at efficient cost.
               </p>
-              <div className="space-y-1.5">
-                <div className="text-sm font-semibold text-yellow-600 dark:text-yellow-400">Avg. ROAS: 2.8x</div>
-                <div className="text-xs text-slate-500">Lower CPC, consistent conversion volume</div>
+              <div className="space-y-2 pt-4 border-t border-slate-50 dark:border-slate-800">
+                <div className="text-sm font-bold text-yellow-600 dark:text-yellow-400">Avg. ROAS: 2.8x</div>
+                <div className="text-xs text-slate-500 font-medium italic">Lower CPC, consistent conversion volume</div>
               </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-l-4 border-blue-400 hover:shadow-md transition-shadow">
-              <h3 className="font-bold text-lg mb-2 text-slate-900 dark:text-white">Product Page</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all border-l-4 border-l-blue-400">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Product Page</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
                 On competitor or related product detail pages. High conquest value — but watch ACOS closely.
               </p>
-              <div className="space-y-1.5">
-                <div className="text-sm font-semibold text-red-600 dark:text-red-400">Avg. ROAS: 1.9x</div>
-                <div className="text-xs text-slate-500">High conquest value — monitor ACOS weekly</div>
+              <div className="space-y-2 pt-4 border-t border-slate-50 dark:border-slate-800">
+                <div className="text-sm font-bold text-red-600 dark:text-red-400">Avg. ROAS: 1.9x</div>
+                <div className="text-xs text-slate-500 font-medium italic">High conquest value — monitor ACOS weekly</div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
