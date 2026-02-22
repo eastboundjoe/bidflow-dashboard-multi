@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -20,19 +20,59 @@ import {
   AvatarFallback,
 } from "@/components/ui/avatar";
 import { User } from "@supabase/supabase-js";
-import { BarChart3, Settings, CreditCard, Link2, LogOut, ChevronDown } from "lucide-react";
+import { BarChart3, Settings, CreditCard, Link2, LogOut, ChevronDown, AlertTriangle } from "lucide-react";
 
 interface DashboardNavProps {
   user: User;
 }
 
+function formatCollectionDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function isToday(date: Date): boolean {
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+function isThisWeek(date: Date): boolean {
+  const now = new Date();
+  const monday = new Date(now);
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  monday.setDate(now.getDate() + diff);
+  monday.setHours(0, 0, 0, 0);
+  return date >= monday;
+}
+
 export function DashboardNav({ user }: DashboardNavProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [lastCollectedAt, setLastCollectedAt] = useState<Date | null>(null);
+  const [showWarning, setShowWarning] = useState(false);
 
   const userInitial = user.email?.[0]?.toUpperCase() || "U";
   const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
   const fullName = user.user_metadata?.full_name || user.email;
+
+  useEffect(() => {
+    fetch("/api/collect/status")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.lastCollectedAt) {
+          setLastCollectedAt(new Date(data.lastCollectedAt));
+        }
+      })
+      .catch(() => {/* silent — button still works */});
+  }, []);
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -42,19 +82,21 @@ export function DashboardNav({ user }: DashboardNavProps) {
     router.refresh();
   };
 
-  const handleCollectData = async () => {
+  const triggerCollection = async () => {
+    setShowWarning(false);
     setLoading(true);
     try {
       const response = await fetch("/api/collect", {
         method: "POST",
       });
-      
+
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to trigger data collection");
       }
 
+      setLastCollectedAt(new Date());
       toast.success("Data collection started successfully!");
     } catch (error) {
       console.error("Error collecting data:", error);
@@ -63,6 +105,16 @@ export function DashboardNav({ user }: DashboardNavProps) {
       setLoading(false);
     }
   };
+
+  const handleCollectData = () => {
+    if (lastCollectedAt && isThisWeek(lastCollectedAt)) {
+      setShowWarning(true);
+      return;
+    }
+    triggerCollection();
+  };
+
+  const collectedToday = lastCollectedAt ? isToday(lastCollectedAt) : false;
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
@@ -109,15 +161,44 @@ export function DashboardNav({ user }: DashboardNavProps) {
               Pro
             </Badge>
 
-            {/* Collect Data Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCollectData}
-              disabled={loading}
-            >
-              {loading ? "Collecting..." : "Collect Data"}
-            </Button>
+            {/* Collect Data — inline confirmation when warning is active */}
+            {showWarning ? (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 px-3 py-1.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <span className="text-xs text-amber-800 dark:text-amber-300 font-medium hidden sm:block">
+                  {collectedToday
+                    ? "Already collected today"
+                    : `Collected ${formatCollectionDate(lastCollectedAt!)}`}
+                </span>
+                <div className="flex items-center gap-1.5 ml-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-xs border-amber-300 hover:border-amber-400 text-amber-800 dark:text-amber-300"
+                    onClick={() => setShowWarning(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 px-2.5 text-xs"
+                    onClick={triggerCollection}
+                    disabled={loading}
+                  >
+                    {loading ? "Collecting..." : "Collect Anyway"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCollectData}
+                disabled={loading}
+              >
+                {loading ? "Collecting..." : "Collect Data"}
+              </Button>
+            )}
 
             {/* User Dropdown */}
             <DropdownMenu>
