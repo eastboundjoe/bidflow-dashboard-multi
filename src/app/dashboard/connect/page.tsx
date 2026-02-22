@@ -20,9 +20,9 @@ export default async function ConnectPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gradient">Amazon Connection</h1>
-        <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Amazon Connection</h1>
+        <p className="text-slate-600 dark:text-slate-400 font-medium">
           Link your advertising account to start optimizing
         </p>
       </div>
