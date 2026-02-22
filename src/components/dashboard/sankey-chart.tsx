@@ -18,6 +18,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const cacheRef = useRef<Record<string, { points: { x: number; y: number }[] }>>({});
   const animationRef = useRef<number | undefined>(undefined);
   const elapsedRef = useRef(0);
+  const spendCounterRef = useRef<Record<string, { sales: number; noSales: number }>>({});
 
   // Calculate placement stats from data
   const placementData = React.useMemo(() => {
@@ -51,6 +52,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const handleReset = () => {
     particlesRef.current = [];
     elapsedRef.current = 0;
+    spendCounterRef.current = {};
     if (svgRef.current) {
       d3.select(svgRef.current).selectAll(".p").remove();
     }
@@ -65,7 +67,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
 
     const width = 900;
     const psize = 6;
-    const margin = { top: 80, right: 20, bottom: 80, left: 10 };
+    const margin = { top: 80, right: 220, bottom: 80, left: 10 };
     const bandHeight = 70;
     const padding = 35;
 
@@ -139,7 +141,18 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .map((n: any) => ({
         node: n,
         targets: targetsAbsolute.filter((t: any) => t.name === n.name),
+        spend: raw[n.name]?.spend || 0
       }));
+
+    // Initialize CPC for each placement
+    const cpcByPlacement: Record<string, number> = {};
+    leaves.forEach((leaf: any) => {
+      const totalClicks = leaf.targets.reduce((sum: number, t: any) => sum + t.value, 0);
+      cpcByPlacement[leaf.node.name] = totalClicks > 0 ? leaf.spend / totalClicks : 0;
+      if (!spendCounterRef.current[leaf.node.name]) {
+        spendCounterRef.current[leaf.node.name] = { sales: 0, noSales: 0 };
+      }
+    });
 
     // Clear and setup SVG
     d3.select(svgRef.current).selectAll("*").remove();
@@ -282,6 +295,140 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .text(" CLICKS");
     }
 
+    // Outcomes header
+    if (leaves[0]) {
+      const s2 = g.append("g")
+        .attr("transform", `translate(${width - margin.left - 120}, ${leaves[0].node.y0 - 40})`)
+        .style("font-family", "monospace")
+        .style("font-size", "11px")
+        .attr("text-anchor", "end")
+        .attr("fill", "#9ca3af");
+
+      s2.append("text").text("OUTCOMES");
+      s2.append("text").attr("y", 16).attr("fill", "#3b82f6").style("font-weight", "bold").text("sales");
+      s2.append("text").attr("y", 30).attr("fill", "#ef4444").style("font-weight", "bold").text("no sales");
+
+      // Spend header
+      const s4 = g.append("g")
+        .attr("transform", `translate(${width - margin.left + 10}, ${leaves[0].node.y0 - 40})`)
+        .style("font-family", "monospace")
+        .style("font-size", "11px")
+        .attr("text-anchor", "end")
+        .attr("fill", "#9ca3af");
+
+      s4.append("text").text("SPEND");
+      s4.append("text").attr("y", 16).attr("fill", "#3b82f6").style("font-weight", "bold").text("→ sales");
+      s4.append("text").attr("y", 30).attr("fill", "#ef4444").style("font-weight", "bold").text("→ no sales");
+    }
+
+    // Progress bars and metrics for each placement
+    const barWidth = 28;
+    const barHeight = bandHeight;
+
+    const barGroups = g.selectAll(".bar-group")
+      .data(leaves)
+      .join("g")
+      .attr("class", "bar-group")
+      .attr("transform", (d: any) => `translate(${d.node.x1 - 4}, ${d.node.y0})`);
+
+    // Background bar
+    barGroups.append("rect")
+      .attr("width", barWidth)
+      .attr("height", barHeight)
+      .attr("fill", "#1f2937")
+      .attr("stroke", "#374151")
+      .attr("stroke-width", 1)
+      .attr("rx", 2);
+
+    // Green bar (sales) - grows from top
+    barGroups.append("rect")
+      .attr("class", "bar-green")
+      .attr("width", barWidth)
+      .attr("height", 0)
+      .attr("fill", "#3b82f6")
+      .attr("rx", 2);
+
+    // Red bar (no sales) - grows from bottom
+    barGroups.append("rect")
+      .attr("class", "bar-red")
+      .attr("x", 0)
+      .attr("y", barHeight)
+      .attr("width", barWidth)
+      .attr("height", 0)
+      .attr("fill", "#ef4444")
+      .attr("rx", 2);
+
+    // Percentage labels
+    barGroups.append("text")
+      .attr("class", "p-green")
+      .attr("x", barWidth + 10)
+      .attr("y", barHeight * 0.25)
+      .attr("dy", "0.3em")
+      .style("font-family", "monospace")
+      .style("font-size", "12px")
+      .style("font-weight", "bold")
+      .attr("fill", "#3b82f6")
+      .text("0%");
+
+    barGroups.append("text")
+      .attr("class", "p-red")
+      .attr("x", barWidth + 10)
+      .attr("y", barHeight * 0.75)
+      .attr("dy", "0.3em")
+      .style("font-family", "monospace")
+      .style("font-size", "12px")
+      .style("font-weight", "bold")
+      .attr("fill", "#ef4444")
+      .text("0%");
+
+    // Click counts
+    barGroups.append("text")
+      .attr("class", "c-green")
+      .attr("x", barWidth + 50)
+      .attr("y", barHeight * 0.25)
+      .attr("dy", "0.3em")
+      .style("font-family", "monospace")
+      .style("font-size", "12px")
+      .style("font-weight", "bold")
+      .attr("fill", "#3b82f6")
+      .text("0");
+
+    barGroups.append("text")
+      .attr("class", "c-red")
+      .attr("x", barWidth + 50)
+      .attr("y", barHeight * 0.75)
+      .attr("dy", "0.3em")
+      .style("font-family", "monospace")
+      .style("font-size", "12px")
+      .style("font-weight", "bold")
+      .attr("fill", "#ef4444")
+      .text("0");
+
+    // Spend values - separate for sales and no sales
+    barGroups.append("text")
+      .attr("class", "spend-green")
+      .attr("x", barWidth + 130)
+      .attr("y", barHeight * 0.25)
+      .attr("dy", "0.3em")
+      .attr("text-anchor", "end")
+      .style("font-family", "monospace")
+      .style("font-size", "11px")
+      .style("font-weight", "bold")
+      .attr("fill", "#3b82f6")
+      .text("$0");
+
+    barGroups.append("text")
+      .attr("class", "spend-red")
+      .attr("x", barWidth + 130)
+      .attr("y", barHeight * 0.75)
+      .attr("dy", "0.3em")
+      .attr("text-anchor", "end")
+      .style("font-family", "monospace")
+      .style("font-size", "11px")
+      .style("font-weight", "bold")
+      .attr("fill", "#ef4444")
+      .text("$0");
+
     // Animation tick function
     function tick(t: number) {
       const speedScale = d3.scaleLinear().domain([0, 1]).range([speed, speed + 0.5]);
@@ -301,8 +448,65 @@ export function SankeyChart({ data }: SankeyChartProps) {
           createdAt: t,
           length: cacheRef.current[target.path].points.length,
           target,
+          counted: false
         });
       }
+
+      // Update bars and metrics
+      barGroups.each(function(d: any) {
+        const exp = d3.sum(d.targets, (t: any) => t.value) || 1;
+        const placementName = d.node.name;
+
+        // Count completed particles for spend - separate by outcome
+        const completedNow = particlesRef.current.filter((p: any) =>
+          p.target.name === placementName && p.pos >= p.length && !p.counted
+        );
+
+        completedNow.forEach((p: any) => {
+          if (cpcByPlacement[placementName]) {
+            const cpc = cpcByPlacement[placementName];
+            if (!spendCounterRef.current[placementName]) {
+              spendCounterRef.current[placementName] = { sales: 0, noSales: 0 };
+            }
+            if (p.target.group === "clicks to sales") {
+              spendCounterRef.current[placementName].sales += cpc;
+            } else {
+              spendCounterRef.current[placementName].noSales += cpc;
+            }
+          }
+          p.counted = true;
+        });
+
+        const af = particlesRef.current.filter((p: any) =>
+          p.target.name === placementName && p.target.group === "clicks no sales" && p.pos >= p.length
+        ).length;
+        const kf = particlesRef.current.filter((p: any) =>
+          p.target.name === placementName && p.target.group === "clicks to sales" && p.pos >= p.length
+        ).length;
+
+        // Update bars
+        d3.select(this).select(".bar-green")
+          .attr("height", Math.min(barHeight, (kf / exp) * barHeight));
+        d3.select(this).select(".bar-red")
+          .attr("y", barHeight - Math.min(barHeight, (af / exp) * barHeight))
+          .attr("height", Math.min(barHeight, (af / exp) * barHeight));
+
+        // Update labels
+        const tot = af + kf;
+        d3.select(this).select(".p-green").text(tot > 0 ? (kf / tot * 100).toFixed(0) + "%" : "0%");
+        d3.select(this).select(".p-red").text(tot > 0 ? (af / tot * 100).toFixed(0) + "%" : "0%");
+        d3.select(this).select(".c-green").text(kf);
+        d3.select(this).select(".c-red").text(af);
+
+        // Update spend - separate for sales vs no sales
+        const spendData = spendCounterRef.current[placementName] || { sales: 0, noSales: 0 };
+        const maxSpend = d.spend || 0;
+        const totalSpendSoFar = spendData.sales + spendData.noSales;
+        const ratio = maxSpend > 0 && totalSpendSoFar > 0 ? Math.min(1, maxSpend / totalSpendSoFar) : 1;
+
+        d3.select(this).select(".spend-green").text("$" + Math.round(spendData.sales * ratio));
+        d3.select(this).select(".spend-red").text("$" + Math.round(spendData.noSales * ratio));
+      });
 
       // Move particles
       particlesContainer
@@ -437,15 +641,13 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
       (acc, row) => {
         const placement = row.placement_type || "Unknown";
         if (!acc[placement]) {
-          acc[placement] = { spend: 0, sales: 0, clicks: 0, orders: 0 };
+          acc[placement] = { spend: 0, sales: 0 };
         }
         acc[placement].spend += row.spend_7d || 0;
         acc[placement].sales += row.sales_7d || 0;
-        acc[placement].clicks += row.clicks_7d || 0;
-        acc[placement].orders += row.orders_7d || 0;
         return acc;
       },
-      {} as Record<string, { spend: number; sales: number; clicks: number; orders: number }>
+      {} as Record<string, { spend: number; sales: number }>
     );
 
     const totalSpend = Object.values(byPlacement).reduce((sum, s) => sum + s.spend, 0);
@@ -466,9 +668,9 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
   }
 
   const placements = [
-    { key: "Top of Search", short: "TOP", color: "#1d4ed8" },
-    { key: "Rest of Search", short: "ROS", color: "#3b82f6" },
-    { key: "Product Page", short: "PP", color: "#64748b" },
+    { key: "Top of Search", color: "#1d4ed8" },
+    { key: "Rest of Search", color: "#3b82f6" },
+    { key: "Product Page", color: "#64748b" },
   ];
 
   return (
@@ -492,51 +694,6 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                     className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%`, backgroundColor: color }}
                   />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Click Outcomes per placement */}
-      <div className="pt-2 border-t border-border">
-        <h4 className="text-sm font-medium mb-3">Click Outcomes</h4>
-        <div className="w-full text-xs font-mono">
-          {/* Header row */}
-          <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] gap-x-2 mb-1 text-muted-foreground">
-            <span />
-            <span className="text-center" style={{ color: "#3b82f6" }}>sales%</span>
-            <span className="text-center text-red-500">no sale%</span>
-            <span className="text-right" style={{ color: "#3b82f6" }}>→ sales</span>
-            <span className="text-right text-red-500">→ wasted</span>
-          </div>
-          {placements.map(({ key, short, color }) => {
-            const p = stats.byPlacement[key];
-            if (!p) return null;
-            const cvr = p.clicks > 0 ? p.orders / p.clicks : 0;
-            const clicksSales = Math.round(p.clicks * cvr);
-            const clicksNoSales = p.clicks - clicksSales;
-            const spendSales = p.clicks > 0 ? (p.spend * cvr) : 0;
-            const spendNoSales = p.spend - spendSales;
-            const pctSales = p.clicks > 0 ? (cvr * 100).toFixed(0) : "0";
-            const pctNoSales = p.clicks > 0 ? ((1 - cvr) * 100).toFixed(0) : "0";
-            return (
-              <div key={key} className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] gap-x-2 py-1.5 border-b border-border/50 last:border-0 items-center">
-                <span className="font-bold" style={{ color }}>{short}</span>
-                <div className="text-center">
-                  <div style={{ color: "#3b82f6" }} className="font-bold">{pctSales}%</div>
-                  <div className="text-muted-foreground">{clicksSales}</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-red-500">{pctNoSales}%</div>
-                  <div className="text-muted-foreground">{clicksNoSales}</div>
-                </div>
-                <div className="text-right" style={{ color: "#3b82f6" }}>
-                  ${Math.round(spendSales)}
-                </div>
-                <div className="text-right text-red-500">
-                  ${Math.round(spendNoSales)}
                 </div>
               </div>
             );
