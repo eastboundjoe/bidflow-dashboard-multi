@@ -47,11 +47,12 @@ const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(value);
 
 const formatPercent = (value: number) =>
-  `${value.toFixed(2)}%`;
+  `${value.toFixed(1)}%`;
 
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("en-US").format(value);
@@ -226,7 +227,7 @@ export function PlacementDataTable({
         ),
         cell: ({ row }) => {
             const val = row.getValue("campaign_budget") as number | null;
-            return <div className="text-center font-mono tabular-nums text-xs">{val ? `$${val}` : "-"}</div>;
+            return <div className="text-center font-bold text-slate-900 dark:text-slate-100 text-xs">{val ? `$${Math.round(val)}` : "-"}</div>;
         }
       },
       {
@@ -242,7 +243,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {formatNumber(row.getValue("clicks"))}
           </div>
         ),
@@ -260,10 +261,39 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-primary text-xs">
+          <div className="text-center font-bold text-slate-900 dark:text-slate-100 text-xs">
             {formatCurrency(row.getValue("spend"))}
           </div>
         ),
+      },
+      {
+        accessorKey: "roas",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+          >
+            ROAS<br/>30d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const roas = row.getValue("roas") as number;
+          const badgeClass =
+            roas > 4
+              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+              : roas > 2.5
+              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
+              : "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400";
+          return (
+            <div className="flex justify-center">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${badgeClass}`}>
+                {roas.toFixed(1)}x
+              </span>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "orders",
@@ -278,7 +308,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {row.getValue("orders")}
           </div>
         ),
@@ -296,7 +326,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {formatPercent(row.getValue("cvr"))}
           </div>
         ),
@@ -343,7 +373,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {formatNumber(row.getValue("clicks_7d"))}
           </div>
         ),
@@ -361,10 +391,43 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-slate-900 dark:text-slate-100 text-xs">
             {formatCurrency(row.getValue("spend_7d"))}
           </div>
         ),
+      },
+      {
+        accessorKey: "roas_7d",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
+          >
+            ROAS<br/>7d
+            <ArrowUpDown className="ml-2 h-3 w-3" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          // Calculate ROAS 7d if not directly in data
+          const spend = row.original.spend_7d || 0;
+          const sales = row.original.sales_7d || 0;
+          const roas = spend > 0 ? sales / spend : 0;
+          
+          const badgeClass =
+            roas > 4
+              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
+              : roas > 2.5
+              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
+              : "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400";
+          return (
+            <div className="flex justify-center">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${badgeClass}`}>
+                {roas.toFixed(1)}x
+              </span>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "orders_7d",
@@ -379,7 +442,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {row.getValue("orders_7d")}
           </div>
         ),
@@ -397,7 +460,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {formatPercent(row.getValue("cvr_7d"))}
           </div>
         ),
@@ -444,7 +507,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {formatCurrency(row.getValue("spent_db_yesterday"))}
           </div>
         ),
@@ -462,7 +525,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {formatCurrency(row.getValue("spent_yesterday"))}
           </div>
         ),
@@ -480,7 +543,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {row.getValue("impression_share_30d")}
           </div>
         ),
@@ -498,7 +561,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {row.getValue("impression_share_7d")}
           </div>
         ),
@@ -516,7 +579,7 @@ export function PlacementDataTable({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-center font-mono tabular-nums text-xs">
+          <div className="text-center font-bold text-xs">
             {row.getValue("impression_share_yesterday")}
           </div>
         ),
@@ -549,8 +612,12 @@ export function PlacementDataTable({
         ),
         cell: ({ row }) => {
           const adjustment = row.getValue("bid_adjustment") as number;
+          const isNonZero = adjustment !== 0;
           return (
-            <div className="text-center font-mono tabular-nums text-xs">
+            <div className={cn(
+                "text-center text-xs font-bold",
+                isNonZero ? "text-blue-600 dark:text-blue-400" : "text-slate-400"
+            )}>
               {adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`}
             </div>
           );
