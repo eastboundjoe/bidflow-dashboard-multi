@@ -24,8 +24,8 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient">Settings</h1>
-        <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Settings</h1>
+        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
           Manage your account and report preferences
         </p>
       </div>

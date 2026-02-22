@@ -352,8 +352,8 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gradient">Placement Optimizer</h1>
-          <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Placement Optimizer</h1>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
             Amazon Ads Performance Dashboard
           </p>
         </div>
@@ -468,31 +468,6 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
               onSubmit={handleSubmitChanges}
               submitting={submitting}
             />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Debug Panel - Remove after fixing */}
-      <Card className="bg-yellow-500/10 border-yellow-500/50">
-        <CardHeader className="py-3">
-          <CardTitle className="text-sm">Debug Info (temp)</CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs font-mono space-y-1">
-          <p>Total rows: {filteredData.length}</p>
-          <p>Total spend: ${filteredData.reduce((sum, r) => sum + (r.spend || 0), 0).toFixed(2)}</p>
-          <p>Total sales: ${filteredData.reduce((sum, r) => sum + (r.sales || 0), 0).toFixed(2)}</p>
-          <p>Total clicks: {filteredData.reduce((sum, r) => sum + (r.clicks || 0), 0)}</p>
-          <p>Placements: {[...new Set(filteredData.map(r => r.placement_type))].join(', ')}</p>
-          <p>Week IDs: {[...new Set(filteredData.map(r => r.week_id))].join(', ')}</p>
-          {filteredData.length > 0 && (
-            <p className="mt-2 text-[10px] break-all">
-              Sample row: {JSON.stringify({
-                spend: filteredData[0].spend,
-                sales: filteredData[0].sales,
-                clicks: filteredData[0].clicks,
-                placement_type: filteredData[0].placement_type
-              })}
-            </p>
           )}
         </CardContent>
       </Card>
