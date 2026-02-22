@@ -556,13 +556,13 @@ export default function HomePage() {
           Start free, upgrade when you&apos;re ready.
         </p>
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-          {/* Pro — highlighted as Most Popular */}
-          <Card className="border-2 border-primary relative shadow-lg">
+          {/* Pro — matched to Enterprise styling */}
+          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-primary hover:bg-primary shadow-sm px-4">Most Popular</Badge>
+              <Badge variant="outline" className="bg-white dark:bg-gray-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 shadow-sm px-4">Most Popular</Badge>
             </div>
             <CardHeader className="text-center pt-8">
-              <CardTitle className="text-2xl text-primary">Pro</CardTitle>
+              <CardTitle className="text-2xl">Pro</CardTitle>
               <div className="mt-4">
                 <span className="text-5xl font-extrabold">$29</span>
                 <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
@@ -587,7 +587,7 @@ export default function HomePage() {
             </CardContent>
             <CardFooter>
               <Link href="/signup" className="w-full">
-                <Button className="w-full" size="lg">
+                <Button className="w-full" variant="outline" size="lg">
                   Start Free Trial
                 </Button>
               </Link>
