@@ -219,7 +219,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
             .attr("stroke", "#111827")
             .attr("stroke-width", 4)
             .attr("text-anchor", "start")
-            .style("font-family", "monospace")
+            .style("font-family", "inherit")
             .style("font-size", "16px")
             .style("font-weight", "700")
             .attr("fill", "#9ca3af")
@@ -227,7 +227,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
           group.append("text")
             .attr("fill", "#f3f4f6")
             .attr("text-anchor", "start")
-            .style("font-family", "monospace")
+            .style("font-family", "inherit")
             .style("font-size", "16px")
             .style("font-weight", "700")
             .text(d.name);
@@ -254,7 +254,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
             .attr("y", 4)
             .attr("text-anchor", "middle")
             .attr("fill", color)
-            .style("font-family", "monospace")
+            .style("font-family", "inherit")
             .style("font-size", "12px")
             .style("font-weight", "bold")
             .text(d.name);
@@ -266,7 +266,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     if (adSpendNode) {
       const desc = g.append("g")
         .attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 30})`)
-        .style("font-family", "monospace")
+        .style("font-family", "inherit")
         .style("font-size", "11px")
         .attr("fill", "#9ca3af");
 
@@ -287,7 +287,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     if (leaves[0]) {
       const s2 = g.append("g")
         .attr("transform", `translate(${width - margin.left - 120}, ${leaves[0].node.y0 - 40})`)
-        .style("font-family", "monospace")
+        .style("font-family", "inherit")
         .style("font-size", "11px")
         .attr("text-anchor", "end")
         .attr("fill", "#9ca3af");
@@ -337,25 +337,25 @@ export function SankeyChart({ data }: SankeyChartProps) {
     barGroups.append("text")
       .attr("class", "p-green")
       .attr("x", barWidth + 10).attr("y", barHeight * 0.25).attr("dy", "0.3em")
-      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#3b82f6").text("0%");
 
     barGroups.append("text")
       .attr("class", "p-red")
       .attr("x", barWidth + 10).attr("y", barHeight * 0.75).attr("dy", "0.3em")
-      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#ef4444").text("0%");
 
     barGroups.append("text")
       .attr("class", "c-green")
       .attr("x", barWidth + 50).attr("y", barHeight * 0.25).attr("dy", "0.3em")
-      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#3b82f6").text("0");
 
     barGroups.append("text")
       .attr("class", "c-red")
       .attr("x", barWidth + 50).attr("y", barHeight * 0.75).attr("dy", "0.3em")
-      .style("font-family", "monospace").style("font-size", "12px").style("font-weight", "bold")
+      .style("font-family", "inherit").style("font-size", "12px").style("font-weight", "bold")
       .attr("fill", "#ef4444").text("0");
 
 
@@ -624,32 +624,64 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
             <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider text-right">→ sales</span>
             <span className="text-xs font-semibold text-red-500 uppercase tracking-wider text-right">→ no sale</span>
           </div>
-          {placements.map(({ key, short, color }) => {
-            const p = stats.byPlacement[key];
-            if (!p) return null;
-            const cvr = p.clicks > 0 ? p.orders / p.clicks : 0;
-            const clicksSales   = Math.round(p.clicks * cvr);
-            const clicksNoSales = p.clicks - clicksSales;
-            const spendSales    = p.spend * cvr;
-            const spendNoSales  = p.spend - spendSales;
-            const pctSales   = p.clicks > 0 ? (cvr * 100).toFixed(0) : "0";
-            const pctNoSales = p.clicks > 0 ? ((1 - cvr) * 100).toFixed(0) : "0";
+          {(() => {
+            let totalCS = 0, totalCN = 0, totalSS = 0, totalSN = 0;
             return (
-              <div key={key} className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-b border-slate-100 dark:border-slate-800 last:border-0 items-center">
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100" style={{ color }}>{short}</span>
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
-                  <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksSales}</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-bold tabular-nums text-red-500">{pctNoSales}%</span>
-                  <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksNoSales}</span>
-                </div>
-                <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
-                <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</div>
-              </div>
+              <>
+                {placements.map(({ key, short, color }) => {
+                  const p = stats.byPlacement[key];
+                  if (!p) return null;
+                  const cvr = p.clicks > 0 ? p.orders / p.clicks : 0;
+                  const clicksSales   = Math.round(p.clicks * cvr);
+                  const clicksNoSales = p.clicks - clicksSales;
+                  const spendSales    = p.spend * cvr;
+                  const spendNoSales  = p.spend - spendSales;
+                  const pctSales   = p.clicks > 0 ? (cvr * 100).toFixed(0) : "0";
+                  const pctNoSales = p.clicks > 0 ? ((1 - cvr) * 100).toFixed(0) : "0";
+                  totalCS += clicksSales;
+                  totalCN += clicksNoSales;
+                  totalSS += spendSales;
+                  totalSN += spendNoSales;
+                  return (
+                    <div key={key} className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-b border-slate-100 dark:border-slate-800 items-center">
+                      <span className="text-xs font-bold" style={{ color }}>{short}</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
+                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksSales}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-bold tabular-nums text-red-500">{pctNoSales}%</span>
+                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksNoSales}</span>
+                      </div>
+                      <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
+                      <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</div>
+                    </div>
+                  );
+                })}
+                {/* Totals row */}
+                {(() => {
+                  const totalClicks = totalCS + totalCN;
+                  const totalPctS = totalClicks > 0 ? Math.round(totalCS / totalClicks * 100) : 0;
+                  const totalPctN = totalClicks > 0 ? Math.round(totalCN / totalClicks * 100) : 0;
+                  return (
+                    <div className="grid grid-cols-[44px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-t-2 border-slate-300 dark:border-slate-600 mt-0.5 items-center">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-bold tabular-nums text-blue-500">{totalPctS}%</span>
+                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{totalCS}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-bold tabular-nums text-red-500">{totalPctN}%</span>
+                        <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{totalCN}</span>
+                      </div>
+                      <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(totalSS)}</div>
+                      <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(totalSN)}</div>
+                    </div>
+                  );
+                })()}
+              </>
             );
-          })}
+          })()}
         </div>
       </div>
 
