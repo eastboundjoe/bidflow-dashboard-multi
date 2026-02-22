@@ -14,6 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import { User } from "@supabase/supabase-js";
 import { BarChart3, Settings, CreditCard, Link2, LogOut, ChevronDown } from "lucide-react";
 
@@ -24,6 +29,10 @@ interface DashboardNavProps {
 export function DashboardNav({ user }: DashboardNavProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  const userInitial = user.email?.[0]?.toUpperCase() || "U";
+  const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  const fullName = user.user_metadata?.full_name || user.email;
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -113,16 +122,31 @@ export function DashboardNav({ user }: DashboardNavProps) {
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <span className="hidden sm:inline-block max-w-[150px] truncate">
-                    {user.email}
+                <Button variant="ghost" size="sm" className="gap-2 px-2">
+                  <Avatar className="h-7 w-7 border">
+                    <AvatarImage src={avatarUrl} alt={fullName || ""} referrerPolicy="no-referrer" />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                      {userInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline-block max-w-[150px] truncate font-medium">
+                    {fullName}
                   </span>
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  {user.email}
+              <DropdownMenuContent align="end" className="w-64">
+                <div className="flex items-center gap-2 p-2">
+                  <Avatar className="h-9 w-9 border">
+                    <AvatarImage src={avatarUrl} alt={fullName || ""} referrerPolicy="no-referrer" />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                      {userInitial}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col space-y-0.5 overflow-hidden">
+                    <p className="text-sm font-medium truncate">{fullName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
