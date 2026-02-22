@@ -99,10 +99,10 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
                 value={settings.report_day}
                 onValueChange={(value) => setSettings({ ...settings, report_day: value })}
               >
-                <SelectTrigger id="report_day" className="bg-background">
+                <SelectTrigger id="report_day" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-xl z-50">
                   {DAY_OPTIONS.map((day) => (
                     <SelectItem key={day.value} value={day.value}>
                       {day.label}
@@ -118,10 +118,10 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
                 value={settings.report_hour.toString()}
                 onValueChange={(value) => setSettings({ ...settings, report_hour: parseInt(value) })}
               >
-                <SelectTrigger id="report_hour" className="bg-background">
+                <SelectTrigger id="report_hour" className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-xl z-50">
                   {HOUR_OPTIONS.map((hour) => (
                     <SelectItem key={hour.value} value={hour.value.toString()}>
                       {hour.label}

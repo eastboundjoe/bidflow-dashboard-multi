@@ -594,7 +594,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
       {/* Controls */}
       <div className="flex items-center gap-4 mb-4 px-2">
         <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground">Speed</label>
+          <label className="text-xs font-medium text-slate-500 dark:text-slate-400">Speed</label>
           <input
             type="range"
             min="0.5"
@@ -602,13 +602,13 @@ export function SankeyChart({ data }: SankeyChartProps) {
             step="0.1"
             value={speed}
             onChange={(e) => setSpeed(parseFloat(e.target.value))}
-            className="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+            className="w-24 h-1.5 accent-primary rounded-lg appearance-none cursor-pointer bg-slate-200 dark:bg-slate-700"
           />
-          <span className="text-xs text-muted-foreground w-8">{speed.toFixed(1)}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 w-8">{speed.toFixed(1)}</span>
         </div>
         <button
           onClick={handleReset}
-          className="px-3 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded border border-gray-600 transition-colors"
+          className="px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md border border-slate-200 dark:border-slate-700 transition-colors shadow-sm"
         >
           Reset
         </button>
@@ -709,7 +709,7 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
           <div className="text-xs text-muted-foreground">Total Spend</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-400">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {stats.totalSales.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
           </div>
           <div className="text-xs text-muted-foreground">Total Sales</div>
@@ -719,8 +719,8 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
       <div className="text-center pt-4 border-t border-border">
         <div className="text-3xl font-bold">
           <span className={
-            stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 3 ? "text-green-400" :
-            stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 2 ? "text-yellow-400" : "text-red-400"
+            stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 3 ? "text-green-600 dark:text-green-400" :
+            stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 2 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"
           }>
             {stats.totalSpend > 0 ? (stats.totalSales / stats.totalSpend).toFixed(2) : "0.00"}x
           </span>

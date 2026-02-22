@@ -36,7 +36,7 @@ function StatCard({ title, value, subtitle, icon, trend, loading }: StatCardProp
   return (
     <Card className="card-hover border-slate-200/50 dark:border-slate-800/50">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-widest font-mono">
+        <CardTitle className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
           {title}
         </CardTitle>
         <div className="text-slate-400 dark:text-slate-500">{icon}</div>

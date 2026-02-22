@@ -170,7 +170,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Campaign
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -200,7 +200,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Portfolio
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -218,7 +218,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Budget
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -235,7 +235,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Clicks<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -253,7 +253,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Spend<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -271,7 +271,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Orders<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -289,7 +289,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             CVR<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -307,7 +307,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             ACoS<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -315,15 +315,17 @@ export function PlacementDataTable({
         ),
         cell: ({ row }) => {
           const acos = row.getValue("acos") as number;
-          const colorClass =
+          const badgeClass =
             acos < 20
-              ? "text-green-400"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
               : acos < 35
-              ? "text-yellow-400"
-              : "text-red-400";
+              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
+              : "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400";
           return (
-            <div className={`text-center font-mono tabular-nums text-xs ${colorClass}`}>
-              {formatPercent(acos)}
+            <div className="flex justify-center">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold tabular-nums ${badgeClass}`}>
+                {formatPercent(acos)}
+              </span>
             </div>
           );
         },
@@ -334,7 +336,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Clicks<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -352,7 +354,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Spend<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -370,7 +372,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Orders<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -388,7 +390,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             CVR<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -406,7 +408,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             ACoS<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -414,15 +416,17 @@ export function PlacementDataTable({
         ),
         cell: ({ row }) => {
           const acos = row.getValue("acos_7d") as number;
-          const colorClass =
+          const badgeClass =
             acos < 20
-              ? "text-green-400"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"
               : acos < 35
-              ? "text-yellow-400"
-              : "text-red-400";
+              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
+              : "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400";
           return (
-            <div className={`text-center font-mono tabular-nums text-xs ${colorClass}`}>
-              {formatPercent(acos)}
+            <div className="flex justify-center">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold tabular-nums ${badgeClass}`}>
+                {formatPercent(acos)}
+              </span>
             </div>
           );
         },
@@ -433,7 +437,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             DB<br/>Yest
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -451,7 +455,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Spent<br/>Yest
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -469,7 +473,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             LAST<br/>30D
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -487,7 +491,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             LAST<br/>7D
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -505,7 +509,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             YEST
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -537,7 +541,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2"
           >
             Multiplier
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -558,7 +562,7 @@ export function PlacementDataTable({
            <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="font-mono text-xs uppercase tracking-wider h-8 px-2 text-primary"
+            className="text-xs font-semibold text-primary h-8 px-2"
           >
             Changes
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -655,13 +659,13 @@ export function PlacementDataTable({
           )}
         </div>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-border/50">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableHeader className="sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-border/50 hover:bg-transparent">
+              <TableRow key={headerGroup.id} className="border-slate-100 dark:border-slate-800 hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-card px-2 h-10">
+                  <TableHead key={header.id} className="bg-slate-50 dark:bg-slate-800/50 px-2 h-10">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -685,7 +689,7 @@ export function PlacementDataTable({
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(
-                        "border-border/50 hover:bg-card/30 transition-colors",
+                        "border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors",
                         isNewCampaign && idx > 0 && "border-t-2 border-t-primary/10"
                       )}
                     >
