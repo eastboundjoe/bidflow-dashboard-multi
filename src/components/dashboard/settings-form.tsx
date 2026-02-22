@@ -84,9 +84,9 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="card-hover">
         <CardHeader>
-          <CardTitle>Report Schedule</CardTitle>
+          <CardTitle className="text-xl font-bold tracking-tight">Report Schedule</CardTitle>
           <CardDescription>
             Choose when you want your weekly Amazon Ads placement reports to be generated.
           </CardDescription>
@@ -94,12 +94,12 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="report_day">Report Day</Label>
+              <Label htmlFor="report_day" className="text-xs font-bold uppercase tracking-wider text-slate-500">Report Day</Label>
               <Select
                 value={settings.report_day}
                 onValueChange={(value) => setSettings({ ...settings, report_day: value })}
               >
-                <SelectTrigger id="report_day">
+                <SelectTrigger id="report_day" className="bg-background">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
@@ -113,12 +113,12 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="report_hour">Report Time (UTC)</Label>
+              <Label htmlFor="report_hour" className="text-xs font-bold uppercase tracking-wider text-slate-500">Report Time (UTC)</Label>
               <Select
                 value={settings.report_hour.toString()}
                 onValueChange={(value) => setSettings({ ...settings, report_hour: parseInt(value) })}
               >
-                <SelectTrigger id="report_hour">
+                <SelectTrigger id="report_hour" className="bg-background">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -133,22 +133,22 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
             </div>
           </div>
 
-          <div className="rounded-lg bg-accent/50 p-4 border border-border flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-lg bg-blue-50/50 dark:bg-blue-900/10 p-4 border border-blue-100 dark:border-blue-900/30 flex items-start gap-3">
+            <CheckCircle2 className="h-5 w-5 text-blue-500 mt-0.5" />
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Your reports will be generated every{" "}
-              <span className="text-foreground font-medium">
+              <span className="text-slate-900 dark:text-slate-100 font-bold">
                 {getDayLabel(settings.report_day)}
               </span>{" "}
               at{" "}
-              <span className="text-foreground font-medium">
+              <span className="text-slate-900 dark:text-slate-100 font-bold">
                 {getHourLabel(settings.report_hour)} UTC
               </span>.
             </p>
           </div>
         </CardContent>
-        <CardFooter className="justify-end">
-          <Button onClick={handleSave} disabled={saving || !credentials}>
+        <CardFooter className="justify-end bg-slate-50/50 dark:bg-slate-900/20 px-6 py-4 border-t">
+          <Button onClick={handleSave} disabled={saving || !credentials} className="btn-gradient px-8">
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -164,30 +164,30 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
         </CardFooter>
       </Card>
 
-      <Card className="border-destructive/20 bg-destructive/5">
-        <CardHeader>
-          <CardTitle className="text-destructive flex items-center gap-2">
+      <Card className="border-red-200 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/10 overflow-hidden">
+        <CardHeader className="border-b border-red-100 dark:border-red-900/20 bg-red-50/50 dark:bg-red-950/20">
+          <CardTitle className="text-red-600 dark:text-red-400 flex items-center gap-2 text-lg">
             <AlertTriangle className="h-5 w-5" />
             Danger Zone
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-red-600/70 dark:text-red-400/70">
             Irreversible actions for your account and data.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="space-y-4 pt-6">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Deleting your account will permanently remove all your Amazon Ads credentials,
             historical placement data, and active subscriptions. This action cannot be undone.
           </p>
-          <Separator className="bg-destructive/20" />
-          <div className="flex items-center justify-between">
+          <Separator className="bg-red-200/50 dark:bg-red-900/30" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <p className="font-medium text-destructive">Delete Account</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="font-bold text-red-600 dark:text-red-400">Delete Account</p>
+              <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
                 Permanently delete your account and all associated data.
               </p>
             </div>
-            <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>
+            <Button variant="destructive" size="sm" onClick={handleDeleteAccount} className="font-bold shadow-sm">
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Account
             </Button>

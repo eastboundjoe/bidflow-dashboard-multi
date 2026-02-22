@@ -96,11 +96,11 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
 
   return (
     <div className="space-y-6">
-      <Card className={isConnected ? "border-primary/50" : ""}>
-        <CardHeader>
+      <Card className={cn("overflow-hidden card-hover transition-all duration-300", isConnected ? "border-blue-500/50 shadow-md" : "border-slate-200 dark:border-slate-800")}>
+        <CardHeader className={cn("border-b", isConnected ? "bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20" : "bg-slate-50/50 dark:bg-slate-900/20 border-slate-100 dark:border-slate-800")}>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <div className="bg-orange-500 p-1.5 rounded-md">
+            <CardTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
+              <div className="bg-orange-500 p-2 rounded-lg shadow-sm">
                 <img 
                   src="https://www.amazon.com/favicon.ico" 
                   alt="Amazon" 
@@ -109,36 +109,46 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
               </div>
               Amazon Advertising
             </CardTitle>
-            <Badge variant={isConnected ? "default" : "secondary"}>
+            <Badge 
+              variant={isConnected ? "default" : "secondary"}
+              className={cn(
+                "font-bold px-3 py-0.5 uppercase text-[10px] tracking-widest",
+                isConnected ? "bg-blue-600 hover:bg-blue-600 shadow-sm" : "bg-slate-200 text-slate-600"
+              )}
+            >
               {isConnected ? "Connected" : "Not Connected"}
             </Badge>
           </div>
-          <CardDescription>
+          <CardDescription className="mt-2 text-slate-600 dark:text-slate-400">
             Connect your Amazon Advertising account to automatically collect and optimize your placement data.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6 pt-6">
           {isConnected ? (
             <div className="space-y-4">
-              <div className="rounded-lg bg-accent/50 p-4 border border-border flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+              <div className="rounded-xl bg-blue-50/50 dark:bg-blue-900/10 p-5 border border-blue-100 dark:border-blue-900/30 flex items-start gap-4 shadow-sm">
+                <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                    <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Your account is successfully linked</p>
-                  <p className="text-xs text-muted-foreground">
-                    Amazon Profile ID: <span className="font-mono">{credentials.profile_id || "Not selected"}</span>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Your account is successfully linked</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Amazon Profile ID: <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-blue-600 dark:text-blue-400">{credentials.profile_id || "Not selected"}</span>
                   </p>
                 </div>
               </div>
 
               {!credentials.profile_id && (
-                <div className="rounded-lg bg-warning/10 p-4 border border-warning/20 flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
+                <div className="rounded-xl bg-amber-50/50 dark:bg-amber-900/10 p-5 border border-amber-100 dark:border-amber-900/30 flex items-start gap-4 shadow-sm">
+                  <div className="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-full">
+                    <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-warning">Profile Selection Required</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm font-bold text-amber-900 dark:text-amber-400">Profile Selection Required</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       We found your account but you need to select which advertising profile to use.
                     </p>
-                    <Button variant="outline" size="sm" className="mt-2">
+                    <Button variant="outline" size="sm" className="mt-3 font-bold border-amber-200 dark:border-amber-900 hover:bg-amber-100 dark:hover:bg-amber-900/30">
                       Select Profile
                     </Button>
                   </div>
@@ -147,29 +157,31 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-lg bg-accent/50 p-4 border border-border flex items-start gap-3">
-                <Info className="h-5 w-5 text-blue-400 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">How it works</p>
-                  <p className="text-xs text-muted-foreground">
-                    1. Click "Authorize Amazon Account" below.<br />
-                    2. Log in to your Amazon Seller/Vendor account.<br />
-                    3. Grant BidFlow permission to access your advertising data.<br />
-                    4. You'll be redirected back here to select your profile.
-                  </p>
+              <div className="rounded-xl bg-blue-50/50 dark:bg-blue-900/10 p-5 border border-blue-100 dark:border-blue-900/30 flex items-start gap-4 shadow-sm">
+                <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                    <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">How it works</p>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1 font-medium">
+                    <p>1. Click "Authorize Amazon Account" below.</p>
+                    <p>2. Log in to your Amazon Seller/Vendor account.</p>
+                    <p>3. Grant BidFlow permission to access your advertising data.</p>
+                    <p>4. You'll be redirected back here to select your profile.</p>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </CardContent>
-        <CardFooter className="justify-end gap-3">
+        <CardFooter className="justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/20 px-6 py-4 border-t border-slate-100 dark:border-slate-800">
           {isConnected ? (
-            <Button variant="outline" onClick={handleDisconnect} disabled={loading}>
+            <Button variant="outline" onClick={handleDisconnect} disabled={loading} className="font-bold shadow-sm">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Unlink className="h-4 w-4 mr-2" />}
               Disconnect Account
             </Button>
           ) : (
-            <Button onClick={handleAuthorize} disabled={loading} className="bg-orange-500 hover:bg-orange-600 text-white border-none">
+            <Button onClick={handleAuthorize} disabled={loading} className="bg-orange-500 hover:bg-orange-600 text-white border-none font-bold px-8 shadow-md">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Link2 className="h-4 w-4 mr-2" />}
               Authorize Amazon Account
             </Button>
@@ -178,26 +190,32 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
       </Card>
 
       {isConnected && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Permissions</CardTitle>
-            <CardDescription>
+        <Card className="card-hover border-slate-200 dark:border-slate-800 overflow-hidden">
+          <CardHeader className="bg-slate-50/30 dark:bg-slate-900/10 border-b border-slate-100 dark:border-slate-800">
+            <CardTitle className="text-lg font-bold tracking-tight">Permissions</CardTitle>
+            <CardDescription className="text-xs">
               BidFlow currently has the following permissions for your account.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                Read advertising campaigns and performance data
+          <CardContent className="pt-6">
+            <ul className="space-y-4">
+              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                </div>
+                <span className="font-medium">Read advertising campaigns and performance data</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                Update placement bid adjustments
+              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                </div>
+                <span className="font-medium">Update placement bid adjustments</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                Manage portfolios
+              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                </div>
+                <span className="font-medium">Manage portfolios</span>
               </li>
             </ul>
           </CardContent>
