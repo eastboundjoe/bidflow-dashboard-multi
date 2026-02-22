@@ -48,7 +48,7 @@ export default function HomePage() {
                 Pricing
               </Link>
               <Link href="/login">
-                <Button variant="ghost">Log in</Button>
+                <Button variant="outline" className="border-slate-300 hover:border-primary hover:text-primary font-medium">Log in</Button>
               </Link>
               <Link href="/signup">
                 <Button>Get Started</Button>
@@ -546,9 +546,13 @@ export default function HomePage() {
           Start free, upgrade when you&apos;re ready.
         </p>
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-          <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Pro</CardTitle>
+          {/* Pro — highlighted as Most Popular */}
+          <Card className="border-2 border-primary relative shadow-lg">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge className="bg-primary hover:bg-primary shadow-sm px-4">Most Popular</Badge>
+            </div>
+            <CardHeader className="text-center pt-8">
+              <CardTitle className="text-2xl text-primary">Pro</CardTitle>
               <div className="mt-4">
                 <span className="text-5xl font-extrabold">$29</span>
                 <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
@@ -566,23 +570,24 @@ export default function HomePage() {
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-slate-700 dark:text-slate-300">{feature}</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-medium">{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter>
               <Link href="/signup" className="w-full">
-                <Button className="w-full" variant="outline" size="lg">
+                <Button className="w-full" size="lg">
                   Start Free Trial
                 </Button>
               </Link>
             </CardFooter>
           </Card>
 
-          <Card className="border-2 border-primary relative shadow-lg">
+          {/* Enterprise — elevated secondary tier */}
+          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-primary hover:bg-primary shadow-sm px-4">Most Popular</Badge>
+              <Badge variant="outline" className="bg-white dark:bg-gray-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 shadow-sm px-4">Scale Up</Badge>
             </div>
             <CardHeader className="text-center pt-8">
               <CardTitle className="text-2xl">Enterprise</CardTitle>
@@ -611,7 +616,7 @@ export default function HomePage() {
             </CardContent>
             <CardFooter>
               <Link href="/signup" className="w-full">
-                <Button className="w-full" size="lg">
+                <Button className="w-full" variant="outline" size="lg">
                   Start Free Trial
                 </Button>
               </Link>

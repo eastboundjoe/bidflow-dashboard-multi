@@ -122,58 +122,57 @@ export function DashboardNav({ user }: DashboardNavProps) {
             {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 px-2">
-                  <Avatar className="h-7 w-7 border">
+                <Button variant="outline" size="sm" className="gap-2 border-slate-200 hover:border-primary hover:text-primary">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage src={avatarUrl} alt={fullName || ""} referrerPolicy="no-referrer" />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-bold">
                       {userInitial}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:inline-block max-w-[150px] truncate font-medium">
+                  <span className="hidden sm:inline-block max-w-[140px] truncate text-sm font-medium">
                     {fullName}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60 flex-shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <div className="flex items-center gap-2 p-2">
-                  <Avatar className="h-9 w-9 border">
+              <DropdownMenuContent align="end" className="w-60 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl p-1">
+                <div className="flex items-center gap-3 px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 mb-1">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={avatarUrl} alt={fullName || ""} referrerPolicy="no-referrer" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                       {userInitial}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col space-y-0.5 overflow-hidden">
-                    <p className="text-sm font-medium truncate">{fullName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <div className="flex flex-col overflow-hidden">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{fullName}</p>
+                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
                   </div>
                 </div>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                  <Link href="/dashboard/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                    <Settings className="h-4 w-4 text-slate-400" />
+                    <span className="text-sm font-medium">Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/billing" className="flex items-center">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Billing
+                  <Link href="/dashboard/billing" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                    <CreditCard className="h-4 w-4 text-slate-400" />
+                    <span className="text-sm font-medium">Billing</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/connect" className="flex items-center">
-                    <Link2 className="mr-2 h-4 w-4" />
-                    Amazon Account
+                  <Link href="/dashboard/connect" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                    <Link2 className="h-4 w-4 text-slate-400" />
+                    <span className="text-sm font-medium">Amazon Account</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
                 <DropdownMenuItem
                   onClick={handleSignOut}
-                  className="text-red-600 focus:text-red-600"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer focus:text-red-600 focus:bg-red-50"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-sm font-medium">Sign out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
