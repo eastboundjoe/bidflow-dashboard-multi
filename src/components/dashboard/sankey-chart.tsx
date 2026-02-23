@@ -210,6 +210,9 @@ export function SankeyChart({ data }: SankeyChartProps) {
       "PP": "#64748b"
     };
 
+    // Store placement text elements so clicks can toggle all three together
+    const placementTextEls = new Map<string, { el: any; shortName: string; fullName: string }>();
+
     // Labels for nodes
     g.selectAll(".label")
       .data(sankeyData.nodes)
@@ -224,21 +227,13 @@ export function SankeyChart({ data }: SankeyChartProps) {
       .each(function(d: any) {
         const group = d3.select(this as SVGGElement);
         if (d.name === "AD SPEND") {
+          // Clean single text — no stroke shadow
           group.append("text")
-            .attr("stroke", "#111827")
-            .attr("stroke-width", 4)
             .attr("text-anchor", "start")
             .style("font-family", "inherit")
-            .style("font-size", "16px")
-            .style("font-weight", "700")
-            .attr("fill", "#9ca3af")
-            .text(d.name);
-          group.append("text")
-            .attr("fill", "#f3f4f6")
-            .attr("text-anchor", "start")
-            .style("font-family", "inherit")
-            .style("font-size", "16px")
-            .style("font-weight", "700")
+            .style("font-size", "13px")
+            .style("font-weight", "600")
+            .attr("fill", "#6b7280")
             .text(d.name);
         } else {
           const color = placementColors[d.name] || "#9ca3af";
@@ -246,7 +241,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
                           d.name === "ROS" ? "Rest of Search" :
                           d.name === "PP" ? "Product Page" : d.name;
 
-          // Badge text — clickable to toggle short/full name
+          // Badge text — clickable, all three expand/collapse together
           const textEl = group.append("text")
             .attr("x", -40)
             .attr("y", 4)
@@ -258,16 +253,24 @@ export function SankeyChart({ data }: SankeyChartProps) {
             .style("cursor", "pointer")
             .text(d.name);
 
+          placementTextEls.set(d.name, { el: textEl, shortName: d.name, fullName });
+
           group
             .style("cursor", "pointer")
             .on("click", function() {
-              const isExpanded = expandedRef.current.has(d.name);
-              if (isExpanded) {
-                expandedRef.current.delete(d.name);
-                textEl.style("font-size", "12px").text(d.name);
+              const anyExpanded = expandedRef.current.size > 0;
+              if (anyExpanded) {
+                // Collapse all back to short names
+                expandedRef.current.clear();
+                placementTextEls.forEach(({ el, shortName }) => {
+                  el.style("font-size", "12px").text(shortName);
+                });
               } else {
-                expandedRef.current.add(d.name);
-                textEl.style("font-size", "9px").text(fullName);
+                // Expand all to full names at same font size
+                placementTextEls.forEach(({ el, fullName: fn }, key) => {
+                  expandedRef.current.add(key);
+                  el.style("font-size", "10px").text(fn);
+                });
               }
             });
         }
@@ -280,19 +283,20 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 30})`)
         .style("font-family", "inherit")
         .style("font-size", "11px")
+        .style("font-weight", "500")
         .attr("fill", "#9ca3af");
 
-      desc.append("text").text("CLICK FLOW ");
+      desc.append("text").text("Click Flow ");
       desc.append("text")
         .attr("class", "embedded-counter")
-        .attr("x", 85)
-        .attr("fill", "#0095ff")
-        .style("font-weight", "bold")
-        .style("font-size", "13px")
+        .attr("x", 72)
+        .attr("fill", "#3b82f6")
+        .style("font-weight", "600")
+        .style("font-size", "11px")
         .text(totalP.toLocaleString());
       desc.append("text")
-        .attr("x", 85 + totalP.toLocaleString().length * 8 + 5)
-        .text(" CLICKS");
+        .attr("x", 72 + totalP.toLocaleString().length * 7 + 4)
+        .text(" clicks");
     }
 
     // Outcomes header
