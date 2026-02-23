@@ -97,12 +97,14 @@ export function LoginForm() {
             <Button
               type="button"
               variant="outline"
-              className="w-full mb-6 border-slate-300 hover:border-slate-400 font-medium h-11"
+              className={`w-full mb-6 border-slate-300 hover:border-slate-400 font-medium h-11 transition-all ${
+                loading ? "shadow-inner bg-slate-50 opacity-80" : ""
+              }`}
               onClick={handleGoogleLogin}
               disabled={loading}
             >
               {loading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in…</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Logging in…</>
               ) : (
                 <>
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 20 20">
@@ -166,9 +168,15 @@ export function LoginForm() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-11 font-semibold text-base shadow-md" disabled={loading}>
+              <Button 
+                type="submit" 
+                className={`w-full h-11 font-semibold text-base shadow-md transition-all ${
+                  loading ? "shadow-inner bg-primary/90 opacity-80" : ""
+                }`} 
+                disabled={loading}
+              >
                 {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Signing in…</>
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Logging in…</>
                 ) : "Sign In"}
               </Button>
             </form>
