@@ -615,19 +615,23 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Spend by Placement */}
       <div>
-        <h4 className="text-sm font-medium mb-3">Spend by Placement</h4>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+          Spend by Placement
+        </p>
         <div className="space-y-3">
           {placements.map(({ key, color }) => {
             const value = stats.byPlacement[key]?.spend || 0;
             const percentage = stats.totalSpend > 0 ? (value / stats.totalSpend) * 100 : 0;
             return (
-              <div key={key} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">{key}</span>
-                  <span className="font-mono">
-                    {value.toLocaleString("en-US", { style: "currency", currency: "USD" })} ({percentage.toFixed(1)}%)
+              <div key={key} className="space-y-1.5">
+                <div className="flex justify-between items-baseline gap-2">
+                  <span className="text-sm font-medium text-foreground">{key}</span>
+                  <span className="text-sm font-semibold tabular-nums text-muted-foreground whitespace-nowrap">
+                    {value.toLocaleString("en-US", { style: "currency", currency: "USD" })}{" "}
+                    <span className="text-xs font-normal">({percentage.toFixed(1)}%)</span>
                   </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -642,33 +646,33 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         </div>
       </div>
 
-      {/* Click Outcomes — mirrors the Sankey OUTCOMES columns */}
-      <div className="pt-2 border-t border-border">
-        <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Click Outcomes</h4>
+      {/* Click Outcomes */}
+      <div className="pt-1 border-t border-border">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+          Click Outcomes
+        </p>
         <div className="w-full overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
+          <table className="w-full border-collapse">
             <thead>
-              {/* Group header */}
               <tr>
-                <th className="pb-0.5 text-left w-[90px]" />
-                <th colSpan={3} className="pb-0.5 text-center border-b-2 border-blue-400">
-                  <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Clicks → Sales</span>
+                <th className="pb-1 text-left" />
+                <th colSpan={3} className="pb-1 text-center border-b-2 border-primary/60">
+                  <span className="text-xs font-bold text-primary uppercase tracking-wide">Clicks → Sales</span>
                 </th>
-                <th className="w-2" />
-                <th colSpan={3} className="pb-0.5 text-center border-b-2 border-red-400">
-                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Clicks → No Sale</span>
+                <th className="w-3" />
+                <th colSpan={3} className="pb-1 text-center border-b-2 border-destructive/60">
+                  <span className="text-xs font-bold text-destructive uppercase tracking-wide">Clicks → No Sale</span>
                 </th>
               </tr>
-              {/* Sub-header */}
-              <tr className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                <th className="text-left pb-1.5 font-medium" />
-                <th className="text-right pb-1.5 font-medium pr-2">CVR%</th>
-                <th className="text-right pb-1.5 font-medium pr-2">Clicks</th>
-                <th className="text-right pb-1.5 font-medium">Spend</th>
-                <th className="w-2" />
-                <th className="text-right pb-1.5 font-medium pr-2">CVR%</th>
-                <th className="text-right pb-1.5 font-medium pr-2">Clicks</th>
-                <th className="text-right pb-1.5 font-medium">Spend</th>
+              <tr className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="text-left pt-1 pb-2" />
+                <th className="text-right pt-1 pb-2 pr-2">CVR%</th>
+                <th className="text-right pt-1 pb-2 pr-2">Clicks</th>
+                <th className="text-right pt-1 pb-2">Spend</th>
+                <th className="w-3" />
+                <th className="text-right pt-1 pb-2 pr-2">CVR%</th>
+                <th className="text-right pt-1 pb-2 pr-2">Clicks</th>
+                <th className="text-right pt-1 pb-2">Spend</th>
               </tr>
             </thead>
             <tbody>
@@ -690,22 +694,22 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                   totalSN += spendNoSales;
                   return (
                     <React.Fragment key={key}>
-                      <tr className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                        <td className="py-1.5 font-semibold leading-tight" style={{ color }}>{key}</td>
-                        <td className="py-1.5 text-right pr-2 font-bold tabular-nums text-blue-500">{pctSales}%</td>
-                        <td className="py-1.5 text-right pr-2 font-bold tabular-nums text-slate-700 dark:text-slate-300">{clicksSales}</td>
-                        <td className="py-1.5 text-right font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</td>
-                        <td className="w-2" />
-                        <td className="py-1.5 text-right pr-2 font-bold tabular-nums text-red-500">{pctNoSales}%</td>
-                        <td className="py-1.5 text-right pr-2 font-bold tabular-nums text-slate-700 dark:text-slate-300">{clicksNoSales}</td>
-                        <td className="py-1.5 text-right font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</td>
+                      <tr className="border-b border-border hover:bg-muted/40 transition-colors">
+                        <td className="py-2 text-xs font-semibold leading-snug" style={{ color }}>{key}</td>
+                        <td className="py-2 text-right pr-2 text-sm font-bold tabular-nums text-primary">{pctSales}%</td>
+                        <td className="py-2 text-right pr-2 text-sm font-semibold tabular-nums text-foreground">{clicksSales}</td>
+                        <td className="py-2 text-right text-sm font-bold tabular-nums text-primary">${Math.round(spendSales)}</td>
+                        <td className="w-3" />
+                        <td className="py-2 text-right pr-2 text-sm font-bold tabular-nums text-destructive">{pctNoSales}%</td>
+                        <td className="py-2 text-right pr-2 text-sm font-semibold tabular-nums text-foreground">{clicksNoSales}</td>
+                        <td className="py-2 text-right text-sm font-bold tabular-nums text-destructive">${Math.round(spendNoSales)}</td>
                       </tr>
                       <tr>
-                        <td colSpan={8} className="pb-1.5">
-                          <div className="h-1.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        <td colSpan={8} className="pb-2">
+                          <div className="h-1.5 rounded-full overflow-hidden bg-muted">
                             <div className="h-full flex">
-                              <div className="h-full transition-all duration-500" style={{ width: `${pctSales}%`, backgroundColor: '#3b82f6' }} />
-                              <div className="h-full transition-all duration-500" style={{ width: `${pctNoSales}%`, backgroundColor: '#ef4444' }} />
+                              <div className="h-full transition-all duration-500 bg-primary" style={{ width: `${pctSales}%` }} />
+                              <div className="h-full transition-all duration-500 bg-destructive" style={{ width: `${pctNoSales}%` }} />
                             </div>
                           </div>
                         </td>
@@ -716,16 +720,15 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                 return (
                   <>
                     {rows}
-                    {/* Totals row */}
-                    <tr className="border-t-2 border-slate-300 dark:border-slate-600">
-                      <td className="pt-2 font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</td>
-                      <td className="pt-2 text-right pr-2" />
-                      <td className="pt-2 text-right pr-2 font-bold tabular-nums text-blue-500">{totalCS}</td>
-                      <td className="pt-2 text-right font-bold tabular-nums text-blue-500">${Math.round(totalSS)}</td>
-                      <td className="w-2" />
-                      <td className="pt-2 text-right pr-2" />
-                      <td className="pt-2 text-right pr-2 font-bold tabular-nums text-red-500">{totalCN}</td>
-                      <td className="pt-2 text-right font-bold tabular-nums text-red-500">${Math.round(totalSN)}</td>
+                    <tr className="border-t-2 border-border/80">
+                      <td className="pt-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</td>
+                      <td className="pt-2.5 text-right pr-2" />
+                      <td className="pt-2.5 text-right pr-2 text-sm font-bold tabular-nums text-primary">{totalCS}</td>
+                      <td className="pt-2.5 text-right text-sm font-bold tabular-nums text-primary">${Math.round(totalSS)}</td>
+                      <td className="w-3" />
+                      <td className="pt-2.5 text-right pr-2" />
+                      <td className="pt-2.5 text-right pr-2 text-sm font-bold tabular-nums text-destructive">{totalCN}</td>
+                      <td className="pt-2.5 text-right text-sm font-bold tabular-nums text-destructive">${Math.round(totalSN)}</td>
                     </tr>
                   </>
                 );
@@ -735,31 +738,33 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         </div>
       </div>
 
+      {/* Summary totals */}
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
         <div className="text-center">
-          <div className="text-2xl font-bold text-primary">
+          <div className="text-2xl font-extrabold tracking-tight text-primary">
             {stats.totalSpend.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
           </div>
-          <div className="text-xs text-muted-foreground">Total Spend</div>
+          <div className="text-xs font-medium text-muted-foreground mt-0.5">Total Spend</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="text-2xl font-extrabold tracking-tight text-green-600 dark:text-green-400">
             {stats.totalSales.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })}
           </div>
-          <div className="text-xs text-muted-foreground">Total Sales</div>
+          <div className="text-xs font-medium text-muted-foreground mt-0.5">Total Sales</div>
         </div>
       </div>
 
       <div className="text-center pt-4 border-t border-border">
-        <div className="text-3xl font-bold">
-          <span className={
-            stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 3 ? "text-green-600 dark:text-green-400" :
-            stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 2 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"
-          }>
-            {stats.totalSpend > 0 ? (stats.totalSales / stats.totalSpend).toFixed(2) : "0.00"}x
-          </span>
+        <div className={`text-3xl font-extrabold tracking-tight ${
+          stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 3
+            ? "text-green-600 dark:text-green-400"
+            : stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 2
+            ? "text-yellow-600 dark:text-yellow-400"
+            : "text-destructive"
+        }`}>
+          {stats.totalSpend > 0 ? (stats.totalSales / stats.totalSpend).toFixed(2) : "0.00"}x
         </div>
-        <div className="text-xs text-muted-foreground">Return on Ad Spend</div>
+        <div className="text-xs font-medium text-muted-foreground mt-0.5">Return on Ad Spend</div>
       </div>
     </div>
   );
