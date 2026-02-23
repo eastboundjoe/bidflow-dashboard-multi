@@ -656,12 +656,12 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
             <thead>
               <tr>
                 <th className="pb-1 text-left" />
-                <th colSpan={3} className="pb-1 text-center border-b-2 border-primary/60">
-                  <span className="text-xs font-bold text-primary uppercase tracking-wide">Clicks → Sales</span>
+                <th colSpan={3} className="pb-1 text-center border-b-2 border-blue-400">
+                  <span className="text-xs font-bold text-blue-500 uppercase tracking-wide">Clicks → Sales</span>
                 </th>
                 <th className="w-3" />
-                <th colSpan={3} className="pb-1 text-center border-b-2 border-destructive/60">
-                  <span className="text-xs font-bold text-destructive uppercase tracking-wide">Clicks → No Sale</span>
+                <th colSpan={2} className="pb-1 text-center border-b-2 border-red-400">
+                  <span className="text-xs font-bold text-red-500 uppercase tracking-wide">Clicks → No Sale</span>
                 </th>
               </tr>
               <tr className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -670,7 +670,6 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                 <th className="text-right pt-1 pb-2 pr-2">Clicks</th>
                 <th className="text-right pt-1 pb-2">Spend</th>
                 <th className="w-3" />
-                <th className="text-right pt-1 pb-2 pr-2">CVR%</th>
                 <th className="text-right pt-1 pb-2 pr-2">Clicks</th>
                 <th className="text-right pt-1 pb-2">Spend</th>
               </tr>
@@ -696,20 +695,19 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                     <React.Fragment key={key}>
                       <tr className="border-b border-border hover:bg-muted/40 transition-colors">
                         <td className="py-2 text-xs font-semibold leading-snug" style={{ color }}>{key}</td>
-                        <td className="py-2 text-right pr-2 text-sm font-bold tabular-nums text-primary">{pctSales}%</td>
+                        <td className="py-2 text-right pr-2 text-sm font-bold tabular-nums text-blue-500">{pctSales}%</td>
                         <td className="py-2 text-right pr-2 text-sm font-semibold tabular-nums text-foreground">{clicksSales}</td>
-                        <td className="py-2 text-right text-sm font-bold tabular-nums text-primary">${Math.round(spendSales)}</td>
+                        <td className="py-2 text-right text-sm font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</td>
                         <td className="w-3" />
-                        <td className="py-2 text-right pr-2 text-sm font-bold tabular-nums text-destructive">{pctNoSales}%</td>
                         <td className="py-2 text-right pr-2 text-sm font-semibold tabular-nums text-foreground">{clicksNoSales}</td>
-                        <td className="py-2 text-right text-sm font-bold tabular-nums text-destructive">${Math.round(spendNoSales)}</td>
+                        <td className="py-2 text-right text-sm font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</td>
                       </tr>
                       <tr>
-                        <td colSpan={8} className="pb-2">
+                        <td colSpan={7} className="pb-2">
                           <div className="h-1.5 rounded-full overflow-hidden bg-muted">
                             <div className="h-full flex">
-                              <div className="h-full transition-all duration-500 bg-primary" style={{ width: `${pctSales}%` }} />
-                              <div className="h-full transition-all duration-500 bg-destructive" style={{ width: `${pctNoSales}%` }} />
+                              <div className="h-full transition-all duration-500 bg-blue-500" style={{ width: `${pctSales}%` }} />
+                              <div className="h-full transition-all duration-500 bg-red-500" style={{ width: `${pctNoSales}%` }} />
                             </div>
                           </div>
                         </td>
@@ -723,12 +721,11 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                     <tr className="border-t-2 border-border/80">
                       <td className="pt-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</td>
                       <td className="pt-2.5 text-right pr-2" />
-                      <td className="pt-2.5 text-right pr-2 text-sm font-bold tabular-nums text-primary">{totalCS}</td>
-                      <td className="pt-2.5 text-right text-sm font-bold tabular-nums text-primary">${Math.round(totalSS)}</td>
+                      <td className="pt-2.5 text-right pr-2 text-sm font-bold tabular-nums text-blue-500">{totalCS}</td>
+                      <td className="pt-2.5 text-right text-sm font-bold tabular-nums text-blue-500">${Math.round(totalSS)}</td>
                       <td className="w-3" />
-                      <td className="pt-2.5 text-right pr-2" />
-                      <td className="pt-2.5 text-right pr-2 text-sm font-bold tabular-nums text-destructive">{totalCN}</td>
-                      <td className="pt-2.5 text-right text-sm font-bold tabular-nums text-destructive">${Math.round(totalSN)}</td>
+                      <td className="pt-2.5 text-right pr-2 text-sm font-bold tabular-nums text-red-500">{totalCN}</td>
+                      <td className="pt-2.5 text-right text-sm font-bold tabular-nums text-red-500">${Math.round(totalSN)}</td>
                     </tr>
                   </>
                 );
