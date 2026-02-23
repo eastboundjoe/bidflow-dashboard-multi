@@ -13,12 +13,14 @@ interface SankeyChartProps {
 // Sankey Flow Component - Visualizes click flow from ad spend through placements to outcomes
 export function SankeyChart({ data }: SankeyChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [speed, setSpeed] = useState(2.0);
   const particlesRef = useRef<any[]>([]);
   const cacheRef = useRef<Record<string, { points: { x: number; y: number }[] }>>({});
   const animationRef = useRef<number | undefined>(undefined);
   const elapsedRef = useRef(0);
   const expandedRef = useRef<Set<string>>(new Set());
+  const isVisibleRef = useRef(false);
 
   // Calculate placement stats from data
   const placementData = React.useMemo(() => {
@@ -293,9 +295,10 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .attr("fill", "#3b82f6")
         .style("font-weight", "600")
         .style("font-size", "11px")
-        .text(totalP.toLocaleString());
+        .text("0");
       desc.append("text")
-        .attr("x", 72 + totalP.toLocaleString().length * 7 + 4)
+        .attr("class", "embedded-suffix")
+        .attr("x", 72 + 4 * 7 + 4)
         .text(" clicks");
     }
 
@@ -397,6 +400,12 @@ export function SankeyChart({ data }: SankeyChartProps) {
         });
       }
 
+      // Update click flow counter as particles are released
+      const released = Math.min(queueIndex, totalP);
+      const counterText = released.toLocaleString();
+      svg.select(".embedded-counter").text(counterText);
+      svg.select(".embedded-suffix").attr("x", 72 + counterText.length * 7 + 4);
+
       // Update bars and all labels as particles arrive
       barGroups.each(function(d: any) {
         const placementName = d.node.name;
@@ -479,9 +488,11 @@ export function SankeyChart({ data }: SankeyChartProps) {
         });
     }
 
-    // Animation loop
+    // Animation loop — only ticks when section is visible
     function animate() {
-      tick(elapsedRef.current++);
+      if (isVisibleRef.current) {
+        tick(elapsedRef.current++);
+      }
       animationRef.current = requestAnimationFrame(animate);
     }
     animate();
@@ -492,6 +503,18 @@ export function SankeyChart({ data }: SankeyChartProps) {
       }
     };
   }, [placementData, speed]);
+
+  // Start animation only when section scrolls into view
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Check if we have data
   const hasData = Object.keys(placementData).length > 0 &&
@@ -509,7 +532,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   }
 
   return (
-    <div className="w-full">
+    <div ref={containerRef} className="w-full">
       {/* Controls */}
       <div className="flex items-center gap-4 mb-4 px-2">
         <div className="flex items-center gap-2">
