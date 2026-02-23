@@ -647,7 +647,7 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
         <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Click Outcomes</h4>
         <div className="w-full">
           {/* Header row */}
-          <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr] gap-x-2 mb-1 px-1">
+          <div className="grid grid-cols-[88px_1fr_54px_1fr_54px] gap-x-1 mb-1 px-1">
             <span />
             <div className="flex flex-col items-center">
               <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider">sales</span>
@@ -680,7 +680,7 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                   totalSN += spendNoSales;
                   return (
                     <div key={key} className="border-b border-slate-100 dark:border-slate-800">
-                      <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr] gap-x-2 pt-2 pb-0.5 px-1 items-center">
+                      <div className="grid grid-cols-[88px_1fr_54px_1fr_54px] gap-x-1 pt-2 pb-0.5 px-1 items-center">
                         <span className="text-[10px] font-semibold leading-tight" style={{ color }}>{key}</span>
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
@@ -705,7 +705,7 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                 {/* Totals row */}
                 {(() => {
                   return (
-                    <div className="grid grid-cols-[100px_1fr_1fr_1fr_1fr] gap-x-2 py-2 px-1 border-t-2 border-slate-300 dark:border-slate-600 mt-0.5 items-center">
+                    <div className="grid grid-cols-[88px_1fr_54px_1fr_54px] gap-x-1 py-2 px-1 border-t-2 border-slate-300 dark:border-slate-600 mt-0.5 items-center">
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</span>
                       <div className="flex flex-col items-center">
                         <span className="text-xs font-bold tabular-nums text-blue-500">{totalCS}</span>
