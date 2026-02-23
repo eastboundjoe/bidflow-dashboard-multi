@@ -186,10 +186,13 @@ export function SankeyChart({ data }: SankeyChartProps) {
     }
 
     // Draw flow paths
+    // stroke-opacity must be 1 (full) to prevent semi-transparent paths from
+    // compounding at overlaps and creating a darker sum color at the source node.
+    // Subtlety comes from the light grey color, not from transparency.
     const routeLayer = g.append("g")
       .attr("fill", "none")
-      .attr("stroke-opacity", 0.3)
-      .attr("stroke", "#94a3b8")
+      .attr("stroke-opacity", 1)
+      .attr("stroke", "#cbd5e1")
       .selectAll("path")
       .data(routes)
       .join("path")
