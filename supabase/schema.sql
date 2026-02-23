@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict nL0zOkY7w4pkbMgfAMvMDdgr4IN8u607RHMktoMFCc0fMKVbJvhShJKe90kHH8x
+\restrict TFqAPjwvklUMegpAILlifk1Uf4xfdkAuLO3Dyww8UhnRcHIREiW4NR33TJg40m8
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -1453,7 +1453,13 @@ CREATE TABLE public.weekly_placement_bids (
     placement_top_of_search integer DEFAULT 0,
     placement_rest_of_search integer DEFAULT 0,
     placement_product_page integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now(),
+    last_changed_at_top timestamp with time zone,
+    last_changed_to_top integer,
+    last_changed_at_rest timestamp with time zone,
+    last_changed_to_rest integer,
+    last_changed_at_product timestamp with time zone,
+    last_changed_to_product integer
 );
 
 
@@ -1592,23 +1598,34 @@ CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on
             WHEN 'Rest of Search'::text THEN COALESCE(wb.placement_rest_of_search, 0)
             WHEN 'Product Page'::text THEN COALESCE(wb.placement_product_page, 0)
             ELSE 0
-        END AS "Increase bids by
-  placement",
-    0 AS "Changes in
-  placement",
+        END AS "Increase bids by placement",
+    0 AS "Changes in placement",
     ''::text AS "NOTES",
     ''::text AS "Empty1",
     ''::text AS "Empty2",
     cwm.tenant_id,
     cwm.campaign_id,
+        CASE cwm.placement_type
+            WHEN 'Top of Search'::text THEN pb.last_changed_to_top
+            WHEN 'Rest of Search'::text THEN pb.last_changed_to_rest
+            WHEN 'Product Page'::text THEN pb.last_changed_to_product
+            ELSE NULL::integer
+        END AS last_changed_to,
+        CASE cwm.placement_type
+            WHEN 'Top of Search'::text THEN pb.last_changed_at_top
+            WHEN 'Rest of Search'::text THEN pb.last_changed_at_rest
+            WHEN 'Product Page'::text THEN pb.last_changed_at_product
+            ELSE NULL::timestamp with time zone
+        END AS last_changed_at,
     cwm.week_id,
     (cwm.start_date)::text AS date_range_start,
     (cwm.end_date)::text AS date_range_end
-   FROM ((((campaign_week_matrix cwm
+   FROM (((((campaign_week_matrix cwm
      LEFT JOIN public.weekly_placement_performance pp ON (((cwm.tenant_id = pp.tenant_id) AND (cwm.week_id = pp.week_id) AND (cwm.campaign_id = pp.campaign_id) AND (cwm.placement_type = pp.placement_type))))
      LEFT JOIN public.weekly_campaign_performance cp ON (((cwm.tenant_id = cp.tenant_id) AND (cwm.week_id = cp.week_id) AND (cwm.campaign_id = cp.campaign_id))))
      LEFT JOIN public.weekly_placement_bids wb ON (((cwm.tenant_id = wb.tenant_id) AND (cwm.week_id = wb.week_id) AND (cwm.campaign_id = wb.campaign_id))))
      LEFT JOIN public.weekly_portfolios wpf ON (((cwm.tenant_id = wpf.tenant_id) AND (cwm.week_id = wpf.week_id) AND (cp.portfolio_id = wpf.portfolio_id))))
+     LEFT JOIN public.placement_bids pb ON (((cwm.tenant_id = pb.tenant_id) AND (cwm.campaign_id = pb.campaign_id))))
   ORDER BY cwm.week_id DESC, cwm.campaign_name, cwm.sort_order;
 
 
@@ -2760,5 +2777,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict nL0zOkY7w4pkbMgfAMvMDdgr4IN8u607RHMktoMFCc0fMKVbJvhShJKe90kHH8x
+\unrestrict TFqAPjwvklUMegpAILlifk1Uf4xfdkAuLO3Dyww8UhnRcHIREiW4NR33TJg40m8
 
