@@ -77,24 +77,14 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     try {
       const supabase = createClient();
 
-      // Fetch placements and change tracking in parallel
-      const [{ data: placements, error: fetchError }, { data: bidsData }] = await Promise.all([
-        supabase
-          .from("view_placement_optimization_report")
-          .select("*")
-          .order("Spend", { ascending: false }),
-        supabase
-          .from("placement_bids")
-          .select("campaign_id, last_changed_at_top, last_changed_to_top, last_changed_at_rest, last_changed_to_rest, last_changed_at_product, last_changed_to_product"),
-      ]);
+      const { data: placements, error: fetchError } = await supabase
+        .from("view_placement_optimization_report")
+        .select("*")
+        .order("Spend", { ascending: false });
 
       if (fetchError) {
         throw new Error(fetchError.message);
       }
-
-      // Build lookup map: campaign_id -> change tracking columns
-      const bidsMap: Record<string, any> = {};
-      (bidsData || []).forEach((b: any) => { bidsMap[b.campaign_id] = b; });
 
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
@@ -143,26 +133,16 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         const portfolioName = getVal("Portfolio") || "No Portfolio";
         const portfolioId = row.portfolio_id || portfolioName;
 
-        // Derive change tracking from placement_bids
+        // Derive change tracking from weekly snapshot (week-specific, not global)
         const campaignId = row.campaign_id || "";
-        const bids = bidsMap[campaignId];
-        const placementSuffix =
-          placement_type === "Top of Search" ? "top" :
-          placement_type === "Rest of Search" ? "rest" :
-          placement_type === "Product Page" ? "product" : null;
-
         let changed_at: string | undefined;
         let changes_in_placement = "";
-        if (bids && placementSuffix) {
-          const changedAt = bids[`last_changed_at_${placementSuffix}`];
-          const changedTo = bids[`last_changed_to_${placementSuffix}`];
-          if (changedAt) {
-            const d = new Date(changedAt);
-            changed_at = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-          }
-          if (changedTo !== null && changedTo !== undefined && changedTo !== 0) {
-            changes_in_placement = changedTo.toString();
-          }
+        if (row.last_changed_at) {
+          const d = new Date(row.last_changed_at);
+          changed_at = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+        }
+        if (row.last_changed_to !== null && row.last_changed_to !== undefined && row.last_changed_to !== 0) {
+          changes_in_placement = row.last_changed_to.toString();
         }
 
         return {
