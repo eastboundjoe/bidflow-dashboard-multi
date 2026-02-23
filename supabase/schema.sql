@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict tN0clumcHhTQI28z8FWzwmzkoNSxCbWfEGMO0X2wvqZIwNSyBZj3ADEfk6HSAdb
+\restrict Hm7v69AlCM0LN5tZunQBUTIzq2McVD9raMA3hlD2jWNj2G9FesfJwvJfUHp4YDI
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -262,6 +262,147 @@ BEGIN
         WHEN 'Detail Page on-Amazon' THEN RETURN 'PRODUCT_PAGE';
         ELSE RETURN 'UNKNOWN';
     END CASE;
+END;
+$$;
+
+
+--
+-- Name: populate_weekly_tables(uuid, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.populate_weekly_tables(p_tenant_id uuid, p_week_id text, p_snapshot_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+
+  -- 1. Snapshot portfolios
+  INSERT INTO public.weekly_portfolios (
+    snapshot_id, tenant_id, week_id,
+    portfolio_id, portfolio_name, budget_amount, currency, status
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    portfolio_id, portfolio_name, budget_amount, currency, portfolio_state
+  FROM public.portfolios
+  WHERE tenant_id = p_tenant_id
+  ON CONFLICT DO NOTHING;
+
+  -- 2. Snapshot placement bid adjustments
+  INSERT INTO public.weekly_placement_bids (
+    snapshot_id, tenant_id, week_id,
+    campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
+    placement_top_of_search, placement_rest_of_search, placement_product_page
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
+    placement_top_of_search, placement_rest_of_search, placement_product_page
+  FROM public.placement_bids
+  WHERE tenant_id = p_tenant_id
+  ON CONFLICT DO NOTHING;
+
+  -- 3. Snapshot campaign-level performance (joins 30d, 7d, yesterday, dayBefore)
+  INSERT INTO public.weekly_campaign_performance (
+    snapshot_id, tenant_id, week_id,
+    campaign_id, campaign_name, campaign_status, portfolio_id,
+    impressions_30d, clicks_30d, spend_30d, sales_30d, purchases_30d, acos_30d, cvr_30d,
+    impressions_7d,  clicks_7d,  spend_7d,  sales_7d,  purchases_7d,  acos_7d,  cvr_7d,
+    yesterday_impressions, yesterday_clicks, yesterday_spend,
+    day_before_impressions, day_before_clicks, day_before_spend,
+    campaign_budget, top_of_search_impression_share
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    c30.campaign_id, c30.campaign_name, c30.campaign_status, c30.portfolio_id,
+    COALESCE(c30.impressions, 0), COALESCE(c30.clicks, 0), COALESCE(c30.spend, 0),
+    COALESCE(c30.sales_30d, 0),  COALESCE(c30.purchases_30d, 0), c30.acos_30d, c30.cvr_30d,
+    COALESCE(c7.impressions,  0), COALESCE(c7.clicks,  0), COALESCE(c7.spend,  0),
+    COALESCE(c7.sales_7d,  0),   COALESCE(c7.purchases_7d,  0),  c7.acos_7d,  c7.cvr_7d,
+    COALESCE(cy.impressions,  0), COALESCE(cy.clicks,  0), COALESCE(cy.spend,  0),
+    COALESCE(cdb.impressions, 0), COALESCE(cdb.clicks, 0), COALESCE(cdb.spend, 0),
+    c30.campaign_budget_amount,
+    c30.top_of_search_impression_share
+  FROM (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '30day'
+      AND data_date = (
+        SELECT MAX(data_date) FROM public.raw_campaign_reports
+        WHERE tenant_id = p_tenant_id AND report_type = '30day'
+      )
+  ) c30
+  LEFT JOIN (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '7day'
+      AND data_date = (
+        SELECT MAX(data_date) FROM public.raw_campaign_reports
+        WHERE tenant_id = p_tenant_id AND report_type = '7day'
+      )
+  ) c7  ON c30.campaign_id = c7.campaign_id
+  LEFT JOIN (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = 'yesterday'
+      AND data_date = (
+        SELECT MAX(data_date) FROM public.raw_campaign_reports
+        WHERE tenant_id = p_tenant_id AND report_type = 'yesterday'
+      )
+  ) cy  ON c30.campaign_id = cy.campaign_id
+  LEFT JOIN (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = 'dayBefore'
+      AND data_date = (
+        SELECT MAX(data_date) FROM public.raw_campaign_reports
+        WHERE tenant_id = p_tenant_id AND report_type = 'dayBefore'
+      )
+  ) cdb ON c30.campaign_id = cdb.campaign_id
+  ON CONFLICT DO NOTHING;
+
+  -- 4. Snapshot placement-level performance (30d + 7d, maps raw names to weekly CHECK values)
+  INSERT INTO public.weekly_placement_performance (
+    snapshot_id, tenant_id, week_id,
+    campaign_id, campaign_name, placement_type,
+    impressions_30d, clicks_30d, spend_30d, sales_30d, purchases_30d, acos_30d, cvr_30d,
+    impressions_7d,  clicks_7d,  spend_7d,  sales_7d,  purchases_7d,  acos_7d,  cvr_7d
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    p30.campaign_id, p30.campaign_name,
+    -- Map Amazon API classification names to weekly_placement_performance CHECK values
+    CASE p30.placement_classification
+      WHEN 'Top of Search on-Amazon' THEN 'Top of Search'
+      WHEN 'Other on-Amazon'         THEN 'Rest of Search'
+      WHEN 'Detail Page on-Amazon'   THEN 'Product Page'
+    END,
+    COALESCE(p30.impressions, 0), COALESCE(p30.clicks, 0), COALESCE(p30.spend, 0),
+    COALESCE(p30.sales_30d,  0),  COALESCE(p30.purchases_30d, 0), p30.acos_30d, p30.cvr_30d,
+    COALESCE(p7.impressions, 0),  COALESCE(p7.clicks,  0),  COALESCE(p7.spend,  0),
+    COALESCE(p7.sales_7d,  0),    COALESCE(p7.purchases_7d,  0),  p7.acos_7d,  p7.cvr_7d
+  FROM (
+    SELECT * FROM public.raw_placement_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '30day'
+      AND placement_classification IN (
+        'Top of Search on-Amazon', 'Other on-Amazon', 'Detail Page on-Amazon'
+      )
+      AND data_date = (
+        SELECT MAX(data_date) FROM public.raw_placement_reports
+        WHERE tenant_id = p_tenant_id AND report_type = '30day'
+      )
+  ) p30
+  LEFT JOIN (
+    SELECT * FROM public.raw_placement_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '7day'
+      AND data_date = (
+        SELECT MAX(data_date) FROM public.raw_placement_reports
+        WHERE tenant_id = p_tenant_id AND report_type = '7day'
+      )
+  ) p7 ON p30.campaign_id = p7.campaign_id
+      AND p30.placement_classification = p7.placement_classification
+  ON CONFLICT DO NOTHING;
+
+  -- 5. Mark snapshot completed
+  UPDATE public.weekly_snapshots
+  SET status = 'completed', completed_at = NOW()
+  WHERE id = p_snapshot_id AND tenant_id = p_tenant_id;
+
 END;
 $$;
 
@@ -1272,468 +1413,216 @@ CREATE VIEW public.view_placement_7_days WITH (security_invoker='true') AS
 
 
 --
+-- Name: weekly_campaign_performance; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_campaign_performance (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    campaign_status text,
+    portfolio_id text,
+    impressions_30d bigint DEFAULT 0,
+    clicks_30d bigint DEFAULT 0,
+    spend_30d numeric(10,2) DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    purchases_30d integer DEFAULT 0,
+    acos_30d numeric(5,2),
+    cvr_30d numeric(5,4),
+    impressions_7d bigint DEFAULT 0,
+    clicks_7d bigint DEFAULT 0,
+    spend_7d numeric(10,2) DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    purchases_7d integer DEFAULT 0,
+    acos_7d numeric(5,2),
+    cvr_7d numeric(5,4),
+    yesterday_impressions bigint DEFAULT 0,
+    yesterday_clicks bigint DEFAULT 0,
+    yesterday_spend numeric(10,2) DEFAULT 0,
+    day_before_impressions bigint DEFAULT 0,
+    day_before_clicks bigint DEFAULT 0,
+    day_before_spend numeric(10,2) DEFAULT 0,
+    campaign_budget numeric(10,2),
+    top_of_search_impression_share numeric(5,2),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: weekly_placement_bids; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_placement_bids (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    campaign_status text,
+    portfolio_id text,
+    campaign_budget numeric(10,2),
+    placement_top_of_search integer DEFAULT 0,
+    placement_rest_of_search integer DEFAULT 0,
+    placement_product_page integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: weekly_placement_performance; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_placement_performance (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    placement_type text NOT NULL,
+    impressions_30d bigint DEFAULT 0,
+    clicks_30d bigint DEFAULT 0,
+    spend_30d numeric(10,2) DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    purchases_30d integer DEFAULT 0,
+    acos_30d numeric(5,2),
+    cvr_30d numeric(5,4),
+    impressions_7d bigint DEFAULT 0,
+    clicks_7d bigint DEFAULT 0,
+    spend_7d numeric(10,2) DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    purchases_7d integer DEFAULT 0,
+    acos_7d numeric(5,2),
+    cvr_7d numeric(5,4),
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT weekly_placement_type_check CHECK ((placement_type = ANY (ARRAY['Top of Search'::text, 'Rest of Search'::text, 'Product Page'::text])))
+);
+
+
+--
+-- Name: weekly_portfolios; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_portfolios (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    portfolio_id text NOT NULL,
+    portfolio_name text,
+    budget_amount numeric(10,2),
+    currency text DEFAULT 'USD'::text,
+    status text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: weekly_snapshots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_snapshots (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    year integer NOT NULL,
+    week_number integer NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    status text DEFAULT 'collecting'::text NOT NULL,
+    workflow_execution_id text,
+    created_at timestamp with time zone DEFAULT now(),
+    completed_at timestamp with time zone,
+    CONSTRAINT weekly_snapshots_status_check CHECK ((status = ANY (ARRAY['collecting'::text, 'processing'::text, 'completed'::text, 'failed'::text])))
+);
+
+
+--
 -- Name: view_placement_optimization_report; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on') AS
- WITH all_placements AS (
-         SELECT 'Top of Search on-Amazon'::text AS original_name,
-            'Placement Top'::text AS normalized_name,
+ WITH placement_types AS (
+         SELECT 'Top of Search'::text AS wpt,
+            'Placement Top'::text AS normalized,
             1 AS sort_order
         UNION ALL
-         SELECT 'Other on-Amazon'::text,
+         SELECT 'Rest of Search'::text,
             'Placement Rest Of Search'::text,
             2
         UNION ALL
-         SELECT 'Detail Page on-Amazon'::text,
+         SELECT 'Product Page'::text,
             'Placement Product Page'::text,
             3
-        ), latest_campaign_reports AS (
-         SELECT t.id,
-            t.report_id,
-            t.report_name,
-            t.report_type,
-            t.data_date,
-            t.campaign_id,
-            t.campaign_name,
-            t.campaign_status,
-            t.campaign_budget_amount,
-            t.portfolio_id,
-            t.impressions,
-            t.clicks,
-            t.spend,
-            t.purchases_1d,
-            t.sales_1d,
-            t.purchases_7d,
-            t.sales_7d,
-            t.purchases_14d,
-            t.sales_14d,
-            t.purchases_30d,
-            t.sales_30d,
-            t.top_of_search_impression_share,
-            t.ctr,
-            t.cpc,
-            t.acos_1d,
-            t.acos_7d,
-            t.acos_14d,
-            t.acos_30d,
-            t.cvr_1d,
-            t.cvr_7d,
-            t.cvr_14d,
-            t.cvr_30d,
-            t.created_at,
-            t.updated_at,
-            t.tenant_id,
-            t.campaign_budget_type,
-            t.campaign_budget_currency_code,
-            t.rn
-           FROM ( SELECT raw_campaign_reports.id,
-                    raw_campaign_reports.report_id,
-                    raw_campaign_reports.report_name,
-                    raw_campaign_reports.report_type,
-                    raw_campaign_reports.data_date,
-                    raw_campaign_reports.campaign_id,
-                    raw_campaign_reports.campaign_name,
-                    raw_campaign_reports.campaign_status,
-                    raw_campaign_reports.campaign_budget_amount,
-                    raw_campaign_reports.portfolio_id,
-                    raw_campaign_reports.impressions,
-                    raw_campaign_reports.clicks,
-                    raw_campaign_reports.spend,
-                    raw_campaign_reports.purchases_1d,
-                    raw_campaign_reports.sales_1d,
-                    raw_campaign_reports.purchases_7d,
-                    raw_campaign_reports.sales_7d,
-                    raw_campaign_reports.purchases_14d,
-                    raw_campaign_reports.sales_14d,
-                    raw_campaign_reports.purchases_30d,
-                    raw_campaign_reports.sales_30d,
-                    raw_campaign_reports.top_of_search_impression_share,
-                    raw_campaign_reports.ctr,
-                    raw_campaign_reports.cpc,
-                    raw_campaign_reports.acos_1d,
-                    raw_campaign_reports.acos_7d,
-                    raw_campaign_reports.acos_14d,
-                    raw_campaign_reports.acos_30d,
-                    raw_campaign_reports.cvr_1d,
-                    raw_campaign_reports.cvr_7d,
-                    raw_campaign_reports.cvr_14d,
-                    raw_campaign_reports.cvr_30d,
-                    raw_campaign_reports.created_at,
-                    raw_campaign_reports.updated_at,
-                    raw_campaign_reports.tenant_id,
-                    raw_campaign_reports.campaign_budget_type,
-                    raw_campaign_reports.campaign_budget_currency_code,
-                    row_number() OVER (PARTITION BY raw_campaign_reports.tenant_id, raw_campaign_reports.campaign_id, raw_campaign_reports.report_type ORDER BY raw_campaign_reports.data_date DESC) AS rn
-                   FROM public.raw_campaign_reports) t
-          WHERE (t.rn = 1)
-        ), latest_placement_reports AS (
-         SELECT t.id,
-            t.report_name,
-            t.report_type,
-            t.data_date,
-            t.campaign_id,
-            t.campaign_name,
-            t.campaign_status,
-            t.placement_classification,
-            t.placement_type,
-            t.impressions,
-            t.clicks,
-            t.spend,
-            t.purchases_7d,
-            t.sales_7d,
-            t.purchases_14d,
-            t.sales_14d,
-            t.purchases_30d,
-            t.sales_30d,
-            t.ctr,
-            t.cpc,
-            t.acos_7d,
-            t.acos_14d,
-            t.acos_30d,
-            t.cvr_7d,
-            t.cvr_14d,
-            t.cvr_30d,
-            t.created_at,
-            t.updated_at,
-            t.tenant_id,
-            t.report_id,
-            t.rn
-           FROM ( SELECT raw_placement_reports.id,
-                    raw_placement_reports.report_name,
-                    raw_placement_reports.report_type,
-                    raw_placement_reports.data_date,
-                    raw_placement_reports.campaign_id,
-                    raw_placement_reports.campaign_name,
-                    raw_placement_reports.campaign_status,
-                    raw_placement_reports.placement_classification,
-                    raw_placement_reports.placement_type,
-                    raw_placement_reports.impressions,
-                    raw_placement_reports.clicks,
-                    raw_placement_reports.spend,
-                    raw_placement_reports.purchases_7d,
-                    raw_placement_reports.sales_7d,
-                    raw_placement_reports.purchases_14d,
-                    raw_placement_reports.sales_14d,
-                    raw_placement_reports.purchases_30d,
-                    raw_placement_reports.sales_30d,
-                    raw_placement_reports.ctr,
-                    raw_placement_reports.cpc,
-                    raw_placement_reports.acos_7d,
-                    raw_placement_reports.acos_14d,
-                    raw_placement_reports.acos_30d,
-                    raw_placement_reports.cvr_7d,
-                    raw_placement_reports.cvr_14d,
-                    raw_placement_reports.cvr_30d,
-                    raw_placement_reports.created_at,
-                    raw_placement_reports.updated_at,
-                    raw_placement_reports.tenant_id,
-                    raw_placement_reports.report_id,
-                    row_number() OVER (PARTITION BY raw_placement_reports.tenant_id, raw_placement_reports.campaign_id, raw_placement_reports.placement_classification, raw_placement_reports.report_type ORDER BY raw_placement_reports.data_date DESC) AS rn
-                   FROM public.raw_placement_reports) t
-          WHERE (t.rn = 1)
-        ), base_campaigns AS (
-         SELECT DISTINCT latest_placement_reports.tenant_id,
-            latest_placement_reports.campaign_id,
-            latest_placement_reports.campaign_name
-           FROM latest_placement_reports
-          WHERE ((latest_placement_reports.report_type = '30day'::text) AND (latest_placement_reports.placement_classification <> ALL (ARRAY['Off Amazon'::text, 'Rest of
-  Search'::text])))
-        ), campaign_placement_matrix AS (
-         SELECT bc.tenant_id,
-            bc.campaign_id,
-            bc.campaign_name,
-            ap.original_name AS placement_classification,
-            ap.normalized_name AS placement_type,
-            ap.sort_order
-           FROM (base_campaigns bc
-             CROSS JOIN all_placements ap)
-        ), cp_30d AS (
-         SELECT latest_campaign_reports.id,
-            latest_campaign_reports.report_id,
-            latest_campaign_reports.report_name,
-            latest_campaign_reports.report_type,
-            latest_campaign_reports.data_date,
-            latest_campaign_reports.campaign_id,
-            latest_campaign_reports.campaign_name,
-            latest_campaign_reports.campaign_status,
-            latest_campaign_reports.campaign_budget_amount,
-            latest_campaign_reports.portfolio_id,
-            latest_campaign_reports.impressions,
-            latest_campaign_reports.clicks,
-            latest_campaign_reports.spend,
-            latest_campaign_reports.purchases_1d,
-            latest_campaign_reports.sales_1d,
-            latest_campaign_reports.purchases_7d,
-            latest_campaign_reports.sales_7d,
-            latest_campaign_reports.purchases_14d,
-            latest_campaign_reports.sales_14d,
-            latest_campaign_reports.purchases_30d,
-            latest_campaign_reports.sales_30d,
-            latest_campaign_reports.top_of_search_impression_share,
-            latest_campaign_reports.ctr,
-            latest_campaign_reports.cpc,
-            latest_campaign_reports.acos_1d,
-            latest_campaign_reports.acos_7d,
-            latest_campaign_reports.acos_14d,
-            latest_campaign_reports.acos_30d,
-            latest_campaign_reports.cvr_1d,
-            latest_campaign_reports.cvr_7d,
-            latest_campaign_reports.cvr_14d,
-            latest_campaign_reports.cvr_30d,
-            latest_campaign_reports.created_at,
-            latest_campaign_reports.updated_at,
-            latest_campaign_reports.tenant_id,
-            latest_campaign_reports.campaign_budget_type,
-            latest_campaign_reports.campaign_budget_currency_code,
-            latest_campaign_reports.rn
-           FROM latest_campaign_reports
-          WHERE (latest_campaign_reports.report_type = '30day'::text)
-        ), cp_7d AS (
-         SELECT latest_campaign_reports.id,
-            latest_campaign_reports.report_id,
-            latest_campaign_reports.report_name,
-            latest_campaign_reports.report_type,
-            latest_campaign_reports.data_date,
-            latest_campaign_reports.campaign_id,
-            latest_campaign_reports.campaign_name,
-            latest_campaign_reports.campaign_status,
-            latest_campaign_reports.campaign_budget_amount,
-            latest_campaign_reports.portfolio_id,
-            latest_campaign_reports.impressions,
-            latest_campaign_reports.clicks,
-            latest_campaign_reports.spend,
-            latest_campaign_reports.purchases_1d,
-            latest_campaign_reports.sales_1d,
-            latest_campaign_reports.purchases_7d,
-            latest_campaign_reports.sales_7d,
-            latest_campaign_reports.purchases_14d,
-            latest_campaign_reports.sales_14d,
-            latest_campaign_reports.purchases_30d,
-            latest_campaign_reports.sales_30d,
-            latest_campaign_reports.top_of_search_impression_share,
-            latest_campaign_reports.ctr,
-            latest_campaign_reports.cpc,
-            latest_campaign_reports.acos_1d,
-            latest_campaign_reports.acos_7d,
-            latest_campaign_reports.acos_14d,
-            latest_campaign_reports.acos_30d,
-            latest_campaign_reports.cvr_1d,
-            latest_campaign_reports.cvr_7d,
-            latest_campaign_reports.cvr_14d,
-            latest_campaign_reports.cvr_30d,
-            latest_campaign_reports.created_at,
-            latest_campaign_reports.updated_at,
-            latest_campaign_reports.tenant_id,
-            latest_campaign_reports.campaign_budget_type,
-            latest_campaign_reports.campaign_budget_currency_code,
-            latest_campaign_reports.rn
-           FROM latest_campaign_reports
-          WHERE (latest_campaign_reports.report_type = '7day'::text)
-        ), cp_yst AS (
-         SELECT latest_campaign_reports.id,
-            latest_campaign_reports.report_id,
-            latest_campaign_reports.report_name,
-            latest_campaign_reports.report_type,
-            latest_campaign_reports.data_date,
-            latest_campaign_reports.campaign_id,
-            latest_campaign_reports.campaign_name,
-            latest_campaign_reports.campaign_status,
-            latest_campaign_reports.campaign_budget_amount,
-            latest_campaign_reports.portfolio_id,
-            latest_campaign_reports.impressions,
-            latest_campaign_reports.clicks,
-            latest_campaign_reports.spend,
-            latest_campaign_reports.purchases_1d,
-            latest_campaign_reports.sales_1d,
-            latest_campaign_reports.purchases_7d,
-            latest_campaign_reports.sales_7d,
-            latest_campaign_reports.purchases_14d,
-            latest_campaign_reports.sales_14d,
-            latest_campaign_reports.purchases_30d,
-            latest_campaign_reports.sales_30d,
-            latest_campaign_reports.top_of_search_impression_share,
-            latest_campaign_reports.ctr,
-            latest_campaign_reports.cpc,
-            latest_campaign_reports.acos_1d,
-            latest_campaign_reports.acos_7d,
-            latest_campaign_reports.acos_14d,
-            latest_campaign_reports.acos_30d,
-            latest_campaign_reports.cvr_1d,
-            latest_campaign_reports.cvr_7d,
-            latest_campaign_reports.cvr_14d,
-            latest_campaign_reports.cvr_30d,
-            latest_campaign_reports.created_at,
-            latest_campaign_reports.updated_at,
-            latest_campaign_reports.tenant_id,
-            latest_campaign_reports.campaign_budget_type,
-            latest_campaign_reports.campaign_budget_currency_code,
-            latest_campaign_reports.rn
-           FROM latest_campaign_reports
-          WHERE (latest_campaign_reports.report_type = 'yesterday'::text)
-        ), cp_db AS (
-         SELECT latest_campaign_reports.id,
-            latest_campaign_reports.report_id,
-            latest_campaign_reports.report_name,
-            latest_campaign_reports.report_type,
-            latest_campaign_reports.data_date,
-            latest_campaign_reports.campaign_id,
-            latest_campaign_reports.campaign_name,
-            latest_campaign_reports.campaign_status,
-            latest_campaign_reports.campaign_budget_amount,
-            latest_campaign_reports.portfolio_id,
-            latest_campaign_reports.impressions,
-            latest_campaign_reports.clicks,
-            latest_campaign_reports.spend,
-            latest_campaign_reports.purchases_1d,
-            latest_campaign_reports.sales_1d,
-            latest_campaign_reports.purchases_7d,
-            latest_campaign_reports.sales_7d,
-            latest_campaign_reports.purchases_14d,
-            latest_campaign_reports.sales_14d,
-            latest_campaign_reports.purchases_30d,
-            latest_campaign_reports.sales_30d,
-            latest_campaign_reports.top_of_search_impression_share,
-            latest_campaign_reports.ctr,
-            latest_campaign_reports.cpc,
-            latest_campaign_reports.acos_1d,
-            latest_campaign_reports.acos_7d,
-            latest_campaign_reports.acos_14d,
-            latest_campaign_reports.acos_30d,
-            latest_campaign_reports.cvr_1d,
-            latest_campaign_reports.cvr_7d,
-            latest_campaign_reports.cvr_14d,
-            latest_campaign_reports.cvr_30d,
-            latest_campaign_reports.created_at,
-            latest_campaign_reports.updated_at,
-            latest_campaign_reports.tenant_id,
-            latest_campaign_reports.campaign_budget_type,
-            latest_campaign_reports.campaign_budget_currency_code,
-            latest_campaign_reports.rn
-           FROM latest_campaign_reports
-          WHERE (latest_campaign_reports.report_type = 'dayBefore'::text)
-        ), pp_30d AS (
-         SELECT latest_placement_reports.id,
-            latest_placement_reports.report_name,
-            latest_placement_reports.report_type,
-            latest_placement_reports.data_date,
-            latest_placement_reports.campaign_id,
-            latest_placement_reports.campaign_name,
-            latest_placement_reports.campaign_status,
-            latest_placement_reports.placement_classification,
-            latest_placement_reports.placement_type,
-            latest_placement_reports.impressions,
-            latest_placement_reports.clicks,
-            latest_placement_reports.spend,
-            latest_placement_reports.purchases_7d,
-            latest_placement_reports.sales_7d,
-            latest_placement_reports.purchases_14d,
-            latest_placement_reports.sales_14d,
-            latest_placement_reports.purchases_30d,
-            latest_placement_reports.sales_30d,
-            latest_placement_reports.ctr,
-            latest_placement_reports.cpc,
-            latest_placement_reports.acos_7d,
-            latest_placement_reports.acos_14d,
-            latest_placement_reports.acos_30d,
-            latest_placement_reports.cvr_7d,
-            latest_placement_reports.cvr_14d,
-            latest_placement_reports.cvr_30d,
-            latest_placement_reports.created_at,
-            latest_placement_reports.updated_at,
-            latest_placement_reports.tenant_id,
-            latest_placement_reports.report_id,
-            latest_placement_reports.rn
-           FROM latest_placement_reports
-          WHERE (latest_placement_reports.report_type = '30day'::text)
-        ), pp_7d AS (
-         SELECT latest_placement_reports.id,
-            latest_placement_reports.report_name,
-            latest_placement_reports.report_type,
-            latest_placement_reports.data_date,
-            latest_placement_reports.campaign_id,
-            latest_placement_reports.campaign_name,
-            latest_placement_reports.campaign_status,
-            latest_placement_reports.placement_classification,
-            latest_placement_reports.placement_type,
-            latest_placement_reports.impressions,
-            latest_placement_reports.clicks,
-            latest_placement_reports.spend,
-            latest_placement_reports.purchases_7d,
-            latest_placement_reports.sales_7d,
-            latest_placement_reports.purchases_14d,
-            latest_placement_reports.sales_14d,
-            latest_placement_reports.purchases_30d,
-            latest_placement_reports.sales_30d,
-            latest_placement_reports.ctr,
-            latest_placement_reports.cpc,
-            latest_placement_reports.acos_7d,
-            latest_placement_reports.acos_14d,
-            latest_placement_reports.acos_30d,
-            latest_placement_reports.cvr_7d,
-            latest_placement_reports.cvr_14d,
-            latest_placement_reports.cvr_30d,
-            latest_placement_reports.created_at,
-            latest_placement_reports.updated_at,
-            latest_placement_reports.tenant_id,
-            latest_placement_reports.report_id,
-            latest_placement_reports.rn
-           FROM latest_placement_reports
-          WHERE (latest_placement_reports.report_type = '7day'::text)
+        ), campaign_week_matrix AS (
+         SELECT ws.tenant_id,
+            ws.week_id,
+            ws.start_date,
+            ws.end_date,
+            uniq.campaign_id,
+            uniq.campaign_name,
+            pt.wpt AS placement_type,
+            pt.normalized AS placement_normalized,
+            pt.sort_order
+           FROM ((public.weekly_snapshots ws
+             JOIN ( SELECT DISTINCT weekly_placement_performance.tenant_id,
+                    weekly_placement_performance.week_id,
+                    weekly_placement_performance.campaign_id,
+                    weekly_placement_performance.campaign_name
+                   FROM public.weekly_placement_performance) uniq ON (((ws.tenant_id = uniq.tenant_id) AND (ws.week_id = uniq.week_id))))
+             CROSS JOIN placement_types pt)
+          WHERE (ws.status = 'completed'::text)
         )
- SELECT cpm.campaign_name AS "Campaign",
-    COALESCE(po.portfolio_name, 'Unknown'::text) AS "Portfolio",
-    COALESCE(pb.campaign_budget, (0)::numeric) AS "Budget",
-    COALESCE(p30.clicks, 0) AS "Clicks",
-    round(COALESCE(p30.spend, (0)::numeric), 2) AS "Spend",
-    COALESCE(p30.purchases_30d, 0) AS "Orders",
+ SELECT cwm.campaign_name AS "Campaign",
+    COALESCE(wpf.portfolio_name, 'Unknown'::text) AS "Portfolio",
+    COALESCE(wb.campaign_budget, (0)::numeric) AS "Budget",
+    COALESCE(pp.clicks_30d, (0)::bigint) AS "Clicks",
+    round(COALESCE(pp.spend_30d, (0)::numeric), 2) AS "Spend",
+    COALESCE(pp.purchases_30d, 0) AS "Orders",
         CASE
-            WHEN (COALESCE(p30.clicks, 0) > 0) THEN round((((COALESCE(p30.purchases_30d, 0))::numeric / (p30.clicks)::numeric) * (100)::numeric), 2)
+            WHEN (COALESCE(pp.clicks_30d, (0)::bigint) > 0) THEN round((((COALESCE(pp.purchases_30d, 0))::numeric / (pp.clicks_30d)::numeric) * (100)::numeric), 2)
             ELSE (0)::numeric
         END AS "CVR",
+    COALESCE(pp.acos_30d, (0)::numeric) AS "ACoS",
+    COALESCE(pp.clicks_7d, (0)::bigint) AS "Clicks_7d",
+    round(COALESCE(pp.spend_7d, (0)::numeric), 2) AS "Spend_7d",
+    COALESCE(pp.purchases_7d, 0) AS "Orders_7d",
         CASE
-            WHEN (COALESCE(p30.sales_30d, (0)::numeric) > (0)::numeric) THEN round(((COALESCE(p30.spend, (0)::numeric) / p30.sales_30d) * (100)::numeric), 2)
-            ELSE (0)::numeric
-        END AS "ACoS",
-    COALESCE(p7.clicks, 0) AS "Clicks_7d",
-    round(COALESCE(p7.spend, (0)::numeric), 2) AS "Spend_7d",
-    COALESCE(p7.purchases_7d, 0) AS "Orders_7d",
-        CASE
-            WHEN (COALESCE(p7.clicks, 0) > 0) THEN round((((COALESCE(p7.purchases_7d, 0))::numeric / (p7.clicks)::numeric) * (100)::numeric), 2)
+            WHEN (COALESCE(pp.clicks_7d, (0)::bigint) > 0) THEN round((((COALESCE(pp.purchases_7d, 0))::numeric / (pp.clicks_7d)::numeric) * (100)::numeric), 2)
             ELSE (0)::numeric
         END AS "CVR_7d",
-        CASE
-            WHEN (COALESCE(p7.sales_7d, (0)::numeric) > (0)::numeric) THEN round(((COALESCE(p7.spend, (0)::numeric) / p7.sales_7d) * (100)::numeric), 2)
-            ELSE (0)::numeric
-        END AS "ACoS_7d",
-    (''::text || COALESCE(round(cdb.spend, 2), (0)::numeric)) AS "Spent DB Yesterday",
-    (''::text || COALESCE(round(cy.spend, 2), (0)::numeric)) AS "Spent Yesterday",
-    COALESCE(((c30.top_of_search_impression_share)::text || '%'::text), '0%'::text) AS "Last 30 days",
-    COALESCE(((c7.top_of_search_impression_share)::text || '%'::text), '0%'::text) AS "Last 7 days",
-    COALESCE(((cy.top_of_search_impression_share)::text || '%'::text), '0%'::text) AS "Yesterday",
-    cpm.placement_type AS "Placement Type",
-        CASE
-            WHEN (cpm.placement_type = 'Placement Top'::text) THEN COALESCE(pb.placement_top_of_search, 0)
-            WHEN (cpm.placement_type = 'Placement Rest Of Search'::text) THEN COALESCE(pb.placement_rest_of_search, 0)
-            WHEN (cpm.placement_type = 'Placement Product Page'::text) THEN COALESCE(pb.placement_product_page, 0)
+    COALESCE(pp.acos_7d, (0)::numeric) AS "ACoS_7d",
+    (''::text || COALESCE(round(cp.yesterday_spend, 2), (0)::numeric)) AS "Spent DB Yesterday",
+    (''::text || COALESCE(round(cp.yesterday_spend, 2), (0)::numeric)) AS "Spent Yesterday",
+    COALESCE(((cp.top_of_search_impression_share)::text || '%'::text), '0%'::text) AS "Last 30 days",
+    '0%'::text AS "Last 7 days",
+    '0%'::text AS "Yesterday",
+    cwm.placement_normalized AS "Placement Type",
+        CASE cwm.placement_type
+            WHEN 'Top of Search'::text THEN COALESCE(wb.placement_top_of_search, 0)
+            WHEN 'Rest of Search'::text THEN COALESCE(wb.placement_rest_of_search, 0)
+            WHEN 'Product Page'::text THEN COALESCE(wb.placement_product_page, 0)
             ELSE 0
         END AS "Increase bids by placement",
     0 AS "Changes in placement",
     ''::text AS "NOTES",
     ''::text AS "Empty1",
     ''::text AS "Empty2",
-    cpm.tenant_id,
-    cpm.campaign_id
-   FROM ((((((((campaign_placement_matrix cpm
-     LEFT JOIN pp_30d p30 ON (((cpm.campaign_id = p30.campaign_id) AND (cpm.tenant_id = p30.tenant_id) AND (cpm.placement_classification = p30.placement_classification))))
-     LEFT JOIN pp_7d p7 ON (((cpm.campaign_id = p7.campaign_id) AND (cpm.tenant_id = p7.tenant_id) AND (cpm.placement_classification = p7.placement_classification))))
-     LEFT JOIN cp_30d c30 ON (((cpm.campaign_id = c30.campaign_id) AND (cpm.tenant_id = c30.tenant_id))))
-     LEFT JOIN cp_7d c7 ON (((cpm.campaign_id = c7.campaign_id) AND (cpm.tenant_id = c7.tenant_id))))
-     LEFT JOIN cp_yst cy ON (((cpm.campaign_id = cy.campaign_id) AND (cpm.tenant_id = cy.tenant_id))))
-     LEFT JOIN cp_db cdb ON (((cpm.campaign_id = cdb.campaign_id) AND (cpm.tenant_id = cdb.tenant_id))))
-     LEFT JOIN public.placement_bids pb ON (((cpm.campaign_id = pb.campaign_id) AND (cpm.tenant_id = pb.tenant_id))))
-     LEFT JOIN public.portfolios po ON (((pb.portfolio_id = po.portfolio_id) AND (pb.tenant_id = po.tenant_id))))
-  ORDER BY cpm.campaign_name, cpm.sort_order;
+    cwm.tenant_id,
+    cwm.campaign_id,
+    cwm.week_id,
+    (cwm.start_date)::text AS date_range_start,
+    (cwm.end_date)::text AS date_range_end
+   FROM ((((campaign_week_matrix cwm
+     LEFT JOIN public.weekly_placement_performance pp ON (((cwm.tenant_id = pp.tenant_id) AND (cwm.week_id = pp.week_id) AND (cwm.campaign_id = pp.campaign_id) AND (cwm.placement_type = pp.placement_type))))
+     LEFT JOIN public.weekly_campaign_performance cp ON (((cwm.tenant_id = cp.tenant_id) AND (cwm.week_id = cp.week_id) AND (cwm.campaign_id = cp.campaign_id))))
+     LEFT JOIN public.weekly_placement_bids wb ON (((cwm.tenant_id = wb.tenant_id) AND (cwm.week_id = wb.week_id) AND (cwm.campaign_id = wb.campaign_id))))
+     LEFT JOIN public.weekly_portfolios wpf ON (((cwm.tenant_id = wpf.tenant_id) AND (cwm.week_id = wpf.week_id) AND (cp.portfolio_id = wpf.portfolio_id))))
+  ORDER BY cwm.week_id DESC, cwm.campaign_name, cwm.sort_order;
 
 
 --
@@ -1862,115 +1751,6 @@ CREATE VIEW public.view_usa_placement_data WITH (security_invoker='true') AS
 
 
 --
--- Name: weekly_campaign_performance; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_campaign_performance (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    campaign_id text NOT NULL,
-    campaign_name text,
-    campaign_status text,
-    portfolio_id text,
-    impressions_30d bigint DEFAULT 0,
-    clicks_30d bigint DEFAULT 0,
-    spend_30d numeric(10,2) DEFAULT 0,
-    sales_30d numeric(10,2) DEFAULT 0,
-    purchases_30d integer DEFAULT 0,
-    acos_30d numeric(5,2),
-    cvr_30d numeric(5,4),
-    impressions_7d bigint DEFAULT 0,
-    clicks_7d bigint DEFAULT 0,
-    spend_7d numeric(10,2) DEFAULT 0,
-    sales_7d numeric(10,2) DEFAULT 0,
-    purchases_7d integer DEFAULT 0,
-    acos_7d numeric(5,2),
-    cvr_7d numeric(5,4),
-    yesterday_impressions bigint DEFAULT 0,
-    yesterday_clicks bigint DEFAULT 0,
-    yesterday_spend numeric(10,2) DEFAULT 0,
-    day_before_impressions bigint DEFAULT 0,
-    day_before_clicks bigint DEFAULT 0,
-    day_before_spend numeric(10,2) DEFAULT 0,
-    campaign_budget numeric(10,2),
-    top_of_search_impression_share numeric(5,2),
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
---
--- Name: weekly_placement_bids; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_placement_bids (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    campaign_id text NOT NULL,
-    campaign_name text,
-    campaign_status text,
-    portfolio_id text,
-    campaign_budget numeric(10,2),
-    placement_top_of_search integer DEFAULT 0,
-    placement_rest_of_search integer DEFAULT 0,
-    placement_product_page integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
---
--- Name: weekly_placement_performance; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_placement_performance (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    campaign_id text NOT NULL,
-    campaign_name text,
-    placement_type text NOT NULL,
-    impressions_30d bigint DEFAULT 0,
-    clicks_30d bigint DEFAULT 0,
-    spend_30d numeric(10,2) DEFAULT 0,
-    sales_30d numeric(10,2) DEFAULT 0,
-    purchases_30d integer DEFAULT 0,
-    acos_30d numeric(5,2),
-    cvr_30d numeric(5,4),
-    impressions_7d bigint DEFAULT 0,
-    clicks_7d bigint DEFAULT 0,
-    spend_7d numeric(10,2) DEFAULT 0,
-    sales_7d numeric(10,2) DEFAULT 0,
-    purchases_7d integer DEFAULT 0,
-    acos_7d numeric(5,2),
-    cvr_7d numeric(5,4),
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT weekly_placement_type_check CHECK ((placement_type = ANY (ARRAY['Top of Search'::text, 'Rest of Search'::text, 'Product Page'::text])))
-);
-
-
---
--- Name: weekly_portfolios; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_portfolios (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    portfolio_id text NOT NULL,
-    portfolio_name text,
-    budget_amount numeric(10,2),
-    currency text DEFAULT 'USD'::text,
-    status text,
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
---
 -- Name: view_weekly_placement_report; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -2012,26 +1792,6 @@ CREATE VIEW public.view_weekly_placement_report WITH (security_invoker='on') AS
      LEFT JOIN public.weekly_campaign_performance cp ON (((pp.snapshot_id = cp.snapshot_id) AND (pp.campaign_id = cp.campaign_id))))
      LEFT JOIN public.weekly_placement_bids pb ON (((pp.snapshot_id = pb.snapshot_id) AND (pp.campaign_id = pb.campaign_id))))
      LEFT JOIN public.weekly_portfolios pf ON (((pp.snapshot_id = pf.snapshot_id) AND (cp.portfolio_id = pf.portfolio_id))));
-
-
---
--- Name: weekly_snapshots; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_snapshots (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    year integer NOT NULL,
-    week_number integer NOT NULL,
-    start_date date NOT NULL,
-    end_date date NOT NULL,
-    status text DEFAULT 'collecting'::text NOT NULL,
-    workflow_execution_id text,
-    created_at timestamp with time zone DEFAULT now(),
-    completed_at timestamp with time zone,
-    CONSTRAINT weekly_snapshots_status_check CHECK ((status = ANY (ARRAY['collecting'::text, 'processing'::text, 'completed'::text, 'failed'::text])))
-);
 
 
 --
@@ -3013,5 +2773,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict tN0clumcHhTQI28z8FWzwmzkoNSxCbWfEGMO0X2wvqZIwNSyBZj3ADEfk6HSAdb
+\unrestrict Hm7v69AlCM0LN5tZunQBUTIzq2McVD9raMA3hlD2jWNj2G9FesfJwvJfUHp4YDI
 
