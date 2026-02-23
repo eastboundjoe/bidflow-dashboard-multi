@@ -179,7 +179,7 @@ export function PlacementDataTable({
     () => [
       {
         accessorKey: "campaign_name",
-        size: 155,
+        size: 148,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -210,7 +210,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "portfolio_name",
-        size: 80,
+        size: 68,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -264,7 +264,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "spend",
-        size: 68,
+        size: 58,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -602,7 +602,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "placement_type",
-        size: 85,
+        size: 72,
         header: "Placement",
         cell: ({ row }) => {
           const placement = row.getValue("placement_type") as string;
@@ -617,7 +617,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "bid_adjustment",
-        size: 72,
+        size: 62,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -646,7 +646,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "changes_in_placement",
-        size: 75,
+        size: 65,
         header: ({ column }) => (
            <Button
             variant="ghost"
@@ -673,7 +673,7 @@ export function PlacementDataTable({
   const table = useReactTable({
     data: sortedData,
     columns,
-    defaultColumn: { size: 60, minSize: 50 },
+    defaultColumn: { size: 50, minSize: 44 },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -799,8 +799,8 @@ export function PlacementDataTable({
                           style={{ width: cell.column.getSize() }}
                           className={cn(
                             cell.column.id === "campaign_name"
-                              ? "px-2 py-1.5 sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/30 border-r border-slate-200 dark:border-slate-700"
-                              : "px-1 py-1"
+                              ? "px-2 py-1 sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/30 border-r border-slate-200 dark:border-slate-700"
+                              : "px-0.5 py-0.5"
                           )}>
                           {flexRender(
                             cell.column.columnDef.cell,
