@@ -150,6 +150,15 @@ export function SankeyChart({ data }: SankeyChartProps) {
         spend: raw[n.name]?.spend || 0
       }));
 
+    // Align AD SPEND node top edge with TOP leaf node top edge so paths
+    // originate at the same Y as the topmost destination band.
+    const adSpendNodeAlign = sankeyData.nodes.find((n: any) => n.name === "AD SPEND");
+    if (adSpendNodeAlign && leaves[0]) {
+      const nodeHeight = adSpendNodeAlign.y1 - adSpendNodeAlign.y0;
+      adSpendNodeAlign.y0 = leaves[0].node.y0;
+      adSpendNodeAlign.y1 = adSpendNodeAlign.y0 + nodeHeight;
+    }
+
     // Clear and setup SVG
     d3.select(svgRef.current).selectAll("*").remove();
     cacheRef.current = {};
@@ -279,7 +288,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     const adSpendNode = sankeyData.nodes.find((n: any) => n.name === "AD SPEND");
     if (adSpendNode) {
       const desc = g.append("g")
-        .attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 30})`)
+        .attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 40})`)
         .style("font-family", "inherit")
         .style("font-size", "11px")
         .style("font-weight", "500")
