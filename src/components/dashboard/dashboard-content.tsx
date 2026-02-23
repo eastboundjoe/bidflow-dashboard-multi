@@ -584,6 +584,11 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Ad Spend Flow</CardTitle>
+            {selectedWeek && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                {selectedWeek}{(() => { const w = weeks.find(x => x.id === selectedWeek); return w ? ` · ${w.startDate} – ${w.endDate}` : ""; })()}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -600,6 +605,11 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         <Card>
           <CardHeader>
             <CardTitle>Spend Distribution</CardTitle>
+            {selectedWeek && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                {selectedWeek}{(() => { const w = weeks.find(x => x.id === selectedWeek); return w ? ` · ${w.startDate} – ${w.endDate}` : ""; })()}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             {loading ? (

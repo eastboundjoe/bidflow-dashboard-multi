@@ -179,7 +179,7 @@ export function PlacementDataTable({
     () => [
       {
         accessorKey: "campaign_name",
-        size: 148,
+        size: 138,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -210,7 +210,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "portfolio_name",
-        size: 68,
+        size: 58,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -264,7 +264,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "spend",
-        size: 58,
+        size: 52,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -602,7 +602,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "placement_type",
-        size: 72,
+        size: 62,
         header: "Placement",
         cell: ({ row }) => {
           const placement = row.getValue("placement_type") as string;
@@ -617,7 +617,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "bid_adjustment",
-        size: 62,
+        size: 56,
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -646,7 +646,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "changes_in_placement",
-        size: 65,
+        size: 58,
         header: ({ column }) => (
            <Button
             variant="ghost"
@@ -673,7 +673,7 @@ export function PlacementDataTable({
   const table = useReactTable({
     data: sortedData,
     columns,
-    defaultColumn: { size: 50, minSize: 44 },
+    defaultColumn: { size: 44, minSize: 40 },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
