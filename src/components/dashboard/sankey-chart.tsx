@@ -15,6 +15,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [speed, setSpeed] = useState(2.0);
+  const [resetKey, setResetKey] = useState(0);
   const particlesRef = useRef<any[]>([]);
   const cacheRef = useRef<Record<string, { points: { x: number; y: number }[] }>>({});
   const animationRef = useRef<number | undefined>(undefined);
@@ -52,11 +53,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
   }, [data]);
 
   const handleReset = () => {
-    particlesRef.current = [];
-    elapsedRef.current = 0;
-    if (svgRef.current) {
-      d3.select(svgRef.current).selectAll(".p").remove();
-    }
+    setResetKey(k => k + 1);
   };
 
   useEffect(() => {
@@ -502,7 +499,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [placementData, speed]);
+  }, [placementData, speed, resetKey]);
 
   // Start animation only when section scrolls into view
   useEffect(() => {
