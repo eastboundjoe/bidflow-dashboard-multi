@@ -49,12 +49,12 @@ export default function HomePage() {
               >
                 Pricing
               </Link>
-              <Link href="/login">
-                <Button variant="outline" className="border-slate-300 hover:border-primary hover:text-primary font-medium">Log in</Button>
-              </Link>
-              <Link href="/signup">
-                <Button>Get Started</Button>
-              </Link>
+              <Button asChild variant="outline" className="border-slate-300 hover:border-primary hover:text-primary font-medium">
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Get Started</Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -75,16 +75,12 @@ export default function HomePage() {
           <strong className="text-slate-900 dark:text-slate-100">maximize your ROAS</strong>.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-          <Link href="/signup">
-            <Button size="lg" className="w-full sm:w-auto px-8 shadow-md">
-              Start Free Trial
-            </Button>
-          </Link>
-          <Link href="#features">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto px-8">
-              See How It Works
-            </Button>
-          </Link>
+          <Button asChild size="lg" className="w-full sm:w-auto px-8 shadow-md">
+            <Link href="/signup">Start Free Trial</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8">
+            <Link href="#features">See How It Works</Link>
+          </Button>
         </div>
         <p className="text-sm text-slate-500 mb-12">
           30-day free trial. No credit card required.
@@ -604,11 +600,9 @@ export default function HomePage() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Link href="/signup" className="w-full">
-                <Button className="w-full" variant="outline" size="lg">
-                  Start Free Trial
-                </Button>
-              </Link>
+              <Button asChild className="w-full" variant="outline" size="lg">
+                <Link href="/signup">Start Free Trial</Link>
+              </Button>
             </CardFooter>
           </Card>
 
@@ -643,11 +637,9 @@ export default function HomePage() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Link href="/signup" className="w-full">
-                <Button className="w-full" variant="outline" size="lg">
-                  Start Free Trial
-                </Button>
-              </Link>
+              <Button asChild className="w-full" variant="outline" size="lg">
+                <Link href="/signup">Start Free Trial</Link>
+              </Button>
             </CardFooter>
           </Card>
         </div>
@@ -705,11 +697,9 @@ export default function HomePage() {
             <p className="text-primary-foreground/90 mb-10 max-w-2xl mx-auto text-lg leading-relaxed">
               Stop leaving money on the table. Start your free trial and see exactly where your ad spend is winning — and where it&apos;s not.
             </p>
-            <Link href="/signup">
-              <Button size="lg" variant="secondary" className="px-10 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all">
-                Get Started Free
-              </Button>
-            </Link>
+            <Button asChild size="lg" variant="secondary" className="px-10 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all">
+              <Link href="/signup">Get Started Free</Link>
+            </Button>
             <p className="text-primary-foreground/70 text-sm mt-4">30-day free trial. No credit card required.</p>
           </div>
         </div>
