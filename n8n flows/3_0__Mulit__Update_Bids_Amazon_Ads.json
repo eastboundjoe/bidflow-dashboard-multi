@@ -1,0 +1,492 @@
+{
+  "name": "3.0 (Mulit) Update Bids Amazon Ads",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "481801ae-ca24-4b0c-9a85-43fe438dfa1b",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        300,
+        -240
+      ],
+      "id": "4bf67168-0ce1-4264-b36d-be3c0568ea48",
+      "name": "Webhook from BidFlow",
+      "webhookId": "78c65f32-d31a-4c4e-82fd-bb13eb1035ba"
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_ID",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -240
+      ],
+      "id": "3b074bb8-0ed1-408e-89a0-77bb856f72af",
+      "name": "Get Client ID (Doppler)",
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_SECRET",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        760,
+        -240
+      ],
+      "id": "2bc4cc72-2d56-42f1-891f-dfc6fa40c444",
+      "name": "Get Client Secret (Doppler)",
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Webhook from BidFlow').item.json.body.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -240
+      ],
+      "id": "1a1142ef-2232-4c6c-97cb-ec59cae4cfe8",
+      "name": "Get Tenant Profile ID",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT get_decrypted_refresh_token('{{ $node[\"Webhook from BidFlow\"].json.body.tenant_id }}') as refresh_token;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1140,
+        -240
+      ],
+      "id": "de29d42c-500e-4037-a88e-9e77b53a6399",
+      "name": "Decrypt Refresh Token",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amazon.com/auth/o2/token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $json.refresh_token }}"
+            },
+            {
+              "name": "client_id",
+              "value": "={{ $node[\"Get Client ID (Doppler)\"].json.value.raw }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $node[\"Get Client Secret (Doppler)\"].json.value.raw }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        -240
+      ],
+      "id": "7045d4fa-4939-4260-a721-7790a1478c5a",
+      "name": "Get Access Token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://advertising-api.amazon.com/sp/campaigns/list",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $node[\"Get Client ID (Doppler)\"].json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $node[\"Get Tenant Profile ID\"].json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.spcampaign.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.spcampaign.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"stateFilter\": { \"include\": [\"ENABLED\"] },\n  \"includeExtendedDataFields\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        -240
+      ],
+      "id": "23f36c82-8ac4-4bad-aa01-d979fa624c14",
+      "name": "Get Current Campaigns"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookBody = $('Webhook from BidFlow').item.json.body;\n  const changes = Array.isArray(webhookBody.changes) ? webhookBody.changes : [];\n\n  if (changes.length === 0) {\n    return [{ json: { message: 'No changes to process' } }];\n  }\n\n  const placementMap = {\n    'top':      'PLACEMENT_TOP',\n    'rest':     'PLACEMENT_REST_OF_SEARCH',\n    'product':  'PLACEMENT_PRODUCT_PAGE',\n    'business': 'SITE_AMAZON_BUSINESS'\n  };\n\n  const campaignUpdates = {};\n\n  changes.forEach(change => {\n    if (!change.campaignId) return;\n\n    const p = change.placement.toLowerCase();\n    const matchedKey = Object.keys(placementMap).find(k => p.includes(k));\n    if (!matchedKey) return;\n\n    const multiplier = parseInt(String(change.newMultiplier).replace('%', ''));\n    if (isNaN(multiplier)) return;\n\n    if (!campaignUpdates[change.campaignId]) {\n      campaignUpdates[change.campaignId] = {\n        campaignId: change.campaignId,\n        dynamicBidding: { placementBidding: [] }\n      };\n    }\n\n    const bids = campaignUpdates[change.campaignId].dynamicBidding.placementBidding;\n    const existingIdx = bids.findIndex(b => b.placement === placementMap[matchedKey]);\n    if (existingIdx >= 0) {\n      bids[existingIdx].percentage = multiplier;\n    } else {\n      bids.push({ placement: placementMap[matchedKey], percentage: multiplier });\n    }\n  });\n\n  const updates = Object.values(campaignUpdates).map(c => ({ json: c }));\n\n  if (updates.length === 0) {\n    return [{ json: { error: 'No valid updates prepared - check campaignId is not empty' } }];\n  }\n\n  return updates;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        -240
+      ],
+      "id": "51d14189-1e30-4598-8082-1245855a6824",
+      "name": "Match & Prepare Updates",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://advertising-api.amazon.com/sp/campaigns",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $node[\"Get Access Token\"].json.access_token }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $node[\"Get Client ID (Doppler)\"].json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $node[\"Get Tenant Profile ID\"].json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.spcampaign.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/vnd.spcampaign.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"campaigns\": [ {{ JSON.stringify($json) }} ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        -240
+      ],
+      "id": "8c1dbf7f-4256-4839-86b8-5e6dcd3c7684",
+      "name": "Update Amazon"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Multipliers updated successfully\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2200,
+        -240
+      ],
+      "id": "6835cbf7-72d5-472a-bfc5-f2cb7b56cdb5",
+      "name": "Final Response"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        500,
+        160
+      ],
+      "id": "2cf34ff8-8fcd-4ae3-b73f-520e43874bad",
+      "name": "When clicking ‘Test workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2adceec7-6c16-4e89-9ce1-bdf7ce184b3c",
+              "name": "tenant_id",
+              "value": "=a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+              "type": "string"
+            },
+            {
+              "id": "a80284a5-7215-40d8-9e24-a83485d02815",
+              "name": "week_id",
+              "value": "=2026-W03",
+              "type": "string"
+            },
+            {
+              "id": "69a460e8-d43e-4577-be3a-85f48b280ba0",
+              "name": "snapshot_id",
+              "value": "=0ff07e12-68dd-4d93-b9f8-95b76a8b639c",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        160
+      ],
+      "id": "85473781-95ab-41d9-9e47-2de2478c666f",
+      "name": "🧪 TEST DATA - REMOVE BEFORE PRODUCTION"
+    }
+  ],
+  "pinData": {
+    "Webhook from BidFlow": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.bidflow.app",
+            "x-real-ip": "103.161.61.79",
+            "x-forwarded-for": "103.161.61.79",
+            "x-forwarded-proto": "https",
+            "content-length": "336",
+            "sec-ch-ua-platform": "\"Android\"",
+            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+            "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?1",
+            "accept": "*/*",
+            "origin": "https://bidflow.app",
+            "sec-fetch-site": "same-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "https://bidflow.app/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "tenant_id": "a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+            "user_id": "a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+            "changes": [
+              {
+                "campaign": "Mindful Manual | 2 (Old 2019)",
+                "portfolio": "Mindfulness Game",
+                "placement": "Top of Search",
+                "currentMultiplier": "40",
+                "newMultiplier": "41",
+                "week": "2026-W08",
+                "campaignId": ""
+              }
+            ],
+            "timestamp": "2026-02-22T04:54:58.643Z"
+          },
+          "webhookUrl": "https://n8n.bidflow.app/webhook/481801ae-ca24-4b0c-9a85-43fe438dfa1b",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook from BidFlow": {
+      "main": [
+        [
+          {
+            "node": "Get Client ID (Doppler)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client ID (Doppler)": {
+      "main": [
+        [
+          {
+            "node": "Get Client Secret (Doppler)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client Secret (Doppler)": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant Profile ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant Profile ID": {
+      "main": [
+        [
+          {
+            "node": "Decrypt Refresh Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decrypt Refresh Token": {
+      "main": [
+        [
+          {
+            "node": "Get Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token": {
+      "main": [
+        [
+          {
+            "node": "Get Current Campaigns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Campaigns": {
+      "main": [
+        [
+          {
+            "node": "Match & Prepare Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match & Prepare Updates": {
+      "main": [
+        [
+          {
+            "node": "Update Amazon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Amazon": {
+      "main": [
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "🧪 TEST DATA - REMOVE BEFORE PRODUCTION",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 TEST DATA - REMOVE BEFORE PRODUCTION": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bdc95ff7-677c-4b70-9f4c-8fc169d5ed1f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fa4bcb378ee210d5f1fb5de6ab50587326b68defa808af6512b2ad539bf43873"
+  },
+  "id": "gc8mvJsxGjkgDZUf",
+  "tags": []
+}

@@ -1,0 +1,2595 @@
+{
+  "name": "2.0 (Mulit) Placement Data Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 1. Decompresses Gzip files.\n# 2. Filters data, labels reports. \n# 3. Stores them in Supabase \"raw_data\" tables, one by one.\n",
+        "height": 1504,
+        "width": 1648,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2200,
+        380
+      ],
+      "typeVersion": 1,
+      "id": "acead7eb-aea7-44c4-bc23-e8601711de6b",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "# Checks if reoprts are ready for download.",
+        "height": 576,
+        "width": 936,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1020,
+        560
+      ],
+      "typeVersion": 1,
+      "id": "6b8b6a90-b199-41c8-9bdb-6ed264a16863",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Client ID: SaaS app (doppler)\n## Client secret: SaaS app (doppler)\n\n## Refresh Token: Amazon Business Subscriber (supabase vault)\n# Checks if Access Token is Expired or Not\n",
+        "height": 560,
+        "width": 1500,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -680,
+        580
+      ],
+      "typeVersion": 1,
+      "id": "2f21fd94-e322-4a39-8c4f-8eb462316f82",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sync_staging_to_raw();",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4500,
+        1080
+      ],
+      "id": "77c632a7-2a69-4bd4-aadd-3a6a7bb59ecf",
+      "name": "Postgres",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate webhook payload\nconst payload = $input.first().json.body || $input.first().json;\n\nif (!payload.tenant_id) {\n  throw new Error('Missing required field: tenant_id');\n}\n\n// UUID validation\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (!uuidRegex.test(payload.tenant_id)) {\n  throw new Error('Invalid tenant_id format');\n}\n\n// Return validated data\nreturn [{\n  json: {\n    tenant_id: payload.tenant_id,\n    trigger_source: payload.trigger_source || 'unknown',\n    triggered_at: payload.timestamp || new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1640,
+        900
+      ],
+      "id": "122eb6b1-b3be-4cbc-ac0f-7a3f55930150",
+      "name": "Extract Tenant ID"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Extract Tenant ID').item.json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1220,
+        900
+      ],
+      "id": "6cf34380-c94f-420b-9ee1-b361cf291458",
+      "name": "Get Tenant",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f6b80bf4-2043-4eca-a98e-79b1b012ec04",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "active",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1040,
+        900
+      ],
+      "id": "2a93a033-1607-4c8e-b82f-08217799e180",
+      "name": "IF-Tenant Active"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT decrypted_secret as refresh_token\nFROM vault.decrypted_secrets\nWHERE id = (\n  SELECT vault_id_refresh_token \n  FROM public.credentials \n  WHERE tenant_id = '{{ $json.tenant_id }}'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -800,
+        880
+      ],
+      "id": "97640e1e-e751-43ea-801e-25814d765353",
+      "name": "SQL Decrypt Vault ID",
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "=PENDING"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('IF-Tenant Active').item.json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        900
+      ],
+      "id": "b96c6690-32bc-4f79-b74e-32c801d3b25a",
+      "name": "Find PENDING",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6735e3cc-e1f2-4a9a-af99-8cad54c7a6a4",
+              "name": "report_Id",
+              "value": "={{ $json.report_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6b7159a0-3672-407f-907a-36b9d52cbbd8",
+              "name": "tenant_id",
+              "value": "={{ $json.tenant_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1240,
+        900
+      ],
+      "id": "4cf8597a-d93f-4c58-b08c-794debf7c884",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "=https://advertising-api.amazon.com/reporting/reports/{{ $('Edit Fields').item.json.report_Id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Set Access Token').item.json.access_token }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-ClientId",
+              "value": "={{ $('Get Credentials (Doppler) APP-ID').item.json.value.raw }}"
+            },
+            {
+              "name": "Amazon-Advertising-API-Scope",
+              "value": "={{ $('Get Tenant').item.json.amazon_profile_id }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c7eef80a-737a-4f97-9e55-16527c1c73df",
+      "name": "Report Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1440,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "972f6f80-2b32-4182-8df9-59fdb646f5dc",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        900
+      ],
+      "id": "61211820-8c33-4dcf-ab7b-8320e79b938a",
+      "name": "COMPLETED"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "report_ledger",
+          "mode": "list",
+          "cachedResultName": "report_ledger"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $('Edit Fields').item.json.tenant_id }}",
+            "report_id": "={{ $json.reportId }}",
+            "status": "={{ $json.status }}",
+            "updated_at": "={{ $json.updatedAt }}",
+            "url_expires_at": "={{ $json.urlExpiresAt }}",
+            "url": "={{ $json.url }}",
+            "report_type": "={{ $('Report Status').item.json.configuration.reportTypeId }}",
+            "name": "={{ $('Find PENDING').item.json.name }}",
+            "created_at": "={{ $json.createdAt }}"
+          },
+          "matchingColumns": [
+            "report_id",
+            "tenant_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "report_id",
+              "displayName": "report_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "url_expires_at",
+              "displayName": "url_expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "report_type",
+              "displayName": "report_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "processed",
+              "displayName": "processed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "created_timestamp",
+              "displayName": "created_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1840,
+        760
+      ],
+      "id": "564fb187-ee11-4a82-95f1-d15329a5175a",
+      "name": "update",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1820,
+        1000
+      ],
+      "id": "c9de1529-c109-4a04-a27a-6dc9f7e39703",
+      "name": "Wait 1 hour",
+      "webhookId": "311114cf-fc76-44c1-8462-91f4ef8aa0b0",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        760
+      ],
+      "id": "a62a8e03-743e-45b8-aca4-a08673806c93",
+      "name": "Download Report"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2280,
+        760
+      ],
+      "id": "fb9f657a-4b50-4daf-a57b-3b20b7379dea",
+      "name": "Split In Batches"
+    },
+    {
+      "parameters": {
+        "outputPrefix": "={{ 'report_' + $json.name }}"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        2520,
+        760
+      ],
+      "id": "1d2fed4e-da18-4a3e-8ad4-39b1cb2e630b",
+      "name": "Decompress Gzip"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node — Enhanced Parse Report\n  // Handles binary/text JSON, normalizes values, and tags with reportType + reportName\n  const output = [];\n  // Determine report name/type from previous node\n  const reportName = $input.first().json.name || $json.name || '';\n  const tenantId = $input.first().json.tenant_id || $json.tenant_id;\n  let reportType = 'unknown';\n  // FIXED: Check yesterday/daybefore FIRST (before '7' which appears in dates)\n  if (reportName.toLowerCase().includes('yesterday')) reportType = 'yesterday';\n  else if (reportName.toLowerCase().includes('daybefore')) reportType = 'dayBefore';\n  else if (reportName.toLowerCase().includes('30')) reportType = '30day';\n  else if (reportName.toLowerCase().includes('7')) reportType = '7day';\n  // Helper: normalize numbers (null → 0, strings → float)\n  function toNum(val) {\n    if (val === null || val === undefined || val === '') return 0;\n    const n = Number(val);\n    return isNaN(n) ? 0 : n;\n  }\n  for (const item of items) {\n    let parsed;\n    // Case A: binary JSON (from compression node)\n    if (item.binary && Object.keys(item.binary).length) {\n      const firstBinKey = Object.keys(item.binary)[0];\n      const base64 = item.binary[firstBinKey].data;\n      const text = Buffer.from(base64, 'base64').toString('utf8');\n      try {\n        parsed = JSON.parse(text);\n      } catch (err) {\n        const trimmed = text.replace(/^\\uFEFF/, '');\n        try { parsed = JSON.parse(trimmed); } catch (e) { parsed = item.json || text; }\n      }\n    // Case B: plain JSON already in item.json\n    } else if (item.json) {\n      parsed = item.json;\n      if (typeof parsed === 'string') {\n        try { parsed = JSON.parse(parsed); } catch (e) { parsed = item.json; }\n      }\n    } else {\n      parsed = item.json || {};\n    }\n    // Normalize into output rows\n    if (Array.isArray(parsed)) {\n      for (const row of parsed) {\n        output.push({ json: {\n          ...row,\n          reportName,\n          reportType,\n          tenantId,\n          sales14d: toNum(row.sales14d),\n          spend: toNum(row.spend),\n          clicks: toNum(row.clicks),\n          impressions: toNum(row.impressions),\n          purchases14d: toNum(row.purchases14d),\n          acosClicks14d: toNum(row.acosClicks14d),\n          campaignBudgetAmount: toNum(row.campaignBudgetAmount),\n          topOfSearchImpressionShare: toNum(row.topOfSearchImpressionShare)\n        }});\n      }\n    } else {\n      output.push({ json: {\n        ...parsed,\n        reportName,\n        reportType,\n        tenantId,\n        sales14d: toNum(parsed.sales14d),\n        spend: toNum(parsed.spend),\n        clicks: toNum(parsed.clicks),\n        impressions: toNum(parsed.impressions),\n        purchases14d: toNum(parsed.purchases14d),\n        acosClicks14d: toNum(parsed.acosClicks14d),\n        campaignBudgetAmount: toNum(parsed.campaignBudgetAmount),\n        topOfSearchImpressionShare: toNum(parsed.topOfSearchImpressionShare)\n      }});\n    }\n  }\n  return output"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2740,
+        760
+      ],
+      "id": "c2869dcf-258a-4123-b291-37a4117519cc",
+      "name": "Parse Report"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  // Get values\n  const spend = parseFloat(item.json.spend) || 0;\n  const sales30d = parseFloat(item.json.sales30d) || 0;\n  const sales14d = parseFloat(item.json.sales14d) || 0;\n  const sales7d = parseFloat(item.json.sales7d) || 0;\n  const clicks = parseFloat(item.json.clicks) || 0;\n  const purchases30d = parseFloat(item.json.purchases30d) || 0;\n  const purchases14d = parseFloat(item.json.purchases14d) || 0;\n  const purchases7d = parseFloat(item.json.purchases7d) || 0;\n\n  // Calculate ACOS for different windows (as PERCENTAGE - multiply by 100)\n  const acos30d = sales30d > 0 ? ((spend / sales30d) * 100).toFixed(2) : '0.00';\n  const acos14d = sales14d > 0 ? ((spend / sales14d) * 100).toFixed(2) : '0.00';\n  const acos7d = sales7d > 0 ? ((spend / sales7d) * 100).toFixed(2) : '0.00';\n\n  // Calculate CVR for different windows (as DECIMAL - NO multiply by 100)\n  // ✅ FIXED: Store as decimal (0-1) not percentage (0-100)\n  const cvr30d = clicks > 0 ? (purchases30d / clicks).toFixed(4) : '0.0000';\n  const cvr14d = clicks > 0 ? (purchases14d / clicks).toFixed(4) : '0.0000';\n  const cvr7d = clicks > 0 ? (purchases7d / clicks).toFixed(4) : '0.0000';\n\n  return {\n    json: {\n      ...item.json,\n      acos30d: acos30d,\n      acos14d: acos14d,\n      acos7d: acos7d,\n      cvr30d: cvr30d,    // ✅ Now stores 0.0875 instead of 8.75\n      cvr14d: cvr14d,    // ✅ Now stores 0.0875 instead of 8.75\n      cvr7d: cvr7d       // ✅ Now stores 0.0875 instead of 8.75\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2920,
+        760
+      ],
+      "id": "ea68fdad-37a0-4c7a-85aa-2a581157cc30",
+      "name": "Report Type Identifier"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.reportName }}",
+                    "rightValue": "SP-Campaign-30Days",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "d795f9f1-e97b-472f-ad23-7d82f7b189a2"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1f07a665-8396-47da-b11f-4dfd2c6302e9",
+                    "leftValue": "={{ $json.reportName }}",
+                    "rightValue": "SP-Campaign-7Days",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3bb28e27-8a71-4d3a-b474-5869582c5771",
+                    "leftValue": "={{ $json.reportName }}",
+                    "rightValue": "SP-Campaign-Yesterday",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "465e243e-3e0d-4a8a-a9b3-cba86a615f31",
+                    "leftValue": "={{ $json.reportName }}",
+                    "rightValue": "SP-Campaign-DayBefore",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f9aad1e9-e063-4e08-aeb9-536d72b40f70",
+                    "leftValue": "={{ $json.reportName }}",
+                    "rightValue": "SP-Placement-30Days",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "785ea907-9ebf-440e-bae2-41e99659b6d4",
+                    "leftValue": "={{ $json.reportName }}",
+                    "rightValue": "SP-Placement-7Days",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3160,
+        700
+      ],
+      "id": "975d9072-018e-4726-b09f-c342c87b71cf",
+      "name": "Report Switch"
+    },
+    {
+      "parameters": {
+        "tableId": "staging_campaign_reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_name",
+              "fieldValue": "={{ $json.reportName }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.reportType }}"
+            },
+            {
+              "fieldId": "campaign_id",
+              "fieldValue": "={{ $json.campaignId }}"
+            },
+            {
+              "fieldId": "campaign_name",
+              "fieldValue": "={{ $json.campaignName }}"
+            },
+            {
+              "fieldId": "campaign_status",
+              "fieldValue": "={{ $json.campaignStatus }}"
+            },
+            {
+              "fieldId": "campaign_budget_amount",
+              "fieldValue": "={{ $json.campaignBudgetAmount }}"
+            },
+            {
+              "fieldId": "impressions",
+              "fieldValue": "={{ $json.impressions }}"
+            },
+            {
+              "fieldId": "clicks",
+              "fieldValue": "={{ $json.clicks }}"
+            },
+            {
+              "fieldId": "spend",
+              "fieldValue": "={{ $json.spend }}"
+            },
+            {
+              "fieldId": "top_of_search_impression_share",
+              "fieldValue": "={{ $json.topOfSearchImpressionShare }}"
+            },
+            {
+              "fieldId": "purchases_14d",
+              "fieldValue": "={{ $json.purchases14d }}"
+            },
+            {
+              "fieldId": "sales_14d",
+              "fieldValue": "={{ $json.sales14d }}"
+            },
+            {
+              "fieldId": "data_date",
+              "fieldValue": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "sales_7d",
+              "fieldValue": "={{ $json.sales7d }}"
+            },
+            {
+              "fieldId": "purchases_7d",
+              "fieldValue": "={{ $json.purchases7d }}"
+            },
+            {
+              "fieldId": "acos_7d",
+              "fieldValue": "={{ $json.acos7d }}"
+            },
+            {
+              "fieldId": "cvr_7d",
+              "fieldValue": "={{ $json.cvr7d }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $('Decompress Gzip').item.json.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        860
+      ],
+      "id": "eb3c164d-6180-46c3-8925-1a4a62f3fe75",
+      "name": "Campaign-7 Days",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "staging_campaign_reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_name",
+              "fieldValue": "={{ $json.reportName }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.reportType }}"
+            },
+            {
+              "fieldId": "data_date",
+              "fieldValue": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}"
+            },
+            {
+              "fieldId": "campaign_id",
+              "fieldValue": "={{ $json.campaignId }}"
+            },
+            {
+              "fieldId": "campaign_name",
+              "fieldValue": "={{ $json.campaignName }}"
+            },
+            {
+              "fieldId": "campaign_status",
+              "fieldValue": "={{ $json.campaignStatus }}"
+            },
+            {
+              "fieldId": "campaign_budget_amount",
+              "fieldValue": "={{ $json.campaignBudgetAmount }}"
+            },
+            {
+              "fieldId": "impressions",
+              "fieldValue": "={{ $json.impressions }}"
+            },
+            {
+              "fieldId": "clicks",
+              "fieldValue": "={{ $json.clicks }}"
+            },
+            {
+              "fieldId": "spend",
+              "fieldValue": "={{ $json.spend }}"
+            },
+            {
+              "fieldId": "top_of_search_impression_share",
+              "fieldValue": "={{ $json.topOfSearchImpressionShare }}"
+            },
+            {
+              "fieldId": "purchases_14d",
+              "fieldValue": "={{ $json.purchases14d }}"
+            },
+            {
+              "fieldId": "sales_14d",
+              "fieldValue": "={{ $json.sales14d }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "sales_30d",
+              "fieldValue": "={{ $json.sales30d }}"
+            },
+            {
+              "fieldId": "purchases_30d",
+              "fieldValue": "={{ $json.purchases30d }}"
+            },
+            {
+              "fieldId": "acos_30d",
+              "fieldValue": "={{ $json.acos30d }}"
+            },
+            {
+              "fieldId": "cvr_30d",
+              "fieldValue": "={{ $json.cvr30d }}"
+            },
+            {
+              "fieldId": "acos_14d",
+              "fieldValue": "={{ $json.acos14d }}"
+            },
+            {
+              "fieldId": "cvr_14d",
+              "fieldValue": "={{ $json.cvr14d }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $('Decompress Gzip').item.json.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        680
+      ],
+      "id": "4922e207-aba8-4423-935e-75b0775a3880",
+      "name": "Campaign-30 Days",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "staging_campaign_reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_name",
+              "fieldValue": "={{ $json.reportName }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.reportType }}"
+            },
+            {
+              "fieldId": "data_date",
+              "fieldValue": "={{ $json.date }}"
+            },
+            {
+              "fieldId": "campaign_id",
+              "fieldValue": "={{ $json.campaignId }}"
+            },
+            {
+              "fieldId": "campaign_name",
+              "fieldValue": "={{ $json.campaignName }}"
+            },
+            {
+              "fieldId": "campaign_status",
+              "fieldValue": "={{ $json.campaignStatus }}"
+            },
+            {
+              "fieldId": "campaign_budget_amount",
+              "fieldValue": "={{ $json.campaignBudgetAmount }}"
+            },
+            {
+              "fieldId": "impressions",
+              "fieldValue": "={{ $json.impressions }}"
+            },
+            {
+              "fieldId": "clicks",
+              "fieldValue": "={{ $json.clicks }}"
+            },
+            {
+              "fieldId": "spend",
+              "fieldValue": "={{ $json.spend }}"
+            },
+            {
+              "fieldId": "top_of_search_impression_share",
+              "fieldValue": "={{ $json.topOfSearchImpressionShare }}"
+            },
+            {
+              "fieldId": "purchases_14d",
+              "fieldValue": "={{ $json.purchases14d }}"
+            },
+            {
+              "fieldId": "sales_14d",
+              "fieldValue": "={{ $json.sales14d }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $('Decompress Gzip').item.json.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1040
+      ],
+      "id": "9091c074-abec-4397-9dbe-1c6c85e5acf6",
+      "name": "Campaign-DayBefore",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "staging_campaign_reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_name",
+              "fieldValue": "={{ $json.reportName }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.reportType }}"
+            },
+            {
+              "fieldId": "data_date",
+              "fieldValue": "={{ $json.date }}"
+            },
+            {
+              "fieldId": "campaign_id",
+              "fieldValue": "={{ $json.campaignId }}"
+            },
+            {
+              "fieldId": "campaign_name",
+              "fieldValue": "={{ $json.campaignName }}"
+            },
+            {
+              "fieldId": "campaign_status",
+              "fieldValue": "={{ $json.campaignStatus }}"
+            },
+            {
+              "fieldId": "campaign_budget_amount",
+              "fieldValue": "={{ $json.campaignBudgetAmount }}"
+            },
+            {
+              "fieldId": "impressions",
+              "fieldValue": "={{ $json.impressions }}"
+            },
+            {
+              "fieldId": "clicks",
+              "fieldValue": "={{ $json.clicks }}"
+            },
+            {
+              "fieldId": "spend",
+              "fieldValue": "={{ $json.spend }}"
+            },
+            {
+              "fieldId": "top_of_search_impression_share",
+              "fieldValue": "={{ $json.topOfSearchImpressionShare }}"
+            },
+            {
+              "fieldId": "purchases_14d",
+              "fieldValue": "={{ $json.purchases14d }}"
+            },
+            {
+              "fieldId": "sales_14d",
+              "fieldValue": "={{ $json.sales14d }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "=report_id",
+              "fieldValue": "={{ $('Decompress Gzip').item.json.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1240
+      ],
+      "id": "3a19bfb0-cc61-41b5-b077-3c07ce6cd42f",
+      "name": "Campaign-Yesterday",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "staging_placement_reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_name",
+              "fieldValue": "={{ $json.reportName }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.reportType }}"
+            },
+            {
+              "fieldId": "campaign_id",
+              "fieldValue": "={{ $json.campaignId }}"
+            },
+            {
+              "fieldId": "campaign_name",
+              "fieldValue": "={{ $json.campaignName }}"
+            },
+            {
+              "fieldId": "campaign_status",
+              "fieldValue": "={{ $json.campaignStatus }}"
+            },
+            {
+              "fieldId": "placement_type",
+              "fieldValue": "={{ $json.placementClassification }}"
+            },
+            {
+              "fieldId": "impressions",
+              "fieldValue": "={{ $json.impressions }}"
+            },
+            {
+              "fieldId": "clicks",
+              "fieldValue": "={{ $json.clicks }}"
+            },
+            {
+              "fieldId": "spend",
+              "fieldValue": "={{ $json.spend }}"
+            },
+            {
+              "fieldId": "purchases_14d",
+              "fieldValue": "={{ $json.purchases14d }}"
+            },
+            {
+              "fieldId": "sales_14d",
+              "fieldValue": "={{ $json.sales14d }}"
+            },
+            {
+              "fieldId": "purchases_30d",
+              "fieldValue": "={{ $json.purchases30d }}"
+            },
+            {
+              "fieldId": "sales_30d",
+              "fieldValue": "={{ $json.sales30d }}"
+            },
+            {
+              "fieldId": "data_date",
+              "fieldValue": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $('Decompress Gzip').first().json.report_id }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "acos_30d",
+              "fieldValue": "={{ $json.acos30d }}"
+            },
+            {
+              "fieldId": "cvr_30d",
+              "fieldValue": "={{ $json.cvr30d }}"
+            },
+            {
+              "fieldId": "acos_14d",
+              "fieldValue": "={{ $json.acos14d }}"
+            },
+            {
+              "fieldId": "cvr_14d",
+              "fieldValue": "={{ $json.cvr14d }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $('Decompress Gzip').item.json.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1420
+      ],
+      "id": "2029ec7e-d089-41ae-98bb-beb315f82dd6",
+      "name": "Placement-30 Days",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "staging_placement_reports",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "report_name",
+              "fieldValue": "={{ $json.reportName }}"
+            },
+            {
+              "fieldId": "report_type",
+              "fieldValue": "={{ $json.reportType }}"
+            },
+            {
+              "fieldId": "campaign_id",
+              "fieldValue": "={{ $json.campaignId }}"
+            },
+            {
+              "fieldId": "campaign_name",
+              "fieldValue": "={{ $json.campaignName }}"
+            },
+            {
+              "fieldId": "campaign_status",
+              "fieldValue": "={{ $json.campaignStatus }}"
+            },
+            {
+              "fieldId": "placement_type",
+              "fieldValue": "={{ $json.placementClassification }}"
+            },
+            {
+              "fieldId": "impressions",
+              "fieldValue": "={{ $json.impressions }}"
+            },
+            {
+              "fieldId": "clicks",
+              "fieldValue": "={{ $json.clicks }}"
+            },
+            {
+              "fieldId": "spend",
+              "fieldValue": "={{ $json.spend }}"
+            },
+            {
+              "fieldId": "purchases_14d",
+              "fieldValue": "={{ $json.purchases14d }}"
+            },
+            {
+              "fieldId": "sales_14d",
+              "fieldValue": "={{ $json.sales14d }}"
+            },
+            {
+              "fieldId": "purchases_7d",
+              "fieldValue": "={{ $json.purchases7d }}"
+            },
+            {
+              "fieldId": "sales_7d",
+              "fieldValue": "={{ $json.sales7d }}"
+            },
+            {
+              "fieldId": "data_date",
+              "fieldValue": "={{ new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}"
+            },
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $json.tenantId }}"
+            },
+            {
+              "fieldId": "acos_7d",
+              "fieldValue": "={{ $json.acos7d }}"
+            },
+            {
+              "fieldId": "cvr_7d",
+              "fieldValue": "={{ $json.cvr7d }}"
+            },
+            {
+              "fieldId": "report_id",
+              "fieldValue": "={{ $('Split In Batches').item.json.report_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        1620
+      ],
+      "id": "04b98569-8869-49a7-ba29-1675facd7ae5",
+      "name": "Placement-7 Days",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.report_id }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "processed",
+              "fieldValue": "=TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        680
+      ],
+      "id": "4ede6094-63a6-4fcb-a330-08a84757a0dd",
+      "name": "Update Processed_1",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.report_id }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "processed",
+              "fieldValue": "=TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        860
+      ],
+      "id": "580fb6d3-89c3-4e93-b5a5-b54b2dc9765b",
+      "name": "Update Processed_2",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.report_id }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "processed",
+              "fieldValue": "=TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        1040
+      ],
+      "id": "be9b6228-1870-42ba-8e2e-1095cf3ba724",
+      "name": "Update Processed_3",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.report_id }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "processed",
+              "fieldValue": "=TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        1240
+      ],
+      "id": "2e9ea327-47cd-4f9e-88cf-75db2ff1b198",
+      "name": "Update Processed_4",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.report_id }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "processed",
+              "fieldValue": "=TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        1420
+      ],
+      "id": "3194c619-4800-4926-a269-880f7ac572e6",
+      "name": "Update Processed_5",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "report_ledger",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "report_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.report_id }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('update').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "processed",
+              "fieldValue": "=TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3920,
+        1620
+      ],
+      "id": "49968615-a876-46dc-9f83-543a993477e7",
+      "name": "Update Processed_6",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jnmrwxdevwjahamdtvqf.supabase.co/functions/v1/create-weekly-snapshot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.value.raw }}"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $json.value.raw }}"
+            },
+            {
+              "name": "Name",
+              "value": "Content-Type"
+            },
+            {
+              "name": "Value",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=tenant_id",
+              "value": "={{ $('Webhook after Reports created').first().json.body.tenant_id }}"
+            },
+            {
+              "name": "week_id",
+              "value": "={{ $('Webhook after Reports created').first().json.body.week_id }}"
+            },
+            {
+              "name": "snapshot_id",
+              "value": "={{ $('Webhook after Reports created').first().json.body.snapshot_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5340,
+        1080
+      ],
+      "id": "2e1fdc72-73d4-45c8-be37-d3869968ea0e",
+      "name": "HTTP Request",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4680,
+        1080
+      ],
+      "id": "cc92efc7-1305-4317-bf33-d32172eec36a",
+      "name": "Wait 10sec",
+      "webhookId": "8a27fb1e-c0f4-47b4-a7ca-cff75165abe1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2adceec7-6c16-4e89-9ce1-bdf7ce184b3c",
+              "name": "tenant_id",
+              "value": "=a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+              "type": "string"
+            },
+            {
+              "id": "a80284a5-7215-40d8-9e24-a83485d02815",
+              "name": "week_id",
+              "value": "=2026-W03",
+              "type": "string"
+            },
+            {
+              "id": "69a460e8-d43e-4577-be3a-85f48b280ba0",
+              "name": "snapshot_id",
+              "value": "=0ff07e12-68dd-4d93-b9f8-95b76a8b639c",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1720,
+        1460
+      ],
+      "id": "65a7ea7c-fa27-4a63-b674-744d450f42c3",
+      "name": "🧪 TEST DATA - REMOVE BEFORE PRODUCTION"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuration\nconst BUFFER_MINUTES = 5; \n\n// 2. Get data from the current item ($json)\nconst data = $json;\n\nconst access_token_cache = data.access_token_cache;\nconst access_token_expires_at = data.access_token_expires_at;\nconst tenant_id = data.tenant_id;\n\n// 3. Logic\nconst now = new Date();\nconst expiryDate = access_token_expires_at ? new Date(access_token_expires_at) : null;\nconst bufferTimeMs = BUFFER_MINUTES * 60 * 1000;\n\n// A token is valid ONLY if it exists AND expires more than 5 mins from now\nconst hasToken = !!access_token_cache;\nconst isExpired = !expiryDate || (expiryDate.getTime() - now.getTime()) < bufferTimeMs;\nconst isValid = hasToken && !isExpired;\n\n// 4. Return result using your workflow's specific variable names\nreturn {\n  isValid: isValid,\n  needsNewToken: !isValid, \n  cachedToken: isValid ? access_token_cache : null, \n  tenant_id: tenant_id,\n  debug_info: {\n    now: now.toISOString(),\n    expires_at: access_token_expires_at || 'null',\n    time_left_minutes: expiryDate ? Math.round((expiryDate.getTime() - now.getTime()) / 60000) : 0\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        880
+      ],
+      "id": "42d7f041-1704-4be7-91b1-d330dcf20f1c",
+      "name": "Check Token Validity1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f6b80bf4-2043-4eca-a98e-79b1b012ec04",
+              "leftValue": "={{ $json.needsNewToken === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -100,
+        880
+      ],
+      "id": "f7b862ad-f090-43ee-b0c5-d122cf9335da",
+      "name": "IF-Access Token1",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('IF-Tenant Active').item.json.tenant_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        880
+      ],
+      "id": "f7a033d2-cf37-41be-9c0d-d787e5c67714",
+      "name": "Get Access Token",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amazon.com/auth/o2/token",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "refresh_token"
+            },
+            {
+              "name": "refresh_token",
+              "value": "={{ $('SQL Decrypt Vault ID').item.json.refresh_token }}"
+            },
+            {
+              "name": "client_id",
+              "value": "={{ $('Get Credentials (Doppler) APP-ID').item.json.value.raw }}"
+            },
+            {
+              "name": "client_secret",
+              "value": "={{ $json.value.raw }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        640
+      ],
+      "id": "c5d171a6-15a9-47b9-abef-46ee839958e3",
+      "name": "Get Access Token SP-API (n8n app)1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Get Access Token').first().json.tenant_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "access_token_cache",
+              "fieldValue": "={{ $json.access_token }}"
+            },
+            {
+              "fieldId": "access_token_expires_at",
+              "fieldValue": "={{ new Date(Date.now() + ($json.expires_in * 1000)).toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        660,
+        640
+      ],
+      "id": "31ad02fe-667d-4d67-b159-e919b19bec43",
+      "name": "Save Token to Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fdOBVfvzPzpH4mNx",
+          "name": "Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d59d544f-b30e-415d-8d3b-3d6287f43c5d",
+              "name": "access_token",
+              "value": "={{ $json.access_token_cache }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        900
+      ],
+      "id": "fc237d5f-a748-4538-b037-f1fdfbd311d9",
+      "name": "Set Access Token"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    access_token_cache: $input.first().json.cachedToken\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        900
+      ],
+      "id": "c7328106-c359-4adc-881d-fddf217ea8df",
+      "name": "Use Cached Token"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "32328f48-51f5-4123-b693-af5455d3b29c",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1900,
+        900
+      ],
+      "id": "e63f1c97-fb4a-42b1-85c9-d7dde702f428",
+      "name": "Webhook after Reports created",
+      "webhookId": "32328f48-51f5-4123-b693-af5455d3b29c",
+      "notes": "THis will execute after the reports are created from the 1 st flow. The first flow will send a web hook to the web site letting the cutomer know to reports have been created. Then this webflow will activate aned check if all reports have been created. When all 6 reports are done it will then load the data in to supabase to be refecrenced by the front end."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1960,
+        1460
+      ],
+      "id": "6f9b1986-6909-4a6b-a127-9ec80babf252",
+      "name": "When clicking ‘Test workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        4340,
+        1020
+      ],
+      "id": "295c70aa-b84a-41e9-9a6f-87dde0033cfe",
+      "name": "Merge",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_ID",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        -1420,
+        900
+      ],
+      "id": "a41f2951-e270-4afc-a809-62f1676eceee",
+      "name": "Get Credentials (Doppler) APP-ID",
+      "executeOnce": true,
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "APP_ADS_CLIENT_SECRET",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        200,
+        640
+      ],
+      "id": "d616080f-6e8a-49cc-a83f-ad8d5ef0aac7",
+      "name": "Get Credentials (Doppler) APP-SECRET",
+      "executeOnce": true,
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "SUPABASE_API_KEY_MULTI_TENANT",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        4880,
+        1080
+      ],
+      "id": "39e4c6ec-1330-4d17-85ef-c54496fd5ff3",
+      "name": "Get Credentials (Doppler) SUPABASE-KEY",
+      "executeOnce": true,
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "retrieve",
+        "project": "n8n-amazon",
+        "config": "dev",
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-doppler-secrets.doppler",
+      "typeVersion": 1,
+      "position": [
+        5120,
+        1080
+      ],
+      "id": "4af6416b-1ff9-447d-a73f-8a2328a709f5",
+      "name": "Get Credentials (Doppler) SUPABASE-SECRET",
+      "executeOnce": true,
+      "credentials": {
+        "dopplerApi": {
+          "id": "Ag7hx0mcInz0Qv14",
+          "name": "Doppler account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook after Reports created": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "content-type": "application/json",
+            "user-agent": "axios/1.7.4",
+            "content-length": "202",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "host": "localhost:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "tenant_id": "a5828a7e-30ea-4263-9c9c-c344f616fd9d",
+            "week_id": "2026-W03",
+            "snapshot_id": "1738d805-e337-48fe-9251-4bef231f251e",
+            "trigger_source": "flow_1_completion",
+            "timestamp": "2026-01-18T11:21:38.005Z"
+          },
+          "webhookUrl": "https://n8n.bidflow.app/webhook/32328f48-51f5-4123-b693-af5455d3b29c",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Extract Tenant ID": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) APP-ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tenant": {
+      "main": [
+        [
+          {
+            "node": "IF-Tenant Active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF-Tenant Active": {
+      "main": [
+        [
+          {
+            "node": "SQL Decrypt Vault ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "SQL Decrypt Vault ID": {
+      "main": [
+        [
+          {
+            "node": "Get Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find PENDING": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Report Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Status": {
+      "main": [
+        [
+          {
+            "node": "COMPLETED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "COMPLETED": {
+      "main": [
+        [
+          {
+            "node": "update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 1 hour",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update": {
+      "main": [
+        [
+          {
+            "node": "Download Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Report": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Decompress Gzip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Gzip": {
+      "main": [
+        [
+          {
+            "node": "Parse Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report": {
+      "main": [
+        [
+          {
+            "node": "Report Type Identifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Type Identifier": {
+      "main": [
+        [
+          {
+            "node": "Report Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Switch": {
+      "main": [
+        [
+          {
+            "node": "Campaign-30 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Campaign-7 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Campaign-DayBefore",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Campaign-Yesterday",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Placement-30 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Placement-7 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign-7 Days": {
+      "main": [
+        [
+          {
+            "node": "Update Processed_2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign-30 Days": {
+      "main": [
+        [
+          {
+            "node": "Update Processed_1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign-DayBefore": {
+      "main": [
+        [
+          {
+            "node": "Update Processed_3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign-Yesterday": {
+      "main": [
+        [
+          {
+            "node": "Update Processed_4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Placement-30 Days": {
+      "main": [
+        [
+          {
+            "node": "Update Processed_5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Placement-7 Days": {
+      "main": [
+        [
+          {
+            "node": "Update Processed_6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Processed_1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Processed_2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Update Processed_3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Update Processed_4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Update Processed_5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Update Processed_6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Wait 10sec",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 hour": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) APP-ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 10sec": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) SUPABASE-KEY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 TEST DATA - REMOVE BEFORE PRODUCTION": {
+      "main": [
+        []
+      ]
+    },
+    "Check Token Validity1": {
+      "main": [
+        [
+          {
+            "node": "IF-Access Token1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF-Access Token1": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) APP-SECRET",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Use Cached Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token": {
+      "main": [
+        [
+          {
+            "node": "Check Token Validity1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Access Token SP-API (n8n app)1": {
+      "main": [
+        [
+          {
+            "node": "Save Token to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Token to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Set Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Cached Token": {
+      "main": [
+        [
+          {
+            "node": "Set Access Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Access Token": {
+      "main": [
+        [
+          {
+            "node": "Find PENDING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook after Reports created": {
+      "main": [
+        [
+          {
+            "node": "Extract Tenant ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "🧪 TEST DATA - REMOVE BEFORE PRODUCTION",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Credentials (Doppler) APP-SECRET": {
+      "main": [
+        [
+          {
+            "node": "Get Access Token SP-API (n8n app)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Credentials (Doppler) APP-ID": {
+      "main": [
+        [
+          {
+            "node": "Get Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Credentials (Doppler) SUPABASE-KEY": {
+      "main": [
+        [
+          {
+            "node": "Get Credentials (Doppler) SUPABASE-SECRET",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Credentials (Doppler) SUPABASE-SECRET": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "927a4963-615e-4264-a5be-b858370f95f9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fa4bcb378ee210d5f1fb5de6ab50587326b68defa808af6512b2ad539bf43873"
+  },
+  "id": "ugNKTBLn6c24OM0o",
+  "tags": []
+}
