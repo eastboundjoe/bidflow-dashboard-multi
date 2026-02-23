@@ -1597,12 +1597,34 @@
     },
     {
       "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT populate_weekly_tables(\n  '{{ $('Webhook after Reports created').first().json.body.tenant_id }}'::uuid,\n  '{{ $('Webhook after Reports created').first().json.body.week_id }}',\n  '{{ $('Webhook after Reports created').first().json.body.snapshot_id }}'::uuid\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4590,
+        1080
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Populate Weekly Tables",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "q0BXcAnQ79DNM71b",
+          "name": "Supabase Amazon Data (multi-tenant)"
+        }
+      }
+    },
+    {
+      "parameters": {
         "amount": 10
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        4680,
+        4800,
         1080
       ],
       "id": "cc92efc7-1305-4317-bf33-d32172eec36a",
@@ -2378,6 +2400,17 @@
       ]
     },
     "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Populate Weekly Tables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Populate Weekly Tables": {
       "main": [
         [
           {
