@@ -179,11 +179,12 @@ export function PlacementDataTable({
     () => [
       {
         accessorKey: "campaign_name",
+        size: 155,
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Campaign
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -209,11 +210,12 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "portfolio_name",
+        size: 80,
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Portfolio
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -231,7 +233,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Budget
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -248,7 +250,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Clicks<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -262,11 +264,12 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "spend",
+        size: 68,
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Spend<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -284,7 +287,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             ROAS<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -313,7 +316,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Orders<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -331,7 +334,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             CVR<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -349,7 +352,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             ACoS<br/>30d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -378,7 +381,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Clicks<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -392,11 +395,12 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "spend_7d",
+        size: 68,
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Spend<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -414,7 +418,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             ROAS<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -447,7 +451,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Orders<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -465,7 +469,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             CVR<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -483,7 +487,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             ACoS<br/>7d
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -512,7 +516,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             DB<br/>Yest
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -530,7 +534,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Spent<br/>Yest
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -548,7 +552,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             LAST<br/>30D
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -566,7 +570,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             LAST<br/>7D
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -584,7 +588,7 @@ export function PlacementDataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             YEST
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -598,6 +602,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "placement_type",
+        size: 85,
         header: "Placement",
         cell: ({ row }) => {
           const placement = row.getValue("placement_type") as string;
@@ -612,11 +617,12 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "bid_adjustment",
+        size: 72,
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-8 px-2 uppercase tracking-wider"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 h-6 px-1 uppercase tracking-wider"
           >
             Multiplier
             <ArrowUpDown className="ml-2 h-3 w-3" />
@@ -640,6 +646,7 @@ export function PlacementDataTable({
       },
       {
         accessorKey: "changes_in_placement",
+        size: 75,
         header: ({ column }) => (
            <Button
             variant="ghost"
@@ -666,6 +673,7 @@ export function PlacementDataTable({
   const table = useReactTable({
     data: sortedData,
     columns,
+    defaultColumn: { size: 60, minSize: 50 },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -749,7 +757,15 @@ export function PlacementDataTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-slate-100 dark:border-slate-800 hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-slate-50 dark:bg-slate-800/50 px-2 h-10">
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className={cn(
+                      "bg-slate-50 dark:bg-slate-800/50 h-8",
+                      header.column.id === "campaign_name"
+                        ? "px-2 sticky left-0 z-20 border-r border-slate-200 dark:border-slate-700"
+                        : "px-1"
+                    )}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -773,12 +789,19 @@ export function PlacementDataTable({
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(
-                        "border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors",
+                        "group border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors",
                         isNewCampaign && idx > 0 && "border-t-2 border-t-primary/10"
                       )}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="px-2 py-2">
+                        <TableCell
+                          key={cell.id}
+                          style={{ width: cell.column.getSize() }}
+                          className={cn(
+                            cell.column.id === "campaign_name"
+                              ? "px-2 py-1.5 sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/30 border-r border-slate-200 dark:border-slate-700"
+                              : "px-1 py-1"
+                          )}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
