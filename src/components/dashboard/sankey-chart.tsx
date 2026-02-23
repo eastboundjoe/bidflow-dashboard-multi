@@ -778,35 +778,19 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                 {roas.toFixed(2)}x
               </div>
               <div className="text-xs font-medium text-muted-foreground mt-0.5">Return on Ad Spend</div>
-              <div className="mt-4 px-3 py-3 bg-muted/40 rounded-xl border border-border/50 text-left">
-                <p className="text-[12px] font-bold text-foreground mb-2.5 flex items-center gap-2">
-                  <span className="text-base">🤖</span> The Ad Machine Analogy
+              <div className="mt-4 px-3 py-3 bg-muted/30 rounded-lg border border-border/50">
+                <p className="text-sm leading-relaxed text-muted-foreground font-medium">
+                  For every <span className="font-bold text-foreground">$1.00</span> you spend, you get <span className={`font-bold ${roas >= 1 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>${roas.toFixed(2)}</span> back in sales.
                 </p>
-                <div className="space-y-2 text-[11px] leading-relaxed text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <span className="shrink-0">🟢</span>
-                    <span>You put <span className="font-bold text-foreground">$1.00</span> into the machine.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="shrink-0">⚙️</span>
-                    <span>The machine works (Amazon Ads).</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="shrink-0">💰</span>
-                    <span>It spits out <span className={`font-bold ${roas >= 1 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>${roas.toFixed(2)}</span> in total sales.</span>
-                  </div>
-                </div>
-                <div className="mt-3 pt-2.5 border-t border-border/40">
-                  <p className="text-[10px] text-muted-foreground/90 italic font-medium">
-                    {roas > 1 
-                      ? `Result: You walk away with $${(roas - 1).toFixed(2)} more than your $1.00.` 
-                      : roas < 1 && roas > 0
-                      ? `Result: You walk away with $${(1 - roas).toFixed(2)} less than your $1.00.`
-                      : roas === 1
-                      ? `Result: You walk away with exactly what you put in.`
-                      : "No data to calculate results."}
-                  </p>
-                </div>
+                <p className="text-xs mt-1.5 text-muted-foreground/80 italic font-medium">
+                  {roas > 1 
+                    ? `(Your $1.00 plus $${(roas - 1).toFixed(2)} more)` 
+                    : roas < 1 && roas > 0
+                    ? `(You get $${(1 - roas).toFixed(2)} less than your $1.00 back)`
+                    : roas === 1
+                    ? `(You break even on your spend)`
+                    : ""}
+                </p>
               </div>
             </>
           );
