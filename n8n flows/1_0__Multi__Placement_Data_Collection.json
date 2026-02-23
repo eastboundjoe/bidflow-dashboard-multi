@@ -1069,7 +1069,7 @@
         "url": "http://localhost:5678/webhook/32328f48-51f5-4123-b693-af5455d3b29c",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"tenant_id\": \"{{ $('Calculate Week ID').first().json.tenant_id }}\",\n  \"week_id\": \"{{ $('Calculate Week ID').first().json.week_id }}\",\n  \"snapshot_id\": \"{{ $('Create Weekly Snapshot').first().json.id }}\",\n  \"trigger_source\": \"flow_1_completion\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "jsonBody": "={\n  \"tenant_id\": \"{{ $('Calculate Week ID').first().json.tenant_id }}\",\n  \"week_id\": \"{{ $('Calculate Week ID').first().json.week_id }}\",\n  \"snapshot_id\": \"{{ $('Create Weekly Snapshot').first().json.id }}\",\n  \"email\": \"{{ $('Webhook from Vercel.com').item.json.body.email }}\",\n  \"trigger_source\": \"flow_1_completion\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",

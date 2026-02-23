@@ -73,7 +73,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Validate webhook payload\nconst payload = $input.first().json.body || $input.first().json;\n\nif (!payload.tenant_id) {\n  throw new Error('Missing required field: tenant_id');\n}\n\n// UUID validation\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (!uuidRegex.test(payload.tenant_id)) {\n  throw new Error('Invalid tenant_id format');\n}\n\n// Return validated data\nreturn [{\n  json: {\n    tenant_id: payload.tenant_id,\n    trigger_source: payload.trigger_source || 'unknown',\n    triggered_at: payload.timestamp || new Date().toISOString()\n  }\n}];"
+        "jsCode": "// Validate webhook payload - explicitly reference the Webhook node\nconst payload = $('Webhook after Reports created').item.json.body || $('Webhook after Reports created').item.json;\n\nif (!payload.tenant_id) {\n  throw new Error('Missing required field: tenant_id');\n}\n\n// UUID validation\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (!uuidRegex.test(payload.tenant_id)) {\n  throw new Error('Invalid tenant_id format');\n}\n\n// Return validated data\nreturn [{\n  json: {\n    tenant_id: payload.tenant_id,\n    trigger_source: payload.trigger_source || 'unknown',\n    triggered_at: payload.timestamp || new Date().toISOString()\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1548,24 +1548,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://jnmrwxdevwjahamdtvqf.supabase.co/functions/v1/create-weekly-snapshot",
+        "url": "https://bidflow.app/api/webhooks/collection-complete",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "Authorization",
-              "value": "=Bearer {{ $json.value.raw }}"
-            },
-            {
-              "name": "apikey",
-              "value": "={{ $json.value.raw }}"
-            },
-            {
-              "name": "Name",
-              "value": "Content-Type"
-            },
-            {
-              "name": "Value",
+              "name": "Content-Type",
               "value": "application/json"
             }
           ]
@@ -1574,7 +1562,7 @@
         "bodyParameters": {
           "parameters": [
             {
-              "name": "=tenant_id",
+              "name": "tenant_id",
               "value": "={{ $('Webhook after Reports created').first().json.body.tenant_id }}"
             },
             {
@@ -1584,6 +1572,14 @@
             {
               "name": "snapshot_id",
               "value": "={{ $('Webhook after Reports created').first().json.body.snapshot_id }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $('Webhook after Reports created').first().json.body.email }}"
+            },
+            {
+              "name": "status",
+              "value": "completed"
             }
           ]
         },

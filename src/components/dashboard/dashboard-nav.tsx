@@ -99,7 +99,10 @@ export function DashboardNav({ user }: DashboardNavProps) {
       }
 
       setStatus((prev) => ({ ...prev, lastCollectedAt: new Date(), collectedThisWeek: true }));
-      toast.success("Data collection started successfully!");
+      toast.success(
+        "Reports requested! Amazon is processing them now. This takes about an hour. We'll email you when your data is ready.",
+        { duration: 8000 }
+      );
     } catch (error) {
       console.error("Error collecting data:", error);
       toast.error(error instanceof Error ? error.message : "Failed to trigger data collection");
