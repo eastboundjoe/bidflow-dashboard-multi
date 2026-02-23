@@ -1,8 +1,5 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with API key from environment variables
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export interface EmailOptions {
   to: string;
   subject: string;
@@ -10,6 +7,15 @@ export interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
+  const apiKey = process.env.RESEND_API_KEY;
+  
+  if (!apiKey) {
+    console.error('RESEND_API_KEY is missing');
+    return { success: false, error: 'Configuration error: Missing Email API Key' };
+  }
+
+  const resend = new Resend(apiKey);
+
   try {
     const data = await resend.emails.send({
       from: 'BidFlow <notifications@bidflow.app>',
