@@ -653,11 +653,11 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
               <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider">sales</span>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">clicks</span>
             </div>
+            <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider text-right">→ sales</span>
             <div className="flex flex-col items-center">
               <span className="text-xs font-semibold text-red-500 uppercase tracking-wider">no sale</span>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">clicks</span>
             </div>
-            <span className="text-xs font-semibold text-blue-500 uppercase tracking-wider text-right">→ sales</span>
             <span className="text-xs font-semibold text-red-500 uppercase tracking-wider text-right">→ no sale</span>
           </div>
           {(() => {
@@ -686,11 +686,11 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                           <span className="text-xs font-bold tabular-nums text-blue-500">{pctSales}%</span>
                           <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksSales}</span>
                         </div>
+                        <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
                         <div className="flex flex-col items-center">
                           <span className="text-xs font-bold tabular-nums text-red-500">{pctNoSales}%</span>
                           <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-slate-100">{clicksNoSales}</span>
                         </div>
-                        <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(spendSales)}</div>
                         <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(spendNoSales)}</div>
                       </div>
                       <div className="h-1.5 mx-1 mb-1.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -710,10 +710,10 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                       <div className="flex flex-col items-center">
                         <span className="text-xs font-bold tabular-nums text-blue-500">{totalCS}</span>
                       </div>
+                      <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(totalSS)}</div>
                       <div className="flex flex-col items-center">
                         <span className="text-xs font-bold tabular-nums text-red-500">{totalCN}</span>
                       </div>
-                      <div className="text-right text-xs font-bold tabular-nums text-blue-500">${Math.round(totalSS)}</div>
                       <div className="text-right text-xs font-bold tabular-nums text-red-500">${Math.round(totalSN)}</div>
                     </div>
                   );
