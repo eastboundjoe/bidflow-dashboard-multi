@@ -764,16 +764,37 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
       </div>
 
       <div className="text-center pt-4 border-t border-border">
-        <div className={`text-3xl font-extrabold tracking-tight ${
-          stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 3
-            ? "text-green-600 dark:text-green-400"
-            : stats.totalSpend > 0 && stats.totalSales / stats.totalSpend > 2
-            ? "text-yellow-600 dark:text-yellow-400"
-            : "text-destructive"
-        }`}>
-          {stats.totalSpend > 0 ? (stats.totalSales / stats.totalSpend).toFixed(2) : "0.00"}x
-        </div>
-        <div className="text-xs font-medium text-muted-foreground mt-0.5">Return on Ad Spend</div>
+        {(() => {
+          const roas = stats.totalSpend > 0 ? stats.totalSales / stats.totalSpend : 0;
+          return (
+            <>
+              <div className={`text-3xl font-extrabold tracking-tight ${
+                roas > 3
+                  ? "text-green-600 dark:text-green-400"
+                  : roas > 2
+                  ? "text-yellow-600 dark:text-yellow-400"
+                  : "text-destructive"
+              }`}>
+                {roas.toFixed(2)}x
+              </div>
+              <div className="text-xs font-medium text-muted-foreground mt-0.5">Return on Ad Spend</div>
+              <div className="mt-3 px-2 py-2 bg-muted/30 rounded-lg border border-border/50">
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  For every <span className="font-bold text-foreground">$1.00</span> you spend, you get <span className={`font-bold ${roas >= 1 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>${roas.toFixed(2)}</span> back in sales.
+                </p>
+                <p className="text-[10px] mt-1 text-muted-foreground/80 italic">
+                  {roas > 1 
+                    ? `(Your $1.00 plus $${(roas - 1).toFixed(2)} more)` 
+                    : roas < 1 && roas > 0
+                    ? `(You get $${(1 - roas).toFixed(2)} less than your $1.00 back)`
+                    : roas === 1
+                    ? `(You break even on your spend)`
+                    : ""}
+                </p>
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );
