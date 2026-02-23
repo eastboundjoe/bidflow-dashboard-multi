@@ -192,7 +192,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     const routeLayer = g.append("g")
       .attr("fill", "none")
       .attr("stroke-opacity", 1)
-      .attr("stroke", "#cbd5e1")
+      .attr("stroke", "#efefef")
       .selectAll("path")
       .data(routes)
       .join("path")
