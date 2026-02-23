@@ -792,6 +792,34 @@ export function SpendFlowChart({ data }: { data: PlacementData[] }) {
                     : ""}
                 </p>
               </div>
+
+              {/* Money Breakdown Grid */}
+              <div className="mt-4 rounded-xl border border-border/60 overflow-hidden bg-card/50">
+                <table className="w-full text-[11px] border-collapse">
+                  <thead>
+                    <tr className="bg-muted/50 border-b border-border/60">
+                      <th className="px-3 py-2 text-left font-semibold text-muted-foreground uppercase tracking-wider">Ad Spend</th>
+                      <th className="px-3 py-2 text-right font-semibold text-muted-foreground uppercase tracking-wider">Revenue</th>
+                      <th className="px-3 py-2 text-right font-semibold text-muted-foreground uppercase tracking-wider">Net Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {[1, 100, 1000].map((amount) => {
+                      const revenue = amount * roas;
+                      const profit = revenue - amount;
+                      return (
+                        <tr key={amount} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-3 py-2 text-left font-bold text-foreground/80">${amount.toLocaleString()}</td>
+                          <td className="px-3 py-2 text-right font-bold text-blue-500">${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className={`px-3 py-2 text-right font-bold ${profit >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+                            {profit >= 0 ? "+" : ""}${profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </>
           );
         })()}
