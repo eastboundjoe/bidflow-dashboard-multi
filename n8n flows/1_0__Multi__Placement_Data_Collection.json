@@ -54,10 +54,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -760,
-        1760
+        -2500,
+        5940
       ],
-      "id": "f490dc15-0a7f-47ca-9021-68ba7c808698",
+      "id": "e7c5fefc-48af-46db-acce-876564b3bf47",
       "name": "Edit Fields",
       "alwaysOutputData": true
     },
@@ -95,13 +95,13 @@
         "jsonBody": "={\n  \"name\": \"SP-Campaign-Yesterday-{{ $('Edit Fields').item.json.today }}\",\n  \"startDate\": \"{{ $('Edit Fields').item.json.yesterday }}\",\n  \"endDate\": \"{{ $('Edit Fields').item.json.yesterday }}\",\n  \"configuration\": {\n    \"adProduct\": \"SPONSORED_PRODUCTS\",\n    \"reportTypeId\": \"spCampaigns\",\n    \"timeUnit\": \"DAILY\",\n    \"format\": \"GZIP_JSON\",\n    \"groupBy\": [\"campaign\"],\n    \"columns\": [\n      \"campaignId\",\n      \"campaignName\",\n      \"campaignBudgetAmount\",\n      \"topOfSearchImpressionShare\",\n      \"campaignStatus\",\n      \"date\",\n      \"spend\"\n    ],\n \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
         "options": {}
       },
-      "id": "28fc8b45-816f-468e-9028-5b42e334a398",
+      "id": "c3e354b2-73c3-42fe-9488-7171b73e4bb4",
       "name": "Create Report-Yesterday",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        520,
-        940
+        -1220,
+        5120
       ]
     },
     {
@@ -138,13 +138,13 @@
         "jsonBody": "={\n    \"name\": \"SP-Campaign-DayBefore-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.dayBefore }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.dayBefore }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"DAILY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\"campaign\"],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignBudgetAmount\",\n        \"topOfSearchImpressionShare\",\n        \"campaignStatus\",\n        \"date\",\n        \"spend\"\n      ],\n      \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
         "options": {}
       },
-      "id": "da0e92c4-5cac-4990-9a8b-77933f3b1160",
+      "id": "980a68fe-ca75-4210-a5f2-26c24b5d6711",
       "name": "Create Report-DB Yesterday",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        520,
-        1120
+        -1220,
+        5300
       ]
     },
     {
@@ -181,13 +181,13 @@
         "jsonBody": "={\n  \"stateFilter\": {\n    \"include\": [\"ENABLED\"]\n  },\n  \"includeExtendedDataFields\": true\n}",
         "options": {}
       },
-      "id": "1be5e929-1b9c-47ef-b1a2-4bb06959d597",
+      "id": "d9e32d73-26ad-4de7-a461-97e507878836",
       "name": "Current Placement Bids",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        260,
-        1760
+        -1480,
+        5940
       ]
     },
     {
@@ -197,10 +197,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        500,
-        1760
+        -1240,
+        5940
       ],
-      "id": "74fd1472-bc8a-4cb1-a7f2-c0399b630140",
+      "id": "c5f3f31e-b819-4b09-972f-e597b6a41964",
       "name": "Placement Bids Code",
       "alwaysOutputData": false
     },
@@ -238,13 +238,13 @@
         "jsonBody": "={\n    \"name\": \"SP-Placement-30Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate30 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\",\n        \"campaignPlacement\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignStatus\",\n        \"campaignBudgetAmount\",\n        \"placementClassification\",\n        \"impressions\",\n        \"clicks\",\n        \"spend\",\n        \"purchases30d\",\n        \"sales30d\"\n      ]\n    }\n  }",
         "options": {}
       },
-      "id": "dd593739-073b-4d96-b24f-0c2433852815",
+      "id": "723ac409-d995-40e5-b341-d18d77c12891",
       "name": "Create Placement Report – 30 Days",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        520,
-        580
+        -1220,
+        4760
       ]
     },
     {
@@ -281,13 +281,13 @@
         "jsonBody": "={\n    \"name\": \"SP-Placement-7Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate7 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\",\n        \"campaignPlacement\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignStatus\",\n        \"placementClassification\",\n        \"clicks\",\n        \"spend\",\n        \"purchases7d\",\n        \"sales7d\"\n      ]\n    }\n  }",
         "options": {}
       },
-      "id": "e3a98f30-031b-497b-bffc-6c82c8e44da1",
+      "id": "c253a658-bf00-45bd-bb44-9ba0f4a6f92f",
       "name": "Create Placement Report – 7 Days",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        520,
-        760
+        -1220,
+        4940
       ]
     },
     {
@@ -297,10 +297,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        500,
-        1560
+        -1240,
+        5740
       ],
-      "id": "7239a30e-eec8-4369-b0d4-55c08fe571d1",
+      "id": "e2de453e-4d01-4246-b5f8-6b0f5b5190ff",
       "name": "Process Portfolios",
       "alwaysOutputData": false
     },
@@ -338,13 +338,13 @@
         "jsonBody": "={\n  \"stateFilter\": {\n    \"include\": [\"ENABLED\"]\n  },\n  \"includeExtendedDataFields\": true\n}",
         "options": {}
       },
-      "id": "1c0cfada-d637-4584-81d0-ea504e2ee3c5",
+      "id": "476b13b8-af2b-43c9-ba4d-2c2f07304f36",
       "name": "Get Portfolios",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        260,
-        1560
+        -1480,
+        5740
       ]
     },
     {
@@ -356,11 +356,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        80,
-        20
+        -1660,
+        4200
       ],
       "typeVersion": 1,
-      "id": "0ba21aed-779a-423e-b7fe-6505875ed2c8",
+      "id": "1a7a9f78-ca80-44ea-86ef-c160c23d112c",
       "name": "Sticky Note1"
     },
     {
@@ -370,10 +370,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        280,
-        580
+        -1460,
+        4760
       ],
-      "id": "ca8c70fb-a502-4d03-9a86-4f1fab838e7e",
+      "id": "50b9a7e7-9e8b-4db5-b285-a667e25cbe3b",
       "name": "Rate Limit1",
       "webhookId": "bc031fc9-a871-489a-bb1c-8caaf3b0114a"
     },
@@ -384,10 +384,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        280,
-        760
+        -1460,
+        4940
       ],
-      "id": "51d50a1d-3149-4ddc-bae4-a245b29d839c",
+      "id": "b356c44f-d372-4c8c-8b0b-b737af93ea63",
       "name": "Rate Limit2",
       "webhookId": "c30845e1-d248-4897-814a-d35a8d326e28"
     },
@@ -398,10 +398,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        280,
-        940
+        -1460,
+        5120
       ],
-      "id": "0e995e99-2eb4-4e0d-9a02-02a29350107b",
+      "id": "cdc97a40-c59e-4739-b117-9b058a9256fc",
       "name": "Rate Limit3",
       "webhookId": "b2fc052e-beb9-421f-b27d-5319449f2eaf"
     },
@@ -412,10 +412,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        280,
-        1120
+        -1460,
+        5300
       ],
-      "id": "4b619a0c-744b-4f7a-8876-23d18b932960",
+      "id": "ff89cfc6-af9c-49d9-bc1e-72e22d114d91",
       "name": "Rate Limit4",
       "webhookId": "33ec43a5-164a-46b6-8dfa-6d91361c197f"
     },
@@ -453,13 +453,13 @@
         "jsonBody": "= {\n    \"name\": \"SP-Campaign-30Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate30 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignBudgetAmount\",\n        \"impressions\",\n        \"clicks\",\n        \"spend\",\n        \"purchases30d\",\n        \"sales30d\",\n        \"purchases14d\",\n        \"sales14d\",\n        \"purchases7d\",\n        \"sales7d\",\n        \"topOfSearchImpressionShare\",\n        \"campaignStatus\"\n      ],\n      \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
         "options": {}
       },
-      "id": "ef35c8bb-43ac-4247-a852-d781c35b56d6",
+      "id": "c1948bb7-e558-481d-9fc9-bffa9005ff1e",
       "name": "Create Campaign Report-30 Days",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        280,
-        240
+        -1460,
+        4420
       ]
     },
     {
@@ -469,10 +469,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        280,
-        420
+        -1460,
+        4600
       ],
-      "id": "527b821f-b4e3-4d52-93ae-266914fb57f0",
+      "id": "4b1464bb-3c35-402d-b8b7-7c21d84fb2b8",
       "name": "Rate Limit0",
       "webhookId": "78096a1b-ef69-498b-a59a-da56ccbaa929"
     },
@@ -510,13 +510,13 @@
         "jsonBody": "={\n    \"name\": \"SP-Campaign-7Days-{{ $('Edit Fields').item.json.today }}\",\n    \"startDate\": \"{{ $('Edit Fields').item.json.startDate7 }}\",\n    \"endDate\": \"{{ $('Edit Fields').item.json.endDate }}\",\n    \"configuration\": {\n      \"adProduct\": \"SPONSORED_PRODUCTS\",\n      \"reportTypeId\": \"spCampaigns\",\n      \"timeUnit\": \"SUMMARY\",\n      \"format\": \"GZIP_JSON\",\n      \"groupBy\": [\n        \"campaign\"\n      ],\n      \"columns\": [\n        \"campaignId\",\n        \"campaignName\",\n        \"campaignBudgetAmount\",\n        \"impressions\",\n        \"clicks\",\n        \"spend\",\n        \"purchases7d\",\n        \"sales7d\",\n        \"purchases14d\",\n        \"sales14d\",\n        \"purchases30d\",\n        \"sales30d\",\n        \"topOfSearchImpressionShare\",\n        \"campaignStatus\"\n      ],\n      \"filters\": [\n        {\n          \"field\": \"campaignStatus\",\n          \"values\": [\n            \"ENABLED\"\n          ]\n        }\n      ]\n    }\n  }",
         "options": {}
       },
-      "id": "f52febd4-06aa-481d-8bf5-f5be1658bd43",
+      "id": "38601e73-9dd2-4ad5-9056-538ba0bf9c31",
       "name": "Create Campaign Report-7 Days",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        520,
-        420
+        -1220,
+        4600
       ]
     },
     {
@@ -528,11 +528,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        80,
-        1320
+        -1660,
+        5500
       ],
       "typeVersion": 1,
-      "id": "0ec2f9a2-7db1-43c3-93c6-1d2cff566055",
+      "id": "55bb6810-381c-4121-8556-cca471dd6204",
       "name": "Sticky Note3"
     },
     {
@@ -567,6 +567,10 @@
             {
               "fieldId": "tenant_id",
               "fieldValue": "={{ $('IF-Tenant Active').item.json.tenant_id }}"
+            },
+            {
+              "fieldId": "week_id",
+              "fieldValue": "={{ $('Create Weekly Snapshot').item.json.week_id }}"
             }
           ]
         }
@@ -574,10 +578,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        860,
-        240
+        -880,
+        4420
       ],
-      "id": "855c466a-5d54-4d41-b7a5-63fcf7f699ad",
+      "id": "4919fd92-50a4-4b11-9f3f-b8a49a5e744c",
       "name": "Report Ledger",
       "executeOnce": false,
       "credentials": {
@@ -614,10 +618,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -2920,
-        1760
+        -4660,
+        5940
       ],
-      "id": "c5953dc4-d4a3-46b6-b063-3949e1985219",
+      "id": "30f5632f-1d86-4d9e-9edb-3c9b6f2ebcba",
       "name": "IF-Tenant Active"
     },
     {
@@ -629,10 +633,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        -2720,
-        1960
+        -4460,
+        6140
       ],
-      "id": "93e42325-50d7-4bcb-beff-ab3a746cf7a1",
+      "id": "b0bc1c92-afab-4f18-9949-8e6a99100289",
       "name": "Respond to Webhook (account not active)"
     },
     {
@@ -651,10 +655,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -3080,
-        1760
+        -4820,
+        5940
       ],
-      "id": "239c1dfb-5571-4f93-a08f-ff78c02f4da2",
+      "id": "6aea0ca0-3e1e-4504-8e76-8a5987249787",
       "name": "Get Tenant",
       "credentials": {
         "supabaseApi": {
@@ -672,10 +676,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        -2720,
-        1740
+        -4460,
+        5920
       ],
-      "id": "163381b6-7fdc-438c-9bb4-1120d47a7e02",
+      "id": "6e1f96dc-8a52-4d8a-87af-a6d3188344bb",
       "name": "SQL Decrypt Vault ID",
       "credentials": {
         "postgres": {
@@ -693,11 +697,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2500,
-        1440
+        -4240,
+        5620
       ],
       "typeVersion": 1,
-      "id": "c4bdd90a-0414-47a3-9ab9-d550588863a8",
+      "id": "6041a274-2678-4661-84f7-1abb55a11677",
       "name": "Sticky Note2"
     },
     {
@@ -705,10 +709,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        740,
-        1760
+        -1000,
+        5940
       ],
-      "id": "df2e4e53-8d36-4e2d-a4fa-21c5e0d1f906",
+      "id": "21db6951-cdbd-45be-abce-540f65c800a5",
       "name": "Wait for Data to Update",
       "webhookId": "12fe16f8-3273-4b7e-91bf-a6c77c5017f2"
     },
@@ -856,10 +860,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        920,
-        1760
+        -820,
+        5940
       ],
-      "id": "f4e42e44-86e1-4bd7-8c24-1f7d11879dc7",
+      "id": "0e8a723d-7751-4dc6-9e36-bd8e8f7fdcf5",
       "name": "2. Update Current Placement Bids",
       "credentials": {
         "postgres": {
@@ -984,10 +988,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        740,
-        1560
+        -1000,
+        5740
       ],
-      "id": "4308bb36-7297-4008-b907-16af1b7a0c88",
+      "id": "530faafa-7bf2-4962-9564-deb07d147696",
       "name": "1. Update Current Portfolios",
       "credentials": {
         "postgres": {
@@ -1003,10 +1007,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3240,
-        1760
+        -4980,
+        5940
       ],
-      "id": "6a6f8a82-5495-4aee-a3a6-21dda6b603cc",
+      "id": "3d12bd8b-f82b-4cbc-99eb-8c35634ed260",
       "name": "Extract Tenant ID"
     },
     {
@@ -1018,10 +1022,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1640,
-        1760
+        -100,
+        5940
       ],
-      "id": "8677300a-93a4-4f65-aed6-70ef3852787a",
+      "id": "98c98fb2-54d6-4708-aac6-e61c7c2e417e",
       "name": "Respond to Webhook",
       "executeOnce": true,
       "notes": "This should send s reponse saying success of failure. To the front end user"
@@ -1035,10 +1039,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        -320,
-        1760
+        -2060,
+        5940
       ],
-      "id": "d75ffb1a-2c1c-4dbc-b5af-5ff93bb5f0f8",
+      "id": "17b6b850-a9c4-4d53-8d74-713c27d0674d",
       "name": "Create Weekly Snapshot",
       "credentials": {
         "postgres": {
@@ -1056,11 +1060,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -820,
-        1440
+        -2560,
+        5620
       ],
       "typeVersion": 1,
-      "id": "e5b7d0dd-f27a-47c6-a45a-2da42e0e36a2",
+      "id": "65d3c75b-67ef-4497-ac9b-f3f2458ef904",
       "name": "Sticky Note"
     },
     {
@@ -1075,10 +1079,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1420,
-        1760
+        -320,
+        5940
       ],
-      "id": "73a5feed-6586-4a32-8dff-ace632812999",
+      "id": "a810427b-b8e2-479f-a688-be328a2a1261",
       "name": "Trigger Flow 2",
       "executeOnce": true
     },
@@ -1135,10 +1139,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3100,
-        760
+        -4840,
+        4940
       ],
-      "id": "ddf1c47c-1f8b-44ca-b467-f0fe79809fea",
+      "id": "5166d732-6c9a-4fa3-a418-af3b67bcf76a",
       "name": "Edit Fields, Week43 (for testing)"
     },
     {
@@ -1146,10 +1150,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1180,
-        1760
+        -560,
+        5940
       ],
-      "id": "fbad9cd8-769d-4095-a91d-9192c9030882",
+      "id": "c6b662ce-fce2-4a00-b1af-74e13f815004",
       "name": "Wait 5sec",
       "webhookId": "f236727d-2ef6-42da-80de-1c5a1357e438"
     },
@@ -1160,10 +1164,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -540,
-        1760
+        -2280,
+        5940
       ],
-      "id": "41e7da70-84c1-4359-9f5f-b73a343ea50b",
+      "id": "46d6d6d6-8a10-4a0a-8308-de5fd530792b",
       "name": "Calculate Week ID"
     },
     {
@@ -1173,10 +1177,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2200,
-        1740
+        -3940,
+        5920
       ],
-      "id": "0e4c4fb6-a591-462a-8c8e-77ff8b1255d5",
+      "id": "7744809f-1a30-4b32-acf6-c91268c6eacf",
       "name": "Check Token Validity1",
       "executeOnce": true
     },
@@ -1208,10 +1212,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1980,
-        1740
+        -3720,
+        5920
       ],
-      "id": "e8b10c00-4054-4aed-a277-a0b6aa991181",
+      "id": "77c26ead-c704-4a95-88af-1213c4b32412",
       "name": "IF-Access Token1",
       "alwaysOutputData": false,
       "executeOnce": false
@@ -1232,10 +1236,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -2440,
-        1740
+        -4180,
+        5920
       ],
-      "id": "a2732ee7-1f00-45f9-b883-dc1d6a4d3ed2",
+      "id": "8479d4e8-5942-485d-b251-3faca676c60d",
       "name": "Get Access Token",
       "credentials": {
         "supabaseApi": {
@@ -1273,10 +1277,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -1280,
-        1520
+        -3020,
+        5700
       ],
-      "id": "dd27c220-8d3f-4ad2-84de-babe6744f3c3",
+      "id": "fac7a438-c1a6-4f25-ae82-b2056978a30b",
       "name": "Save Token to Supabase",
       "credentials": {
         "supabaseApi": {
@@ -1302,10 +1306,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1060,
-        1760
+        -2800,
+        5940
       ],
-      "id": "794d7584-9939-4287-bb5c-0221309df7ee",
+      "id": "17b763d2-404c-4033-8ae2-ffd2e19f72d4",
       "name": "Set Access Token",
       "alwaysOutputData": true
     },
@@ -1316,10 +1320,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1680,
-        1760
+        -3420,
+        5940
       ],
-      "id": "07a075bc-edec-44d3-9581-df9b710c016a",
+      "id": "10316f67-89f4-4335-8b49-cd8b1ff832c7",
       "name": "Use Cached Token"
     },
     {
@@ -1345,10 +1349,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3360,
-        740
+        -5100,
+        4920
       ],
-      "id": "538a1201-2086-484a-9870-31d06cf95826",
+      "id": "0eff3d89-432b-485f-8ec3-bcc5829e4e10",
       "name": "🧪 TEST DATA - REMOVE BEFORE PRODUCTION"
     },
     {
@@ -1361,10 +1365,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -3620,
-        1760
+        -5360,
+        5940
       ],
-      "id": "6b3fe956-648a-491f-9ea1-ca46e9f043ff",
+      "id": "9a445574-0b07-4a77-8267-c8d74de84238",
       "name": "Webhook from Vercel.com",
       "webhookId": "481801ae-ca24-4b0c-9a85-43fe438dfa1b"
     },
@@ -1379,10 +1383,10 @@
       "type": "n8n-nodes-doppler-secrets.doppler",
       "typeVersion": 1,
       "position": [
-        -3420,
-        1760
+        -5160,
+        5940
       ],
-      "id": "08578024-8834-47dc-9731-33d5d88d32a8",
+      "id": "600c33e8-d8c7-407e-a887-dfcef68f0d14",
       "name": "Get Credentials (Doppler) APP-ID",
       "executeOnce": true,
       "credentials": {
@@ -1403,10 +1407,10 @@
       "type": "n8n-nodes-doppler-secrets.doppler",
       "typeVersion": 1,
       "position": [
-        -1680,
-        1520
+        -3420,
+        5700
       ],
-      "id": "16ffe8ee-a19d-4081-a506-fa235f021a33",
+      "id": "cd790c9a-689c-4eb8-8a89-9489d51f645c",
       "name": "Get Credentials (Doppler) APP-SECRET",
       "executeOnce": true,
       "credentials": {
@@ -1446,10 +1450,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1480,
-        1520
+        -3220,
+        5700
       ],
-      "id": "67e5a0ee-6b73-4523-ad7c-88a4b11dc1f7",
+      "id": "9feb9e20-ecc1-47c6-972a-7ea233007371",
       "name": "Get Access Token SP-API (n8n app)"
     },
     {
@@ -1457,10 +1461,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -3580,
-        740
+        -5320,
+        4920
       ],
-      "id": "4595e908-808c-4c1e-8707-170698a11f3b",
+      "id": "187c15ee-a9af-4f99-bf89-fdc427210c63",
       "name": "When clicking ‘Test workflow’",
       "disabled": true
     }
@@ -1472,13 +1476,13 @@
           "headers": {
             "connection": "upgrade",
             "host": "n8n.bidflow.app",
-            "x-real-ip": "44.204.174.29",
-            "x-forwarded-for": "44.204.174.29",
+            "x-real-ip": "100.53.70.62",
+            "x-forwarded-for": "100.53.70.62",
             "x-forwarded-proto": "https",
             "content-length": "202",
             "content-type": "application/json",
-            "x-vercel-id": "sin1::lbn9q-1771725032235-247a859c4974",
-            "x-invocation-id": "sin1::lbn9q-1771725032235-247a859c4974",
+            "x-vercel-id": "sin1::b6c5b-1771830556105-5890b703b3e1",
+            "x-invocation-id": "sin1::b6c5b-1771830556105-5890b703b3e1",
             "accept": "*/*",
             "accept-language": "*",
             "sec-fetch-mode": "cors",
@@ -1492,7 +1496,7 @@
             "user_id": "a5828a7e-30ea-4263-9c9c-c344f616fd9d",
             "email": "joey@tryramenbomb.com",
             "trigger_source": "bidflow_ui",
-            "timestamp": "2026-02-22T01:50:33.243Z"
+            "timestamp": "2026-02-23T07:09:16.673Z"
           },
           "webhookUrl": "https://n8n.bidflow.app/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87",
           "executionMode": "production"
@@ -1946,11 +1950,6 @@
         ]
       ]
     },
-    "🧪 TEST DATA - REMOVE BEFORE PRODUCTION": {
-      "main": [
-        []
-      ]
-    },
     "When clicking ‘Test workflow’": {
       "main": [
         [
@@ -1971,7 +1970,7 @@
     "availableInMCP": false,
     "errorWorkflow": "vKcoz8TDF55wHGPo"
   },
-  "versionId": "6d43946b-f602-4b45-8580-c9cb2edea05d",
+  "versionId": "ca341b69-14a1-48cf-8535-9641cf73ca70",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "fa4bcb378ee210d5f1fb5de6ab50587326b68defa808af6512b2ad539bf43873"
