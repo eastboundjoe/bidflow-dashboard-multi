@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fp2ZBmoSgCFqtWzLGZDmk3v9L7prP3vEcbLLkC0PznfKTiVALJGQ6tasRuchf0w
+\restrict 0dZfvampXg64fyaTWvvpsE7iub4e2JR31Eo07dWPuzXPa5ZbINGvKAJTNLkqRdM
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -1426,6 +1426,239 @@ CREATE VIEW public.view_placement_7_days WITH (security_invoker='true') AS
 
 
 --
+-- Name: weekly_campaign_performance; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_campaign_performance (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    campaign_status text,
+    portfolio_id text,
+    impressions_30d bigint DEFAULT 0,
+    clicks_30d bigint DEFAULT 0,
+    spend_30d numeric(10,2) DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    purchases_30d integer DEFAULT 0,
+    acos_30d numeric(5,2),
+    cvr_30d numeric(5,4),
+    impressions_7d bigint DEFAULT 0,
+    clicks_7d bigint DEFAULT 0,
+    spend_7d numeric(10,2) DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    purchases_7d integer DEFAULT 0,
+    acos_7d numeric(5,2),
+    cvr_7d numeric(5,4),
+    yesterday_impressions bigint DEFAULT 0,
+    yesterday_clicks bigint DEFAULT 0,
+    yesterday_spend numeric(10,2) DEFAULT 0,
+    day_before_impressions bigint DEFAULT 0,
+    day_before_clicks bigint DEFAULT 0,
+    day_before_spend numeric(10,2) DEFAULT 0,
+    campaign_budget numeric(10,2),
+    top_of_search_impression_share numeric(5,2),
+    created_at timestamp with time zone DEFAULT now(),
+    top_of_search_impression_share_7d numeric(5,2),
+    top_of_search_impression_share_yesterday numeric(5,2)
+);
+
+
+--
+-- Name: weekly_placement_bids; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_placement_bids (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    campaign_status text,
+    portfolio_id text,
+    campaign_budget numeric(10,2),
+    placement_top_of_search integer DEFAULT 0,
+    placement_rest_of_search integer DEFAULT 0,
+    placement_product_page integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    last_changed_at_top timestamp with time zone,
+    last_changed_to_top integer,
+    last_changed_at_rest timestamp with time zone,
+    last_changed_to_rest integer,
+    last_changed_at_product timestamp with time zone,
+    last_changed_to_product integer
+);
+
+
+--
+-- Name: weekly_placement_performance; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_placement_performance (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    placement_type text NOT NULL,
+    impressions_30d bigint DEFAULT 0,
+    clicks_30d bigint DEFAULT 0,
+    spend_30d numeric(10,2) DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    purchases_30d integer DEFAULT 0,
+    acos_30d numeric(10,2),
+    cvr_30d numeric(10,4),
+    impressions_7d bigint DEFAULT 0,
+    clicks_7d bigint DEFAULT 0,
+    spend_7d numeric(10,2) DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    purchases_7d integer DEFAULT 0,
+    acos_7d numeric(10,2),
+    cvr_7d numeric(10,4),
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT weekly_placement_type_check CHECK ((placement_type = ANY (ARRAY['Top of Search'::text, 'Rest of Search'::text, 'Product Page'::text])))
+);
+
+
+--
+-- Name: weekly_portfolios; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_portfolios (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    portfolio_id text NOT NULL,
+    portfolio_name text,
+    budget_amount numeric(10,2),
+    currency text DEFAULT 'USD'::text,
+    status text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: weekly_snapshots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_snapshots (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    year integer NOT NULL,
+    week_number integer NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    status text DEFAULT 'collecting'::text NOT NULL,
+    workflow_execution_id text,
+    created_at timestamp with time zone DEFAULT now(),
+    completed_at timestamp with time zone,
+    CONSTRAINT weekly_snapshots_status_check CHECK ((status = ANY (ARRAY['collecting'::text, 'processing'::text, 'completed'::text, 'failed'::text])))
+);
+
+
+--
+-- Name: view_placement_optimization_report; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on') AS
+ WITH placement_types AS (
+         SELECT 'Top of Search'::text AS wpt,
+            'Placement Top'::text AS normalized,
+            1 AS sort_order
+        UNION ALL
+         SELECT 'Rest of Search'::text,
+            'Placement Rest Of Search'::text,
+            2
+        UNION ALL
+         SELECT 'Product Page'::text,
+            'Placement Product Page'::text,
+            3
+        ), campaign_week_matrix AS (
+         SELECT ws.tenant_id,
+            ws.week_id,
+            ws.start_date,
+            ws.end_date,
+            uniq.campaign_id,
+            uniq.campaign_name,
+            pt.wpt AS placement_type,
+            pt.normalized AS placement_normalized,
+            pt.sort_order
+           FROM ((public.weekly_snapshots ws
+             JOIN ( SELECT DISTINCT weekly_placement_performance.tenant_id,
+                    weekly_placement_performance.week_id,
+                    weekly_placement_performance.campaign_id,
+                    weekly_placement_performance.campaign_name
+                   FROM public.weekly_placement_performance) uniq ON (((ws.tenant_id = uniq.tenant_id) AND (ws.week_id = uniq.week_id))))
+             CROSS JOIN placement_types pt)
+          WHERE (ws.status = 'completed'::text)
+        )
+ SELECT cwm.campaign_name AS "Campaign",
+    COALESCE(wpf.portfolio_name, 'Unknown'::text) AS "Portfolio",
+    COALESCE(wb.campaign_budget, (0)::numeric) AS "Budget",
+    COALESCE(pp.clicks_30d, (0)::bigint) AS "Clicks",
+    round(COALESCE(pp.spend_30d, (0)::numeric), 2) AS "Spend",
+    COALESCE(pp.purchases_30d, 0) AS "Orders",
+        CASE
+            WHEN (COALESCE(pp.clicks_30d, (0)::bigint) > 0) THEN round((((COALESCE(pp.purchases_30d, 0))::numeric / (pp.clicks_30d)::numeric) * (100)::numeric), 2)
+            ELSE (0)::numeric
+        END AS "CVR",
+    COALESCE(pp.acos_30d, (0)::numeric) AS "ACoS",
+    COALESCE(pp.clicks_7d, (0)::bigint) AS "Clicks_7d",
+    round(COALESCE(pp.spend_7d, (0)::numeric), 2) AS "Spend_7d",
+    COALESCE(pp.purchases_7d, 0) AS "Orders_7d",
+        CASE
+            WHEN (COALESCE(pp.clicks_7d, (0)::bigint) > 0) THEN round((((COALESCE(pp.purchases_7d, 0))::numeric / (pp.clicks_7d)::numeric) * (100)::numeric), 2)
+            ELSE (0)::numeric
+        END AS "CVR_7d",
+    COALESCE(pp.acos_7d, (0)::numeric) AS "ACoS_7d",
+    (''::text || COALESCE(round(cp.yesterday_spend, 2), (0)::numeric)) AS "Spent DB Yesterday",
+    (''::text || COALESCE(round(cp.yesterday_spend, 2), (0)::numeric)) AS "Spent Yesterday",
+    COALESCE(((cp.top_of_search_impression_share)::text || '%'::text), '0%'::text) AS "Last 30 days",
+    COALESCE(((cp.top_of_search_impression_share_7d)::text || '%'::text), '0%'::text) AS "Last 7 days",
+    COALESCE(((cp.top_of_search_impression_share_yesterday)::text || '%'::text), '0%'::text) AS "Yesterday",
+    cwm.placement_normalized AS "Placement Type",
+        CASE cwm.placement_type
+            WHEN 'Top of Search'::text THEN COALESCE(wb.placement_top_of_search, 0)
+            WHEN 'Rest of Search'::text THEN COALESCE(wb.placement_rest_of_search, 0)
+            WHEN 'Product Page'::text THEN COALESCE(wb.placement_product_page, 0)
+            ELSE 0
+        END AS "Increase bids by placement",
+    0 AS "Changes in placement",
+    ''::text AS "NOTES",
+    ''::text AS "Empty1",
+    ''::text AS "Empty2",
+    cwm.tenant_id,
+    cwm.campaign_id,
+        CASE cwm.placement_type
+            WHEN 'Top of Search'::text THEN wb.last_changed_to_top
+            WHEN 'Rest of Search'::text THEN wb.last_changed_to_rest
+            WHEN 'Product Page'::text THEN wb.last_changed_to_product
+            ELSE NULL::integer
+        END AS last_changed_to,
+        CASE cwm.placement_type
+            WHEN 'Top of Search'::text THEN wb.last_changed_at_top
+            WHEN 'Rest of Search'::text THEN wb.last_changed_at_rest
+            WHEN 'Product Page'::text THEN wb.last_changed_at_product
+            ELSE NULL::timestamp with time zone
+        END AS last_changed_at,
+    cwm.week_id,
+    (cwm.start_date)::text AS date_range_start,
+    (cwm.end_date)::text AS date_range_end
+   FROM ((((campaign_week_matrix cwm
+     LEFT JOIN public.weekly_placement_performance pp ON (((cwm.tenant_id = pp.tenant_id) AND (cwm.week_id = pp.week_id) AND (cwm.campaign_id = pp.campaign_id) AND (cwm.placement_type = pp.placement_type))))
+     LEFT JOIN public.weekly_campaign_performance cp ON (((cwm.tenant_id = cp.tenant_id) AND (cwm.week_id = cp.week_id) AND (cwm.campaign_id = cp.campaign_id))))
+     LEFT JOIN public.weekly_placement_bids wb ON (((cwm.tenant_id = wb.tenant_id) AND (cwm.week_id = wb.week_id) AND (cwm.campaign_id = wb.campaign_id))))
+     LEFT JOIN public.weekly_portfolios wpf ON (((cwm.tenant_id = wpf.tenant_id) AND (cwm.week_id = wpf.week_id) AND (cp.portfolio_id = wpf.portfolio_id))))
+  ORDER BY cwm.week_id DESC, cwm.campaign_name, cwm.sort_order;
+
+
+--
 -- Name: view_portfolio_lookup; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -1551,123 +1784,6 @@ CREATE VIEW public.view_usa_placement_data WITH (security_invoker='true') AS
 
 
 --
--- Name: weekly_campaign_performance; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_campaign_performance (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    campaign_id text NOT NULL,
-    campaign_name text,
-    campaign_status text,
-    portfolio_id text,
-    impressions_30d bigint DEFAULT 0,
-    clicks_30d bigint DEFAULT 0,
-    spend_30d numeric(10,2) DEFAULT 0,
-    sales_30d numeric(10,2) DEFAULT 0,
-    purchases_30d integer DEFAULT 0,
-    acos_30d numeric(5,2),
-    cvr_30d numeric(5,4),
-    impressions_7d bigint DEFAULT 0,
-    clicks_7d bigint DEFAULT 0,
-    spend_7d numeric(10,2) DEFAULT 0,
-    sales_7d numeric(10,2) DEFAULT 0,
-    purchases_7d integer DEFAULT 0,
-    acos_7d numeric(5,2),
-    cvr_7d numeric(5,4),
-    yesterday_impressions bigint DEFAULT 0,
-    yesterday_clicks bigint DEFAULT 0,
-    yesterday_spend numeric(10,2) DEFAULT 0,
-    day_before_impressions bigint DEFAULT 0,
-    day_before_clicks bigint DEFAULT 0,
-    day_before_spend numeric(10,2) DEFAULT 0,
-    campaign_budget numeric(10,2),
-    top_of_search_impression_share numeric(5,2),
-    created_at timestamp with time zone DEFAULT now(),
-    top_of_search_impression_share_7d numeric(5,2),
-    top_of_search_impression_share_yesterday numeric(5,2)
-);
-
-
---
--- Name: weekly_placement_bids; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_placement_bids (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    campaign_id text NOT NULL,
-    campaign_name text,
-    campaign_status text,
-    portfolio_id text,
-    campaign_budget numeric(10,2),
-    placement_top_of_search integer DEFAULT 0,
-    placement_rest_of_search integer DEFAULT 0,
-    placement_product_page integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT now(),
-    last_changed_at_top timestamp with time zone,
-    last_changed_to_top integer,
-    last_changed_at_rest timestamp with time zone,
-    last_changed_to_rest integer,
-    last_changed_at_product timestamp with time zone,
-    last_changed_to_product integer
-);
-
-
---
--- Name: weekly_placement_performance; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_placement_performance (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    campaign_id text NOT NULL,
-    campaign_name text,
-    placement_type text NOT NULL,
-    impressions_30d bigint DEFAULT 0,
-    clicks_30d bigint DEFAULT 0,
-    spend_30d numeric(10,2) DEFAULT 0,
-    sales_30d numeric(10,2) DEFAULT 0,
-    purchases_30d integer DEFAULT 0,
-    acos_30d numeric(10,2),
-    cvr_30d numeric(10,4),
-    impressions_7d bigint DEFAULT 0,
-    clicks_7d bigint DEFAULT 0,
-    spend_7d numeric(10,2) DEFAULT 0,
-    sales_7d numeric(10,2) DEFAULT 0,
-    purchases_7d integer DEFAULT 0,
-    acos_7d numeric(10,2),
-    cvr_7d numeric(10,4),
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT weekly_placement_type_check CHECK ((placement_type = ANY (ARRAY['Top of Search'::text, 'Rest of Search'::text, 'Product Page'::text])))
-);
-
-
---
--- Name: weekly_portfolios; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_portfolios (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    snapshot_id uuid NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    portfolio_id text NOT NULL,
-    portfolio_name text,
-    budget_amount numeric(10,2),
-    currency text DEFAULT 'USD'::text,
-    status text,
-    created_at timestamp with time zone DEFAULT now()
-);
-
-
---
 -- Name: view_weekly_placement_report; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -1709,26 +1825,6 @@ CREATE VIEW public.view_weekly_placement_report WITH (security_invoker='on') AS
      LEFT JOIN public.weekly_campaign_performance cp ON (((pp.snapshot_id = cp.snapshot_id) AND (pp.campaign_id = cp.campaign_id))))
      LEFT JOIN public.weekly_placement_bids pb ON (((pp.snapshot_id = pb.snapshot_id) AND (pp.campaign_id = pb.campaign_id))))
      LEFT JOIN public.weekly_portfolios pf ON (((pp.snapshot_id = pf.snapshot_id) AND (cp.portfolio_id = pf.portfolio_id))));
-
-
---
--- Name: weekly_snapshots; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.weekly_snapshots (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    tenant_id uuid NOT NULL,
-    week_id text NOT NULL,
-    year integer NOT NULL,
-    week_number integer NOT NULL,
-    start_date date NOT NULL,
-    end_date date NOT NULL,
-    status text DEFAULT 'collecting'::text NOT NULL,
-    workflow_execution_id text,
-    created_at timestamp with time zone DEFAULT now(),
-    completed_at timestamp with time zone,
-    CONSTRAINT weekly_snapshots_status_check CHECK ((status = ANY (ARRAY['collecting'::text, 'processing'::text, 'completed'::text, 'failed'::text])))
-);
 
 
 --
@@ -2731,5 +2827,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fp2ZBmoSgCFqtWzLGZDmk3v9L7prP3vEcbLLkC0PznfKTiVALJGQ6tasRuchf0w
+\unrestrict 0dZfvampXg64fyaTWvvpsE7iub4e2JR31Eo07dWPuzXPa5ZbINGvKAJTNLkqRdM
 
