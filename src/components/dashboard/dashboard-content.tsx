@@ -276,10 +276,23 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     const supabase = createClient();
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
-    await supabase.from("campaign_notes").upsert(
-      { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, note },
-      { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
+    // If note is cleared and goal is also unset, delete the row entirely
+    const row = dataRef.current.find(
+      (r) => r.campaign_id === campaignId && r.week_id === weekId && r.placement_type === placementType
     );
+    if (!note.trim() && row?.goal_completed === null) {
+      await supabase.from("campaign_notes")
+        .delete()
+        .eq("tenant_id", user.id)
+        .eq("week_id", weekId)
+        .eq("campaign_id", campaignId)
+        .eq("placement_type", placementType);
+    } else {
+      await supabase.from("campaign_notes").upsert(
+        { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, note },
+        { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
+      );
+    }
   }, []);
 
   // Handle toggling goal_completed: null → true → false → null
@@ -301,10 +314,20 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     const supabase = createClient();
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
-    await supabase.from("campaign_notes").upsert(
-      { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, goal_completed: next },
-      { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
-    );
+    // If goal is reset to null and note is also empty, delete the row entirely
+    if (next === null && !row.note.trim()) {
+      await supabase.from("campaign_notes")
+        .delete()
+        .eq("tenant_id", user.id)
+        .eq("week_id", weekId)
+        .eq("campaign_id", campaignId)
+        .eq("placement_type", placementType);
+    } else {
+      await supabase.from("campaign_notes").upsert(
+        { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, goal_completed: next },
+        { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
+      );
+    }
   }, []);
 
   // Step 1: build preview and open confirmation dialog
