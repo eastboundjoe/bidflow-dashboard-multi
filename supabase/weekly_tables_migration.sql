@@ -46,16 +46,22 @@ BEGIN
   WHERE tenant_id = p_tenant_id
   ON CONFLICT DO NOTHING;
 
-  -- 2. Snapshot placement bid adjustments
+  -- 2. Snapshot placement bid adjustments + change tracking at this point in time
   INSERT INTO public.weekly_placement_bids (
     snapshot_id, tenant_id, week_id,
     campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
-    placement_top_of_search, placement_rest_of_search, placement_product_page
+    placement_top_of_search, placement_rest_of_search, placement_product_page,
+    last_changed_at_top,     last_changed_to_top,
+    last_changed_at_rest,    last_changed_to_rest,
+    last_changed_at_product, last_changed_to_product
   )
   SELECT
     p_snapshot_id, p_tenant_id, p_week_id,
     campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
-    placement_top_of_search, placement_rest_of_search, placement_product_page
+    placement_top_of_search, placement_rest_of_search, placement_product_page,
+    last_changed_at_top,     last_changed_to_top,
+    last_changed_at_rest,    last_changed_to_rest,
+    last_changed_at_product, last_changed_to_product
   FROM public.placement_bids
   WHERE tenant_id = p_tenant_id
   ON CONFLICT DO NOTHING;
@@ -217,9 +223,19 @@ SELECT
   ''                                                                        AS "Empty2",
   cwm.tenant_id,
   cwm.campaign_id,
+  CASE cwm.placement_type
+    WHEN 'Top of Search' THEN wb.last_changed_to_top
+    WHEN 'Rest of Search' THEN wb.last_changed_to_rest
+    WHEN 'Product Page' THEN wb.last_changed_to_product
+    ELSE NULL END AS last_changed_to,
+  CASE cwm.placement_type
+    WHEN 'Top of Search' THEN wb.last_changed_at_top
+    WHEN 'Rest of Search' THEN wb.last_changed_at_rest
+    WHEN 'Product Page' THEN wb.last_changed_at_product
+    ELSE NULL END AS last_changed_at,
   cwm.week_id,
-  cwm.start_date::text  AS date_range_start,
-  cwm.end_date::text    AS date_range_end
+  cwm.start_date::text AS date_range_start,
+  cwm.end_date::text   AS date_range_end
 FROM campaign_week_matrix cwm
 LEFT JOIN public.weekly_placement_performance pp
        ON cwm.tenant_id = pp.tenant_id AND cwm.week_id = pp.week_id
