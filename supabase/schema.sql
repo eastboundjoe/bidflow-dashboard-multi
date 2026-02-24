@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DoJlZz2MEKgbCwldNTc9s0GqmagCr4uenMWgVEcTxWckcrexssXcp4kiCw61t30
+\restrict fp2ZBmoSgCFqtWzLGZDmk3v9L7prP3vEcbLLkC0PznfKTiVALJGQ6tasRuchf0w
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -1849,14 +1849,6 @@ ALTER TABLE ONLY public.report_ledger
 
 
 --
--- Name: staging_campaign_reports staging_campaign_reports_campaign_id_report_type_data_date_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.staging_campaign_reports
-    ADD CONSTRAINT staging_campaign_reports_campaign_id_report_type_data_date_key UNIQUE (campaign_id, report_type, data_date);
-
-
---
 -- Name: staging_campaign_reports staging_campaign_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2739,5 +2731,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DoJlZz2MEKgbCwldNTc9s0GqmagCr4uenMWgVEcTxWckcrexssXcp4kiCw61t30
+\unrestrict fp2ZBmoSgCFqtWzLGZDmk3v9L7prP3vEcbLLkC0PznfKTiVALJGQ6tasRuchf0w
 
