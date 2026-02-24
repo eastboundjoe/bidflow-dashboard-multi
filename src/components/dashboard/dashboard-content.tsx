@@ -29,6 +29,8 @@ interface DashboardContentProps {
 
 export function DashboardContent({ initialData = [] }: DashboardContentProps) {
   const [data, setData] = React.useState<PlacementData[]>(initialData);
+  const dataRef = React.useRef<PlacementData[]>(initialData);
+  React.useEffect(() => { dataRef.current = data; }, [data]);
   const [loading, setLoading] = React.useState(initialData.length === 0);
   const [error, setError] = React.useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = React.useState<string>("");
@@ -77,14 +79,23 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     try {
       const supabase = createClient();
 
-      const { data: placements, error: fetchError } = await supabase
-        .from("view_placement_optimization_report")
-        .select("*")
-        .order("Spend", { ascending: false });
+      const [{ data: placements, error: fetchError }, { data: notes }] = await Promise.all([
+        supabase.from("view_placement_optimization_report").select("*").order("Spend", { ascending: false }),
+        supabase.from("campaign_notes").select("*"),
+      ]);
 
       if (fetchError) {
         throw new Error(fetchError.message);
       }
+
+      // Build notes lookup: "campaignId|weekId|placementType" → {note, goal_completed}
+      const notesMap = new Map<string, { note: string; goal_completed: boolean | null }>();
+      (notes || []).forEach((n: any) => {
+        notesMap.set(`${n.campaign_id}|${n.week_id}|${n.placement_type}`, {
+          note: n.note || "",
+          goal_completed: n.goal_completed ?? null,
+        });
+      });
 
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
@@ -145,6 +156,9 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           changes_in_placement = row.last_changed_to.toString();
         }
 
+        const noteKey = `${campaignId}|${row.week_id || ""}|${placement_type}`;
+        const noteData = notesMap.get(noteKey);
+
         return {
           id: `${getVal("Campaign") || row.campaign_name}-${rawPlacement}`,
           tenant_id: row.tenant_id,
@@ -191,6 +205,9 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           bid_adjustment: bidAdjustment,
           changes_in_placement,
           changed_at,
+
+          note: noteData?.note ?? "",
+          goal_completed: noteData?.goal_completed ?? null,
 
           week_id: row.week_id || "",
           date_range_start: row.date_range_start || "",
@@ -244,6 +261,51 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       )
     );
   };
+
+  // Handle saving a note for a placement row (auto-save on blur)
+  const handleNoteEdit = React.useCallback(async (
+    campaignId: string, weekId: string, placementType: string, note: string
+  ) => {
+    setData((prev) =>
+      prev.map((row) =>
+        row.campaign_id === campaignId && row.week_id === weekId && row.placement_type === placementType
+          ? { ...row, note }
+          : row
+      )
+    );
+    const supabase = createClient();
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+    await supabase.from("campaign_notes").upsert(
+      { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, note },
+      { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
+    );
+  }, []);
+
+  // Handle toggling goal_completed: null → true → false → null
+  const handleGoalToggle = React.useCallback(async (
+    campaignId: string, weekId: string, placementType: string
+  ) => {
+    const row = dataRef.current.find(
+      (r) => r.campaign_id === campaignId && r.week_id === weekId && r.placement_type === placementType
+    );
+    if (!row) return;
+    const next = row.goal_completed === null ? true : row.goal_completed === true ? false : null;
+    setData((prev) =>
+      prev.map((r) =>
+        r.campaign_id === campaignId && r.week_id === weekId && r.placement_type === placementType
+          ? { ...r, goal_completed: next }
+          : r
+      )
+    );
+    const supabase = createClient();
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+    await supabase.from("campaign_notes").upsert(
+      { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, goal_completed: next },
+      { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
+    );
+  }, []);
 
   // Step 1: build preview and open confirmation dialog
   const handleSubmitChanges = () => {
@@ -518,6 +580,8 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
               onEdit={handleEdit}
               onSubmit={handleSubmitChanges}
               submitting={submitting}
+              onNoteEdit={handleNoteEdit}
+              onGoalToggle={handleGoalToggle}
             />
           )}
         </CardContent>

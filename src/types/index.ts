@@ -103,6 +103,10 @@ export interface PlacementData {
   changes_in_placement: string;
   changed_at?: string; // e.g. "2/22" — set after successful submission
 
+  // Weekly notes & goal tracking
+  note: string;
+  goal_completed: boolean | null;
+
   week_id: string;
   date_range_start: string;
   date_range_end: string;

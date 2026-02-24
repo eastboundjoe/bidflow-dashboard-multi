@@ -41,6 +41,8 @@ interface PlacementDataTableProps {
   onEdit?: (id: string, value: string) => void;
   onSubmit?: () => void;
   submitting?: boolean;
+  onNoteEdit?: (campaignId: string, weekId: string, placementType: string, note: string) => void;
+  onGoalToggle?: (campaignId: string, weekId: string, placementType: string) => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -125,12 +127,75 @@ function ChangesInput({
     );
 }
 
-export function PlacementDataTable({ 
-  data, 
+// Sub-component for per-row notes (auto-save on blur)
+function NoteInput({
+  initialValue, campaignId, weekId, placementType, onNoteEdit,
+}: {
+  initialValue: string;
+  campaignId: string;
+  weekId: string;
+  placementType: string;
+  onNoteEdit?: (campaignId: string, weekId: string, placementType: string, note: string) => void;
+}) {
+  const [localValue, setLocalValue] = React.useState(initialValue);
+  React.useEffect(() => { setLocalValue(initialValue); }, [initialValue]);
+
+  const save = () => {
+    if (localValue !== initialValue) {
+      onNoteEdit?.(campaignId, weekId, placementType, localValue);
+    }
+  };
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <Input
+        className="h-7 w-28 text-xs"
+        value={localValue}
+        placeholder="Add note..."
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => { if (e.key === "Enter") { save(); (e.target as HTMLInputElement).blur(); } }}
+        onFocus={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+}
+
+// Sub-component for goal toggle: null (—) → true (✓ Yes) → false (✗ No) → null
+function GoalToggle({
+  value, campaignId, weekId, placementType, onGoalToggle,
+}: {
+  value: boolean | null;
+  campaignId: string;
+  weekId: string;
+  placementType: string;
+  onGoalToggle?: (campaignId: string, weekId: string, placementType: string) => void;
+}) {
+  return (
+    <button
+      className={cn(
+        "h-6 w-14 text-xs font-bold rounded border transition-colors",
+        value === true && "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/40 dark:text-green-400 dark:border-green-700",
+        value === false && "bg-red-100 text-red-600 border-red-300 dark:bg-red-900/40 dark:text-red-400 dark:border-red-700",
+        value === null && "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
+      )}
+      onClick={(e) => { e.stopPropagation(); onGoalToggle?.(campaignId, weekId, placementType); }}
+    >
+      {value === true ? "✓ Yes" : value === false ? "✗ No" : "—"}
+    </button>
+  );
+}
+
+export function PlacementDataTable({
+  data,
   onExport,
   onEdit,
   onSubmit,
-  submitting = false
+  submitting = false,
+  onNoteEdit,
+  onGoalToggle,
 }: PlacementDataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "campaign_name", desc: false },
@@ -665,9 +730,45 @@ export function PlacementDataTable({
                 onEdit={onEdit}
             />
         )
-      }
+      },
+      {
+        accessorKey: "note",
+        size: 120,
+        header: () => (
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1 uppercase tracking-wider">
+            Notes
+          </span>
+        ),
+        cell: ({ row }) => (
+          <NoteInput
+            initialValue={row.original.note || ""}
+            campaignId={row.original.campaign_id}
+            weekId={row.original.week_id}
+            placementType={row.original.placement_type}
+            onNoteEdit={onNoteEdit}
+          />
+        ),
+      },
+      {
+        accessorKey: "goal_completed",
+        size: 56,
+        header: () => (
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1 uppercase tracking-wider">
+            Goal
+          </span>
+        ),
+        cell: ({ row }) => (
+          <GoalToggle
+            value={row.original.goal_completed}
+            campaignId={row.original.campaign_id}
+            weekId={row.original.week_id}
+            placementType={row.original.placement_type}
+            onGoalToggle={onGoalToggle}
+          />
+        ),
+      },
     ],
-    [onEdit, expandedCampaigns, isPlacementsExpanded]
+    [onEdit, onNoteEdit, onGoalToggle, expandedCampaigns, isPlacementsExpanded]
   );
 
   const table = useReactTable({
