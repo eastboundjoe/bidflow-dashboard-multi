@@ -166,7 +166,7 @@ function NoteInput({
         placeholder="Add note..."
         onChange={(e) => setLocalValue(e.target.value)}
         onFocus={(e) => { e.stopPropagation(); setIsFocused(true); }}
-        onBlur={() => { setIsFocused(false); save(); }}
+        onBlur={() => { setIsFocused(false); if (localValue.trim() || initialValue) save(); }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
