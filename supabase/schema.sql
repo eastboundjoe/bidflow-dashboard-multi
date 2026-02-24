@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict NotQSsYXfIyPmKL841zGZyjrtzdSOMwDdogCjGT7Z3Wox8ZA9sAgWMiYv2AZdtj
+\restrict zQq1HbcaKRGQKMqpNnCl689wjUG15iiD7llH3iVFWh4BLNDmW5EOajudIAC0rNH
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -981,14 +981,14 @@ CREATE TABLE public.raw_placement_reports (
     sales_14d numeric(10,2) DEFAULT 0,
     purchases_30d integer DEFAULT 0,
     sales_30d numeric(10,2) DEFAULT 0,
-    ctr numeric(5,4) DEFAULT 0,
+    ctr numeric(10,4) DEFAULT 0,
     cpc numeric(10,2) DEFAULT 0,
-    acos_7d numeric(5,2) DEFAULT 0,
-    acos_14d numeric(5,2) DEFAULT 0,
-    acos_30d numeric(5,2) DEFAULT 0,
-    cvr_7d numeric(5,4) DEFAULT 0,
-    cvr_14d numeric(5,4) DEFAULT 0,
-    cvr_30d numeric(5,4) DEFAULT 0,
+    acos_7d numeric(10,2) DEFAULT 0,
+    acos_14d numeric(10,2) DEFAULT 0,
+    acos_30d numeric(10,2) DEFAULT 0,
+    cvr_7d numeric(10,4) DEFAULT 0,
+    cvr_14d numeric(10,4) DEFAULT 0,
+    cvr_30d numeric(10,4) DEFAULT 0,
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone DEFAULT now(),
     tenant_id uuid NOT NULL,
@@ -1179,14 +1179,14 @@ CREATE TABLE public.staging_placement_reports (
     sales_14d numeric(10,2) DEFAULT 0,
     purchases_30d integer DEFAULT 0,
     sales_30d numeric(10,2) DEFAULT 0,
-    ctr numeric(5,4) DEFAULT 0,
+    ctr numeric(10,4) DEFAULT 0,
     cpc numeric(10,2) DEFAULT 0,
-    acos_7d numeric(5,2) DEFAULT 0,
-    acos_14d numeric(5,2) DEFAULT 0,
-    acos_30d numeric(5,2) DEFAULT 0,
-    cvr_7d numeric(5,4) DEFAULT 0,
-    cvr_14d numeric(5,4) DEFAULT 0,
-    cvr_30d numeric(5,4) DEFAULT 0,
+    acos_7d numeric(10,2) DEFAULT 0,
+    acos_14d numeric(10,2) DEFAULT 0,
+    acos_30d numeric(10,2) DEFAULT 0,
+    cvr_7d numeric(10,4) DEFAULT 0,
+    cvr_14d numeric(10,4) DEFAULT 0,
+    cvr_30d numeric(10,4) DEFAULT 0,
     created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone DEFAULT now(),
     tenant_id uuid NOT NULL
@@ -2835,5 +2835,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict NotQSsYXfIyPmKL841zGZyjrtzdSOMwDdogCjGT7Z3Wox8ZA9sAgWMiYv2AZdtj
+\unrestrict zQq1HbcaKRGQKMqpNnCl689wjUG15iiD7llH3iVFWh4BLNDmW5EOajudIAC0rNH
 
