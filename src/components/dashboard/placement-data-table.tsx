@@ -160,7 +160,8 @@ function NoteInput({
           "focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400",
           isFocused
             ? "absolute top-0 left-0 w-64 h-24 z-50 shadow-xl bg-white dark:bg-slate-900 border-blue-400"
-            : "w-28 h-7 overflow-hidden"
+            : "w-28 h-7 overflow-hidden",
+          !isFocused && initialValue && "border-orange-500 bg-orange-50/50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"
         )}
         value={localValue}
         placeholder="Add note..."
