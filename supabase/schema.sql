@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dAhZ9GeOchbDxPAkDsdXgrWNeaFZIcPyKasBfe6VnCNINyQSrkIqkqaWcLoebWJ
+\restrict NotQSsYXfIyPmKL841zGZyjrtzdSOMwDdogCjGT7Z3Wox8ZA9sAgWMiYv2AZdtj
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -725,6 +725,23 @@ $$;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: campaign_notes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaign_notes (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    placement_type text NOT NULL,
+    note text DEFAULT ''::text,
+    goal_completed boolean,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
 
 --
 -- Name: credentials; Type: TABLE; Schema: public; Owner: -
@@ -1832,6 +1849,22 @@ ALTER TABLE ONLY public.report_ledger ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: campaign_notes campaign_notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_notes
+    ADD CONSTRAINT campaign_notes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: campaign_notes campaign_notes_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_notes
+    ADD CONSTRAINT campaign_notes_unique UNIQUE (tenant_id, week_id, campaign_id, placement_type);
+
+
+--
 -- Name: credentials credentials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2612,6 +2645,13 @@ CREATE POLICY "Service role full access" ON public.report_ledger TO authenticate
 
 
 --
+-- Name: campaign_notes Users can manage their own notes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users can manage their own notes" ON public.campaign_notes USING ((tenant_id = auth.uid())) WITH CHECK ((tenant_id = auth.uid()));
+
+
+--
 -- Name: placement_bids Users can only see their own data; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -2694,6 +2734,12 @@ CREATE POLICY "Users can view their own weekly portfolios" ON public.weekly_port
 
 CREATE POLICY "Users can view their own weekly snapshots" ON public.weekly_snapshots FOR SELECT USING ((tenant_id = auth.uid()));
 
+
+--
+-- Name: campaign_notes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.campaign_notes ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: credentials; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2789,5 +2835,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dAhZ9GeOchbDxPAkDsdXgrWNeaFZIcPyKasBfe6VnCNINyQSrkIqkqaWcLoebWJ
+\unrestrict NotQSsYXfIyPmKL841zGZyjrtzdSOMwDdogCjGT7Z3Wox8ZA9sAgWMiYv2AZdtj
 
