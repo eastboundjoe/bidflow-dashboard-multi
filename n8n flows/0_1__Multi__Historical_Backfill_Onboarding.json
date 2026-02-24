@@ -227,7 +227,8 @@
     },
     {
       "parameters": {
-        "amount": 90
+        "amount": 15,
+        "unit": "minutes"
       },
       "id": "c066d2ea-6c2a-42c1-845c-6864de68430f",
       "name": "Wait Between Weeks",
