@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict TFqAPjwvklUMegpAILlifk1Uf4xfdkAuLO3Dyww8UhnRcHIREiW4NR33TJg40m8
+\restrict dAhZ9GeOchbDxPAkDsdXgrWNeaFZIcPyKasBfe6VnCNINyQSrkIqkqaWcLoebWJ
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -273,121 +273,134 @@ $$;
 CREATE FUNCTION public.populate_weekly_tables(p_tenant_id uuid, p_week_id text, p_snapshot_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-  BEGIN
+BEGIN
 
-    INSERT INTO public.weekly_portfolios (
-      snapshot_id, tenant_id, week_id,
-      portfolio_id, portfolio_name, budget_amount, currency, status
-    )
-    SELECT p_snapshot_id, p_tenant_id, p_week_id,
-      portfolio_id, portfolio_name, budget_amount, currency, portfolio_state
-    FROM public.portfolios
-    WHERE tenant_id = p_tenant_id
-    ON CONFLICT DO NOTHING;
+  -- 1. Snapshot portfolios
+  INSERT INTO public.weekly_portfolios (
+    snapshot_id, tenant_id, week_id,
+    portfolio_id, portfolio_name, budget_amount, currency, status
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    portfolio_id, portfolio_name, budget_amount, currency, portfolio_state
+  FROM public.portfolios
+  WHERE tenant_id = p_tenant_id
+  ON CONFLICT DO NOTHING;
 
-    INSERT INTO public.weekly_placement_bids (
-      snapshot_id, tenant_id, week_id,
-      campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
-      placement_top_of_search, placement_rest_of_search, placement_product_page
-    )
-    SELECT p_snapshot_id, p_tenant_id, p_week_id,
-      campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
-      placement_top_of_search, placement_rest_of_search, placement_product_page
-    FROM public.placement_bids
-    WHERE tenant_id = p_tenant_id
-    ON CONFLICT DO NOTHING;
+  -- 2. Snapshot placement bid adjustments + change tracking at this point in time
+  INSERT INTO public.weekly_placement_bids (
+    snapshot_id, tenant_id, week_id,
+    campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
+    placement_top_of_search, placement_rest_of_search, placement_product_page,
+    last_changed_at_top,     last_changed_to_top,
+    last_changed_at_rest,    last_changed_to_rest,
+    last_changed_at_product, last_changed_to_product
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    campaign_id, campaign_name, campaign_status, portfolio_id, campaign_budget,
+    placement_top_of_search, placement_rest_of_search, placement_product_page,
+    last_changed_at_top,     last_changed_to_top,
+    last_changed_at_rest,    last_changed_to_rest,
+    last_changed_at_product, last_changed_to_product
+  FROM public.placement_bids
+  WHERE tenant_id = p_tenant_id
+  ON CONFLICT DO NOTHING;
 
-    INSERT INTO public.weekly_campaign_performance (
-      snapshot_id, tenant_id, week_id,
-      campaign_id, campaign_name, campaign_status, portfolio_id,
-      impressions_30d, clicks_30d, spend_30d, sales_30d, purchases_30d, acos_30d, cvr_30d,
-      impressions_7d,  clicks_7d,  spend_7d,  sales_7d,  purchases_7d,  acos_7d,  cvr_7d,
-      yesterday_impressions, yesterday_clicks, yesterday_spend,
-      day_before_impressions, day_before_clicks, day_before_spend,
-      campaign_budget, top_of_search_impression_share,
-      top_of_search_impression_share_7d, top_of_search_impression_share_yesterday
-    )
-    SELECT
-      p_snapshot_id, p_tenant_id, p_week_id,
-      c30.campaign_id, c30.campaign_name, c30.campaign_status, c30.portfolio_id,
-      COALESCE(c30.impressions, 0), COALESCE(c30.clicks, 0), COALESCE(c30.spend, 0),
-      COALESCE(c30.sales_30d, 0),  COALESCE(c30.purchases_30d, 0), c30.acos_30d, c30.cvr_30d,
-      COALESCE(c7.impressions,  0), COALESCE(c7.clicks,  0), COALESCE(c7.spend,  0),
-      COALESCE(c7.sales_7d,  0),   COALESCE(c7.purchases_7d,  0),  c7.acos_7d,  c7.cvr_7d,
-      COALESCE(cy.impressions,  0), COALESCE(cy.clicks,  0), COALESCE(cy.spend,  0),
-      COALESCE(cdb.impressions, 0), COALESCE(cdb.clicks, 0), COALESCE(cdb.spend, 0),
-      c30.campaign_budget_amount,
-      c30.top_of_search_impression_share,
-      c7.top_of_search_impression_share,
-      cy.top_of_search_impression_share
-    FROM (
-      SELECT * FROM public.raw_campaign_reports
-      WHERE tenant_id = p_tenant_id AND report_type = '30day'
-        AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
-                         WHERE tenant_id = p_tenant_id AND report_type = '30day')
-    ) c30
-    LEFT JOIN (
-      SELECT * FROM public.raw_campaign_reports
-      WHERE tenant_id = p_tenant_id AND report_type = '7day'
-        AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
-                         WHERE tenant_id = p_tenant_id AND report_type = '7day')
-    ) c7  ON c30.campaign_id = c7.campaign_id
-    LEFT JOIN (
-      SELECT * FROM public.raw_campaign_reports
-      WHERE tenant_id = p_tenant_id AND report_type = 'yesterday'
-        AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
-                         WHERE tenant_id = p_tenant_id AND report_type = 'yesterday')
-    ) cy  ON c30.campaign_id = cy.campaign_id
-    LEFT JOIN (
-      SELECT * FROM public.raw_campaign_reports
-      WHERE tenant_id = p_tenant_id AND report_type = 'dayBefore'
-        AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
-                         WHERE tenant_id = p_tenant_id AND report_type = 'dayBefore')
-    ) cdb ON c30.campaign_id = cdb.campaign_id
-    ON CONFLICT DO NOTHING;
+  -- 3. Snapshot campaign-level performance (joins 30d, 7d, yesterday, dayBefore)
+  INSERT INTO public.weekly_campaign_performance (
+    snapshot_id, tenant_id, week_id,
+    campaign_id, campaign_name, campaign_status, portfolio_id,
+    impressions_30d, clicks_30d, spend_30d, sales_30d, purchases_30d, acos_30d, cvr_30d,
+    impressions_7d,  clicks_7d,  spend_7d,  sales_7d,  purchases_7d,  acos_7d,  cvr_7d,
+    yesterday_impressions, yesterday_clicks, yesterday_spend,
+    day_before_impressions, day_before_clicks, day_before_spend,
+    campaign_budget, top_of_search_impression_share,
+    top_of_search_impression_share_7d, top_of_search_impression_share_yesterday
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    c30.campaign_id, c30.campaign_name, c30.campaign_status, c30.portfolio_id,
+    COALESCE(c30.impressions, 0), COALESCE(c30.clicks, 0), COALESCE(c30.spend, 0),
+    COALESCE(c30.sales_30d, 0),  COALESCE(c30.purchases_30d, 0), c30.acos_30d, c30.cvr_30d,
+    COALESCE(c7.impressions,  0), COALESCE(c7.clicks,  0), COALESCE(c7.spend,  0),
+    COALESCE(c7.sales_7d,  0),   COALESCE(c7.purchases_7d,  0),  c7.acos_7d,  c7.cvr_7d,
+    COALESCE(cy.impressions,  0), COALESCE(cy.clicks,  0), COALESCE(cy.spend,  0),
+    COALESCE(cdb.impressions, 0), COALESCE(cdb.clicks, 0), COALESCE(cdb.spend, 0),
+    c30.campaign_budget_amount,
+    c30.top_of_search_impression_share,
+    c7.top_of_search_impression_share,
+    cy.top_of_search_impression_share
+  FROM (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '30day'
+      AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
+                       WHERE tenant_id = p_tenant_id AND report_type = '30day')
+  ) c30
+  LEFT JOIN (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '7day'
+      AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
+                       WHERE tenant_id = p_tenant_id AND report_type = '7day')
+  ) c7  ON c30.campaign_id = c7.campaign_id
+  LEFT JOIN (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = 'yesterday'
+      AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
+                       WHERE tenant_id = p_tenant_id AND report_type = 'yesterday')
+  ) cy  ON c30.campaign_id = cy.campaign_id
+  LEFT JOIN (
+    SELECT * FROM public.raw_campaign_reports
+    WHERE tenant_id = p_tenant_id AND report_type = 'dayBefore'
+      AND data_date = (SELECT MAX(data_date) FROM public.raw_campaign_reports
+                       WHERE tenant_id = p_tenant_id AND report_type = 'dayBefore')
+  ) cdb ON c30.campaign_id = cdb.campaign_id
+  ON CONFLICT DO NOTHING;
 
-    INSERT INTO public.weekly_placement_performance (
-      snapshot_id, tenant_id, week_id,
-      campaign_id, campaign_name, placement_type,
-      impressions_30d, clicks_30d, spend_30d, sales_30d, purchases_30d, acos_30d, cvr_30d,
-      impressions_7d,  clicks_7d,  spend_7d,  sales_7d,  purchases_7d,  acos_7d,  cvr_7d
-    )
-    SELECT
-      p_snapshot_id, p_tenant_id, p_week_id,
-      p30.campaign_id, p30.campaign_name,
-      CASE p30.placement_classification
-        WHEN 'Top of Search on-Amazon' THEN 'Top of Search'
-        WHEN 'Other on-Amazon'         THEN 'Rest of Search'
-        WHEN 'Detail Page on-Amazon'   THEN 'Product Page'
-      END,
-      COALESCE(p30.impressions, 0), COALESCE(p30.clicks, 0), COALESCE(p30.spend, 0),
-      COALESCE(p30.sales_30d,  0),  COALESCE(p30.purchases_30d, 0), p30.acos_30d, p30.cvr_30d,
-      COALESCE(p7.impressions, 0),  COALESCE(p7.clicks,  0),  COALESCE(p7.spend,  0),
-      COALESCE(p7.sales_7d,  0),    COALESCE(p7.purchases_7d,  0),  p7.acos_7d,  p7.cvr_7d
-    FROM (
-      SELECT * FROM public.raw_placement_reports
-      WHERE tenant_id = p_tenant_id AND report_type = '30day'
-        AND placement_classification IN (
-          'Top of Search on-Amazon', 'Other on-Amazon', 'Detail Page on-Amazon'
-        )
-        AND data_date = (SELECT MAX(data_date) FROM public.raw_placement_reports
-                         WHERE tenant_id = p_tenant_id AND report_type = '30day')
-    ) p30
-    LEFT JOIN (
-      SELECT * FROM public.raw_placement_reports
-      WHERE tenant_id = p_tenant_id AND report_type = '7day'
-        AND data_date = (SELECT MAX(data_date) FROM public.raw_placement_reports
-                         WHERE tenant_id = p_tenant_id AND report_type = '7day')
-    ) p7 ON p30.campaign_id = p7.campaign_id
-        AND p30.placement_classification = p7.placement_classification
-    ON CONFLICT DO NOTHING;
+  -- 4. Snapshot placement-level performance (30d + 7d, maps raw names to weekly CHECK values)
+  INSERT INTO public.weekly_placement_performance (
+    snapshot_id, tenant_id, week_id,
+    campaign_id, campaign_name, placement_type,
+    impressions_30d, clicks_30d, spend_30d, sales_30d, purchases_30d, acos_30d, cvr_30d,
+    impressions_7d,  clicks_7d,  spend_7d,  sales_7d,  purchases_7d,  acos_7d,  cvr_7d
+  )
+  SELECT
+    p_snapshot_id, p_tenant_id, p_week_id,
+    p30.campaign_id, p30.campaign_name,
+    CASE p30.placement_classification
+      WHEN 'Top of Search on-Amazon' THEN 'Top of Search'
+      WHEN 'Other on-Amazon'         THEN 'Rest of Search'
+      WHEN 'Detail Page on-Amazon'   THEN 'Product Page'
+    END,
+    COALESCE(p30.impressions, 0), COALESCE(p30.clicks, 0), COALESCE(p30.spend, 0),
+    COALESCE(p30.sales_30d,  0),  COALESCE(p30.purchases_30d, 0), p30.acos_30d, p30.cvr_30d,
+    COALESCE(p7.impressions, 0),  COALESCE(p7.clicks,  0),  COALESCE(p7.spend,  0),
+    COALESCE(p7.sales_7d,  0),    COALESCE(p7.purchases_7d,  0),  p7.acos_7d,  p7.cvr_7d
+  FROM (
+    SELECT * FROM public.raw_placement_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '30day'
+      AND placement_classification IN (
+        'Top of Search on-Amazon', 'Other on-Amazon', 'Detail Page on-Amazon'
+      )
+      AND data_date = (SELECT MAX(data_date) FROM public.raw_placement_reports
+                       WHERE tenant_id = p_tenant_id AND report_type = '30day')
+  ) p30
+  LEFT JOIN (
+    SELECT * FROM public.raw_placement_reports
+    WHERE tenant_id = p_tenant_id AND report_type = '7day'
+      AND data_date = (SELECT MAX(data_date) FROM public.raw_placement_reports
+                       WHERE tenant_id = p_tenant_id AND report_type = '7day')
+  ) p7 ON p30.campaign_id = p7.campaign_id
+      AND p30.placement_classification = p7.placement_classification
+  ON CONFLICT DO NOTHING;
 
-    UPDATE public.weekly_snapshots
-    SET status = 'completed', completed_at = NOW()
-    WHERE id = p_snapshot_id AND tenant_id = p_tenant_id;
+  -- 5. Mark snapshot completed
+  UPDATE public.weekly_snapshots
+  SET status = 'completed', completed_at = NOW()
+  WHERE id = p_snapshot_id AND tenant_id = p_tenant_id;
 
-  END;
-  $$;
+END;
+$$;
 
 
 --
@@ -1606,26 +1619,25 @@ CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on
     cwm.tenant_id,
     cwm.campaign_id,
         CASE cwm.placement_type
-            WHEN 'Top of Search'::text THEN pb.last_changed_to_top
-            WHEN 'Rest of Search'::text THEN pb.last_changed_to_rest
-            WHEN 'Product Page'::text THEN pb.last_changed_to_product
+            WHEN 'Top of Search'::text THEN wb.last_changed_to_top
+            WHEN 'Rest of Search'::text THEN wb.last_changed_to_rest
+            WHEN 'Product Page'::text THEN wb.last_changed_to_product
             ELSE NULL::integer
         END AS last_changed_to,
         CASE cwm.placement_type
-            WHEN 'Top of Search'::text THEN pb.last_changed_at_top
-            WHEN 'Rest of Search'::text THEN pb.last_changed_at_rest
-            WHEN 'Product Page'::text THEN pb.last_changed_at_product
+            WHEN 'Top of Search'::text THEN wb.last_changed_at_top
+            WHEN 'Rest of Search'::text THEN wb.last_changed_at_rest
+            WHEN 'Product Page'::text THEN wb.last_changed_at_product
             ELSE NULL::timestamp with time zone
         END AS last_changed_at,
     cwm.week_id,
     (cwm.start_date)::text AS date_range_start,
     (cwm.end_date)::text AS date_range_end
-   FROM (((((campaign_week_matrix cwm
+   FROM ((((campaign_week_matrix cwm
      LEFT JOIN public.weekly_placement_performance pp ON (((cwm.tenant_id = pp.tenant_id) AND (cwm.week_id = pp.week_id) AND (cwm.campaign_id = pp.campaign_id) AND (cwm.placement_type = pp.placement_type))))
      LEFT JOIN public.weekly_campaign_performance cp ON (((cwm.tenant_id = cp.tenant_id) AND (cwm.week_id = cp.week_id) AND (cwm.campaign_id = cp.campaign_id))))
      LEFT JOIN public.weekly_placement_bids wb ON (((cwm.tenant_id = wb.tenant_id) AND (cwm.week_id = wb.week_id) AND (cwm.campaign_id = wb.campaign_id))))
      LEFT JOIN public.weekly_portfolios wpf ON (((cwm.tenant_id = wpf.tenant_id) AND (cwm.week_id = wpf.week_id) AND (cp.portfolio_id = wpf.portfolio_id))))
-     LEFT JOIN public.placement_bids pb ON (((cwm.tenant_id = pb.tenant_id) AND (cwm.campaign_id = pb.campaign_id))))
   ORDER BY cwm.week_id DESC, cwm.campaign_name, cwm.sort_order;
 
 
@@ -2777,5 +2789,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict TFqAPjwvklUMegpAILlifk1Uf4xfdkAuLO3Dyww8UhnRcHIREiW4NR33TJg40m8
+\unrestrict dAhZ9GeOchbDxPAkDsdXgrWNeaFZIcPyKasBfe6VnCNINyQSrkIqkqaWcLoebWJ
 
