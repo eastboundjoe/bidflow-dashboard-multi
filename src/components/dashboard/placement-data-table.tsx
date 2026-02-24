@@ -127,7 +127,7 @@ function ChangesInput({
     );
 }
 
-// Sub-component for per-row notes (auto-save on blur)
+// Sub-component for per-row notes (auto-save on blur, expands on focus)
 function NoteInput({
   initialValue, campaignId, weekId, placementType, onNoteEdit,
 }: {
@@ -138,6 +138,7 @@ function NoteInput({
   onNoteEdit?: (campaignId: string, weekId: string, placementType: string, note: string) => void;
 }) {
   const [localValue, setLocalValue] = React.useState(initialValue);
+  const [isFocused, setIsFocused] = React.useState(false);
   React.useEffect(() => { setLocalValue(initialValue); }, [initialValue]);
 
   const save = () => {
@@ -147,15 +148,32 @@ function NoteInput({
   };
 
   return (
-    <div onClick={(e) => e.stopPropagation()}>
-      <Input
-        className="h-7 w-28 text-xs"
+    // Fixed-size container keeps row height stable; textarea expands absolutely on focus
+    <div
+      className="relative"
+      style={{ height: 28, width: 112 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <textarea
+        className={cn(
+          "text-xs border rounded px-2 py-1 resize-none bg-background transition-all duration-150",
+          "focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400",
+          isFocused
+            ? "absolute top-0 left-0 w-64 h-24 z-50 shadow-xl bg-white dark:bg-slate-900 border-blue-400"
+            : "w-28 h-7 overflow-hidden"
+        )}
         value={localValue}
         placeholder="Add note..."
         onChange={(e) => setLocalValue(e.target.value)}
-        onBlur={save}
-        onKeyDown={(e) => { if (e.key === "Enter") { save(); (e.target as HTMLInputElement).blur(); } }}
-        onFocus={(e) => e.stopPropagation()}
+        onFocus={(e) => { e.stopPropagation(); setIsFocused(true); }}
+        onBlur={() => { setIsFocused(false); save(); }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            save();
+            (e.target as HTMLTextAreaElement).blur();
+          }
+        }}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       />
