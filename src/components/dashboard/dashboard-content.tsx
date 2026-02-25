@@ -670,12 +670,23 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         {/* Sankey Chart - Takes 2 columns */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Ad Spend Flow</CardTitle>
-            {selectedWeek && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                {selectedWeek}{(() => { const w = weeks.find(x => x.id === selectedWeek); return w ? ` · ${w.startDate} – ${w.endDate}` : ""; })()}
-              </p>
-            )}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>Ad Spend Flow</CardTitle>
+              <div className="flex flex-wrap items-center gap-3">
+                <WeekSelector
+                  weeks={weeks}
+                  selectedWeek={selectedWeek}
+                  onWeekChange={setSelectedWeek}
+                  disabled={data.length === 0}
+                />
+                <PortfolioFilter
+                  portfolios={portfolios}
+                  selectedPortfolio={selectedPortfolio}
+                  onPortfolioChange={setSelectedPortfolio}
+                  disabled={data.length === 0}
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -691,12 +702,23 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         {/* Spend Distribution - Takes 1 column */}
         <Card>
           <CardHeader>
-            <CardTitle>Spend Distribution</CardTitle>
-            {selectedWeek && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                {selectedWeek}{(() => { const w = weeks.find(x => x.id === selectedWeek); return w ? ` · ${w.startDate} – ${w.endDate}` : ""; })()}
-              </p>
-            )}
+            <div className="flex flex-col gap-3">
+              <CardTitle>Spend Distribution</CardTitle>
+              <div className="flex flex-wrap items-center gap-3">
+                <WeekSelector
+                  weeks={weeks}
+                  selectedWeek={selectedWeek}
+                  onWeekChange={setSelectedWeek}
+                  disabled={data.length === 0}
+                />
+                <PortfolioFilter
+                  portfolios={portfolios}
+                  selectedPortfolio={selectedPortfolio}
+                  onPortfolioChange={setSelectedPortfolio}
+                  disabled={data.length === 0}
+                />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
