@@ -290,8 +290,12 @@ export function SankeyChart({ data }: SankeyChartProps) {
     // Description above flow
     const adSpendNode = sankeyData.nodes.find((n: any) => n.name === "AD SPEND");
     if (adSpendNode) {
+      const totalSpend7d = Object.values(placementData).reduce((sum, p) => sum + p.spend, 0);
+      const totalClicks7d = Object.values(placementData).reduce((sum, p) => sum + p.clicks, 0);
+      const cpc = totalClicks7d > 0 ? totalSpend7d / totalClicks7d : 0;
+
       const desc = g.append("g")
-        .attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 40})`)
+        .attr("transform", `translate(${adSpendNode.x0}, ${adSpendNode.y0 - 44})`)
         .style("font-family", "inherit")
         .style("font-size", "11px")
         .style("font-weight", "500")
@@ -309,6 +313,15 @@ export function SankeyChart({ data }: SankeyChartProps) {
         .attr("class", "embedded-suffix")
         .attr("x", 72 + 4 * 7 + 4)
         .text(" clicks");
+
+      if (cpc > 0) {
+        desc.append("text")
+          .attr("y", 16)
+          .attr("fill", "#6b7280")
+          .style("font-size", "10px")
+          .style("font-weight", "500")
+          .text(`$${cpc.toFixed(2)} avg CPC`);
+      }
     }
 
     // Outcomes header
