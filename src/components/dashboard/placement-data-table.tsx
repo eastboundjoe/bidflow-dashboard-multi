@@ -6,7 +6,6 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type ColumnFiltersState,
@@ -217,7 +216,7 @@ export function PlacementDataTable({
   onGoalToggle,
 }: PlacementDataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "campaign_name", desc: false },
+    { id: "spend", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -240,24 +239,93 @@ export function PlacementDataTable({
     setExpandedCampaigns(next);
   };
 
-  // Custom sort: Campaign Name ASC, then Placement Type (TOP > ROS > PP)
-  const sortedData = React.useMemo(() => {
-    return [...data].sort((a, b) => {
-        // First sort by Campaign Name
-        const campComp = a.campaign_name.localeCompare(b.campaign_name);
-        if (campComp !== 0) return campComp;
+  const placementOrder = (p: string) => {
+    const l = p.toLowerCase();
+    if (l.includes("top")) return 1;
+    if (l.includes("rest")) return 2;
+    if (l.includes("product")) return 3;
+    return 4;
+  };
 
-        // Then by Placement Type order
-        const getOrder = (p: string) => {
-            const lower = p.toLowerCase();
-            if (lower.includes("top")) return 1;
-            if (lower.includes("rest")) return 2;
-            if (lower.includes("product")) return 3;
-            return 4;
-        };
-        return getOrder(a.placement_type) - getOrder(b.placement_type);
+  // Campaign-grouped sort: sort campaign groups by the active column metric,
+  // then order placements within each group as TOP → ROS → PP.
+  const sortedData = React.useMemo(() => {
+    // Group rows by campaign
+    const campaignMap = new Map<string, PlacementData[]>();
+    data.forEach(row => {
+      const key = row.campaign_id || row.campaign_name;
+      if (!campaignMap.has(key)) campaignMap.set(key, []);
+      campaignMap.get(key)!.push(row);
     });
-  }, [data]);
+
+    // Compute a campaign-level value for the sorted column
+    const getGroupValue = (rows: PlacementData[], columnId: string): number | string => {
+      switch (columnId) {
+        case "campaign_name":      return rows[0]?.campaign_name ?? "";
+        case "portfolio_name":     return rows[0]?.portfolio_name ?? "";
+        case "campaign_budget":    return rows[0]?.campaign_budget ?? 0;
+        case "spend":              return rows.reduce((s, r) => s + r.spend, 0);
+        case "spend_7d":           return rows.reduce((s, r) => s + r.spend_7d, 0);
+        case "clicks":             return rows.reduce((s, r) => s + r.clicks, 0);
+        case "clicks_7d":          return rows.reduce((s, r) => s + r.clicks_7d, 0);
+        case "orders":             return rows.reduce((s, r) => s + r.orders, 0);
+        case "orders_7d":          return rows.reduce((s, r) => s + r.orders_7d, 0);
+        case "spent_db_yesterday": return rows.reduce((s, r) => s + r.spent_db_yesterday, 0);
+        case "spent_yesterday":    return rows.reduce((s, r) => s + r.spent_yesterday, 0);
+        case "acos": {
+          const sp = rows.reduce((s, r) => s + r.spend, 0);
+          const sa = rows.reduce((s, r) => s + r.sales, 0);
+          return sa > 0 ? (sp / sa) * 100 : 0;
+        }
+        case "acos_7d": {
+          const sp = rows.reduce((s, r) => s + r.spend_7d, 0);
+          const sa = rows.reduce((s, r) => s + r.sales_7d, 0);
+          return sa > 0 ? (sp / sa) * 100 : 0;
+        }
+        case "cvr": {
+          const cl = rows.reduce((s, r) => s + r.clicks, 0);
+          const or = rows.reduce((s, r) => s + r.orders, 0);
+          return cl > 0 ? (or / cl) * 100 : 0;
+        }
+        case "cvr_7d": {
+          const cl = rows.reduce((s, r) => s + r.clicks_7d, 0);
+          const or = rows.reduce((s, r) => s + r.orders_7d, 0);
+          return cl > 0 ? (or / cl) * 100 : 0;
+        }
+        case "roas": {
+          const sp = rows.reduce((s, r) => s + r.spend, 0);
+          const sa = rows.reduce((s, r) => s + r.sales, 0);
+          return sp > 0 ? sa / sp : 0;
+        }
+        case "bid_adjustment": return Math.max(...rows.map(r => r.bid_adjustment));
+        default:                return rows.reduce((s, r) => s + r.spend, 0);
+      }
+    };
+
+    const groups = Array.from(campaignMap.values());
+
+    if (sorting.length > 0) {
+      const { id, desc } = sorting[0];
+      groups.sort((a, b) => {
+        const va = getGroupValue(a, id);
+        const vb = getGroupValue(b, id);
+        if (typeof va === "string" && typeof vb === "string") {
+          return desc ? vb.localeCompare(va) : va.localeCompare(vb);
+        }
+        return desc ? (vb as number) - (va as number) : (va as number) - (vb as number);
+      });
+    } else {
+      // Default: highest spend first
+      groups.sort((a, b) =>
+        b.reduce((s, r) => s + r.spend, 0) - a.reduce((s, r) => s + r.spend, 0)
+      );
+    }
+
+    // Flatten — placements always in TOP → ROS → PP order within each group
+    return groups.flatMap(rows =>
+      [...rows].sort((a, b) => placementOrder(a.placement_type) - placementOrder(b.placement_type))
+    );
+  }, [data, sorting]);
 
   const columns = React.useMemo<ColumnDef<PlacementData>[]>(
     () => [
@@ -796,9 +864,9 @@ export function PlacementDataTable({
     defaultColumn: { size: 40, minSize: 36 },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    manualSorting: true,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
