@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jCKXjgmX01pKry4EuQwrceXupfT1QXlFK6nOEGd9zoScphfszhzD1YDutwaYZvN
+\restrict C83up0isiOoTvjfOT8pHg85T7Xa8LinwFs8X1YtSQPADtbS8B8iM1TDBaaJ8fwe
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -1599,8 +1599,8 @@ CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on
           WHERE (ws.status = 'completed'::text)
         )
  SELECT cwm.campaign_name AS "Campaign",
-    COALESCE(wpf.portfolio_name, 'Unknown'::text) AS "Portfolio",
-    COALESCE(wb.campaign_budget, (0)::numeric) AS "Budget",
+    COALESCE(wpf.portfolio_name, 'No Portfolio'::text) AS "Portfolio",
+    COALESCE(wb.campaign_budget, cp.campaign_budget, (0)::numeric) AS "Budget",
     COALESCE(pp.clicks_30d, (0)::bigint) AS "Clicks",
     round(COALESCE(pp.spend_30d, (0)::numeric), 2) AS "Spend",
     COALESCE(pp.purchases_30d, 0) AS "Orders",
@@ -1654,7 +1654,7 @@ CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on
      LEFT JOIN public.weekly_placement_performance pp ON (((cwm.tenant_id = pp.tenant_id) AND (cwm.week_id = pp.week_id) AND (cwm.campaign_id = pp.campaign_id) AND (cwm.placement_type = pp.placement_type))))
      LEFT JOIN public.weekly_campaign_performance cp ON (((cwm.tenant_id = cp.tenant_id) AND (cwm.week_id = cp.week_id) AND (cwm.campaign_id = cp.campaign_id))))
      LEFT JOIN public.weekly_placement_bids wb ON (((cwm.tenant_id = wb.tenant_id) AND (cwm.week_id = wb.week_id) AND (cwm.campaign_id = wb.campaign_id))))
-     LEFT JOIN public.weekly_portfolios wpf ON (((cwm.tenant_id = wpf.tenant_id) AND (cwm.week_id = wpf.week_id) AND (cp.portfolio_id = wpf.portfolio_id))))
+     LEFT JOIN public.weekly_portfolios wpf ON (((cwm.tenant_id = wpf.tenant_id) AND (cwm.week_id = wpf.week_id) AND (COALESCE(cp.portfolio_id, wb.portfolio_id) = wpf.portfolio_id))))
   ORDER BY cwm.week_id DESC, cwm.campaign_name, cwm.sort_order;
 
 
@@ -2827,5 +2827,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jCKXjgmX01pKry4EuQwrceXupfT1QXlFK6nOEGd9zoScphfszhzD1YDutwaYZvN
+\unrestrict C83up0isiOoTvjfOT8pHg85T7Xa8LinwFs8X1YtSQPADtbS8B8iM1TDBaaJ8fwe
 
