@@ -36,6 +36,7 @@ import type { PlacementData } from "@/types";
 
 interface PlacementDataTableProps {
   data: PlacementData[];
+  weekId?: string;
   onExport?: () => void;
   onEdit?: (id: string, value: string) => void;
   onSubmit?: () => void;
@@ -208,6 +209,7 @@ function GoalToggle({
 
 export function PlacementDataTable({
   data,
+  weekId,
   onExport,
   onEdit,
   onSubmit,
@@ -884,6 +886,11 @@ export function PlacementDataTable({
       },
     },
   });
+
+  // Reset to page 1 whenever the selected week changes
+  React.useEffect(() => {
+    table.setPageIndex(0);
+  }, [weekId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="w-full space-y-4">

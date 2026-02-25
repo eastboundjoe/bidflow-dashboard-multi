@@ -623,6 +623,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           ) : (
             <PlacementDataTable
               data={filteredData}
+              weekId={selectedWeek}
               onExport={handleExport}
               onEdit={handleEdit}
               onSubmit={handleSubmitChanges}
