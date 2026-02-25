@@ -520,37 +520,61 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         </Card>
       )}
 
-      {/* Stats Grid */}
-      <StatsGrid
-        stats={stats}
-        loading={loading}
-        allPlacementData={portfolioFilteredData}
-        currentWeekId={selectedWeek}
-      />
-
-      {/* Performance Trends Chart */}
-      {!loading && data.length > 0 && (
-        new Set(data.map(d => d.week_id)).size > 1 ? (
-          <PerformanceChart data={data} />
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
-                <div className="text-center">
-                  <div className="text-4xl mb-4">📈</div>
-                  <p className="text-sm">Trend data will appear after multiple weeks of collection</p>
-                  <p className="text-xs mt-2">Currently showing: {[...new Set(data.map(d => d.week_id))].join(', ')}</p>
-                </div>
+      {/* Ad Spend Flow + Spend Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sankey Chart - Takes 2 columns */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>Ad Spend Flow</CardTitle>
+              <div className="flex flex-wrap items-center gap-3">
+                <WeekSelector
+                  weeks={weeks}
+                  selectedWeek={selectedWeek}
+                  onWeekChange={setSelectedWeek}
+                  disabled={data.length === 0}
+                />
+                <PortfolioFilter
+                  portfolios={portfolios}
+                  selectedPortfolio={selectedPortfolio}
+                  onPortfolioChange={setSelectedPortfolio}
+                  disabled={data.length === 0}
+                />
               </div>
-            </CardContent>
-          </Card>
-        )
-      )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-[300px] w-full" />
+              </div>
+            ) : (
+              <SankeyChart data={filteredData} />
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Main Content */}
+        {/* Spend Distribution - Takes 1 column */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Spend Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-20 w-full mt-4" />
+              </div>
+            ) : (
+              <SpendFlowChart data={filteredData} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Placement Performance */}
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -665,59 +689,35 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Ad Spend Flow Visualization */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sankey Chart - Takes 2 columns */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle>Ad Spend Flow</CardTitle>
-              <div className="flex flex-wrap items-center gap-3">
-                <WeekSelector
-                  weeks={weeks}
-                  selectedWeek={selectedWeek}
-                  onWeekChange={setSelectedWeek}
-                  disabled={data.length === 0}
-                />
-                <PortfolioFilter
-                  portfolios={portfolios}
-                  selectedPortfolio={selectedPortfolio}
-                  onPortfolioChange={setSelectedPortfolio}
-                  disabled={data.length === 0}
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-[300px] w-full" />
-              </div>
-            ) : (
-              <SankeyChart data={filteredData} />
-            )}
-          </CardContent>
-        </Card>
+      {/* Stats Grid (Totals) */}
+      <StatsGrid
+        stats={stats}
+        loading={loading}
+        allPlacementData={portfolioFilteredData}
+        currentWeekId={selectedWeek}
+      />
 
-        {/* Spend Distribution - Takes 1 column */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Spend Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-20 w-full mt-4" />
+      {/* Performance Trends Chart */}
+      {!loading && data.length > 0 && (
+        new Set(data.map(d => d.week_id)).size > 1 ? (
+          <PerformanceChart data={data} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">📈</div>
+                  <p className="text-sm">Trend data will appear after multiple weeks of collection</p>
+                  <p className="text-xs mt-2">Currently showing: {[...new Set(data.map(d => d.week_id))].join(', ')}</p>
+                </div>
               </div>
-            ) : (
-              <SpendFlowChart data={filteredData} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        )
+      )}
     </div>
   );
 }
