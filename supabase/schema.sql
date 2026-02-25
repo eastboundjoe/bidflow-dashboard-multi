@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dUn5ZMynzyu5p9tksPTgMCUvawDLYEP42N507s8TWvhsNxU3N4aofqNPPb15kbf
+\restrict 2m5gXX6vlVMzmSggleCapusYzbuLDOasBs9ILaJJa77pfX3WagbZ7dHibUQsPap
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -1596,9 +1596,11 @@ CREATE VIEW public.view_placement_optimization_report WITH (security_invoker='on
                     weekly_placement_performance.campaign_name
                    FROM public.weekly_placement_performance) uniq ON (((ws.tenant_id = uniq.tenant_id) AND (ws.week_id = uniq.week_id))))
              CROSS JOIN placement_types pt)
-          WHERE ((ws.status = 'completed'::text) AND (EXISTS ( SELECT 1
+          WHERE ((ws.status = 'completed'::text) AND ((EXISTS ( SELECT 1
                    FROM public.weekly_placement_bids wb2
-                  WHERE ((wb2.tenant_id = ws.tenant_id) AND (wb2.week_id = ws.week_id) AND (wb2.campaign_id = uniq.campaign_id)))))
+                  WHERE ((wb2.tenant_id = ws.tenant_id) AND (wb2.week_id = ws.week_id) AND (wb2.campaign_id = uniq.campaign_id)))) OR (EXISTS ( SELECT 1
+                   FROM public.weekly_campaign_performance cp2
+                  WHERE ((cp2.tenant_id = ws.tenant_id) AND (cp2.week_id = ws.week_id) AND (cp2.campaign_id = uniq.campaign_id) AND (cp2.campaign_status = 'ENABLED'::text))))))
         )
  SELECT cwm.campaign_name AS "Campaign",
     COALESCE(wpf.portfolio_name, 'No Portfolio'::text) AS "Portfolio",
@@ -2829,5 +2831,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dUn5ZMynzyu5p9tksPTgMCUvawDLYEP42N507s8TWvhsNxU3N4aofqNPPb15kbf
+\unrestrict 2m5gXX6vlVMzmSggleCapusYzbuLDOasBs9ILaJJa77pfX3WagbZ7dHibUQsPap
 
