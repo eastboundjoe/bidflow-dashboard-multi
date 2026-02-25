@@ -189,7 +189,12 @@ export function SettingsForm({ credentials }: SettingsFormProps) {
                 Permanently delete your account and all associated data.
               </p>
             </div>
-            <Button variant="destructive" size="sm" onClick={handleDeleteAccount} className="font-bold shadow-sm">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDeleteAccount} 
+              className="bg-red-700 hover:bg-red-800 text-white dark:bg-red-800 dark:hover:bg-red-700 font-bold shadow-md border-none"
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Account
             </Button>
