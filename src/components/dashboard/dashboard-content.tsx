@@ -598,6 +598,7 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
             </div>
           ) : (
             <PlacementDataTable
+              key={selectedWeek || "default"}
               data={filteredData}
               onExport={handleExport}
               onEdit={handleEdit}
