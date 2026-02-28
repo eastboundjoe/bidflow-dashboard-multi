@@ -26,6 +26,52 @@ interface DashboardContentProps {
   initialData?: PlacementData[];
 }
 
+// Inline sub-component: auto-saving weekly goals textarea for Spend Distribution
+function WeeklyGoalsNote({
+  weekId,
+  portfolioId,
+  portfolioName,
+  value,
+  onSave,
+}: {
+  weekId: string;
+  portfolioId: string;
+  portfolioName: string | null;
+  value: string;
+  onSave: (weekId: string, portfolioId: string, note: string) => void;
+}) {
+  const [localValue, setLocalValue] = React.useState(value);
+  const savedRef = React.useRef(value);
+
+  // Sync when week or portfolio changes
+  React.useEffect(() => {
+    setLocalValue(value);
+    savedRef.current = value;
+  }, [value]);
+
+  const handleBlur = () => {
+    if (localValue !== savedRef.current) {
+      savedRef.current = localValue;
+      onSave(weekId, portfolioId, localValue);
+    }
+  };
+
+  const label = portfolioName ? `Goals — ${portfolioName}` : "Goals — All Portfolios";
+
+  return (
+    <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800">
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">{label}</p>
+      <textarea
+        className="w-full min-h-[80px] resize-none rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition-colors"
+        placeholder="Add weekly goals or notes for this portfolio..."
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={handleBlur}
+      />
+    </div>
+  );
+}
+
 
 export function DashboardContent({ initialData = [] }: DashboardContentProps) {
   const [data, setData] = React.useState<PlacementData[]>(initialData);
@@ -79,9 +125,10 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     try {
       const supabase = createClient();
 
-      const [{ data: placements, error: fetchError }, { data: notes }] = await Promise.all([
+      const [{ data: placements, error: fetchError }, { data: notes }, { data: portfolioGoals }] = await Promise.all([
         supabase.from("view_placement_optimization_report").select("*").order("Spend", { ascending: false }),
         supabase.from("campaign_notes").select("*"),
+        supabase.from("portfolio_goals").select("*"),
       ]);
 
       if (fetchError) {
@@ -96,6 +143,13 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           goal_completed: n.goal_completed ?? null,
         });
       });
+
+      // Build portfolio goals lookup: "weekId|portfolioId" → note
+      const goalsMap = new Map<string, string>();
+      (portfolioGoals || []).forEach((g: any) => {
+        goalsMap.set(`${g.week_id}|${g.portfolio_id}`, g.note || "");
+      });
+      setPortfolioGoalsMap(goalsMap);
 
       // Map view columns to lowercase type properties
       // Using select("*") and accessing columns by their actual names
@@ -230,6 +284,8 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
     }
   }, [fetchData, initialData.length]);
 
+  const [portfolioGoalsMap, setPortfolioGoalsMap] = React.useState<Map<string, string>>(new Map());
+
   const [submitting, setSubmitting] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [pendingChanges, setPendingChanges] = React.useState<ReturnType<typeof buildChanges>>([]);
@@ -326,6 +382,29 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
       await supabase.from("campaign_notes").upsert(
         { tenant_id: user.id, week_id: weekId, campaign_id: campaignId, placement_type: placementType, goal_completed: next },
         { onConflict: "tenant_id,week_id,campaign_id,placement_type" }
+      );
+    }
+  }, []);
+
+  // Handle saving a portfolio-level weekly goal (auto-save on blur)
+  const handlePortfolioGoalEdit = React.useCallback(async (
+    weekId: string, portfolioId: string, note: string
+  ) => {
+    const key = `${weekId}|${portfolioId}`;
+    setPortfolioGoalsMap((prev) => new Map(prev).set(key, note));
+    const supabase = createClient();
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+    if (!note.trim()) {
+      await supabase.from("portfolio_goals")
+        .delete()
+        .eq("tenant_id", user.id)
+        .eq("week_id", weekId)
+        .eq("portfolio_id", portfolioId);
+    } else {
+      await supabase.from("portfolio_goals").upsert(
+        { tenant_id: user.id, week_id: weekId, portfolio_id: portfolioId, note, updated_at: new Date().toISOString() },
+        { onConflict: "tenant_id,week_id,portfolio_id" }
       );
     }
   }, []);
@@ -555,11 +634,11 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
         </Card>
 
         {/* Spend Distribution - Takes 1 column */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>Spend Distribution</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col flex-1 gap-4">
             {loading ? (
               <div className="space-y-4">
                 <Skeleton className="h-6 w-full" />
@@ -568,7 +647,20 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
                 <Skeleton className="h-20 w-full mt-4" />
               </div>
             ) : (
-              <SpendFlowChart data={filteredData} />
+              <>
+                <SpendFlowChart data={filteredData} />
+                <WeeklyGoalsNote
+                  weekId={selectedWeek}
+                  portfolioId={selectedPortfolio ?? "__ALL__"}
+                  portfolioName={
+                    selectedPortfolio
+                      ? (portfolios.find((p) => p.id === selectedPortfolio)?.name ?? selectedPortfolio)
+                      : null
+                  }
+                  value={portfolioGoalsMap.get(`${selectedWeek}|${selectedPortfolio ?? "__ALL__"}`) ?? ""}
+                  onSave={handlePortfolioGoalEdit}
+                />
+              </>
             )}
           </CardContent>
         </Card>
