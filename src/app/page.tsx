@@ -727,16 +727,12 @@ export default function HomePage() {
                 &copy; {new Date().getFullYear()} BidFlow. All rights reserved.
               </p>
             </div>
-            <div className="flex justify-end gap-8 text-sm font-medium text-slate-600 dark:text-slate-400">
-              <Link href="/privacy" className="hover:text-primary transition-colors">
-                Privacy
-              </Link>
-              <Link href="/terms" className="hover:text-primary transition-colors">
-                Terms
-              </Link>
-              <a href="mailto:support@bidflow.app" className="hover:text-primary transition-colors">
-                Contact
-              </a>
+            <div className="flex flex-wrap justify-end gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+              <Link href="/about" className="hover:text-primary transition-colors">About</Link>
+              <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+              <Link href="/cookies" className="hover:text-primary transition-colors">Cookies</Link>
+              <a href="mailto:support@bidflow.app" className="hover:text-primary transition-colors">Contact</a>
             </div>
           </div>
         </div>
