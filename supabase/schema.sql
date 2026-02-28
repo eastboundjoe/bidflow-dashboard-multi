@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DjlUi0BAPbbEuVI2GdtwNYW8jZN4tCidynlLu9ZvQ3qlXU3Es5zXhiaHapiXNcl
+\restrict 5zCxvN9AkremM6m4ljbxMqQZDgf5DTnhgtheU2ea4mQQot2Z30DR0iHUIcdx7qk
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -854,6 +854,20 @@ COMMENT ON TABLE public.placement_bids IS 'Current placement bid adjustments for
 --
 
 COMMENT ON COLUMN public.placement_bids.placement_top_of_search IS 'Bid adjustment percentage for top of search placement';
+
+
+--
+-- Name: portfolio_goals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.portfolio_goals (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    portfolio_id text NOT NULL,
+    note text DEFAULT ''::text NOT NULL,
+    updated_at timestamp with time zone DEFAULT now()
+);
 
 
 --
@@ -1885,6 +1899,22 @@ ALTER TABLE ONLY public.placement_bids
 
 
 --
+-- Name: portfolio_goals portfolio_goals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portfolio_goals
+    ADD CONSTRAINT portfolio_goals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: portfolio_goals portfolio_goals_tenant_id_week_id_portfolio_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portfolio_goals
+    ADD CONSTRAINT portfolio_goals_tenant_id_week_id_portfolio_id_key UNIQUE (tenant_id, week_id, portfolio_id);
+
+
+--
 -- Name: portfolios portfolios_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2732,6 +2762,13 @@ CREATE POLICY "Users can view their own weekly snapshots" ON public.weekly_snaps
 
 
 --
+-- Name: portfolio_goals Users manage own portfolio goals; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY "Users manage own portfolio goals" ON public.portfolio_goals USING ((tenant_id = auth.uid())) WITH CHECK ((tenant_id = auth.uid()));
+
+
+--
 -- Name: campaign_notes; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2748,6 +2785,12 @@ ALTER TABLE public.credentials ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.placement_bids ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: portfolio_goals; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.portfolio_goals ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: portfolios; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2831,5 +2874,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DjlUi0BAPbbEuVI2GdtwNYW8jZN4tCidynlLu9ZvQ3qlXU3Es5zXhiaHapiXNcl
+\unrestrict 5zCxvN9AkremM6m4ljbxMqQZDgf5DTnhgtheU2ea4mQQot2Z30DR0iHUIcdx7qk
 
