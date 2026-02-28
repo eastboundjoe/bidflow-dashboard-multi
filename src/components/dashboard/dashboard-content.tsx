@@ -56,13 +56,20 @@ function WeeklyGoalsNote({
     }
   };
 
+  const hasContent = localValue.trim().length > 0;
   const label = portfolioName ? `Goals — ${portfolioName}` : "Goals — All Portfolios";
 
   return (
-    <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800">
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">{label}</p>
+    <div className={`mt-auto pt-3 border-t transition-colors ${hasContent ? "border-orange-200 dark:border-orange-800" : "border-slate-100 dark:border-slate-800"}`}>
+      <p className={`text-xs font-medium mb-1.5 transition-colors ${hasContent ? "text-orange-600 dark:text-orange-400" : "text-slate-500 dark:text-slate-400"}`}>
+        {label}
+      </p>
       <textarea
-        className="w-full min-h-[80px] resize-none rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 transition-colors"
+        className={`w-full min-h-[80px] resize-none rounded-lg border px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-colors ${
+          hasContent
+            ? "border-orange-500 bg-orange-50/50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-600"
+            : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+        }`}
         placeholder="Add weekly goals or notes for this portfolio..."
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
