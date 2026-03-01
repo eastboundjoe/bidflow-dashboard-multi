@@ -67,29 +67,22 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
-        <Badge variant="secondary" className="mb-4 bg-white/10 text-blue-300 border-white/20 font-medium backdrop-blur-sm">
-          Built for Amazon PPC Sellers
-        </Badge>
         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.05]">
           Stop Guessing.
           <br />
           <span className="text-blue-400">Start Optimizing.</span>
         </h1>
         <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">
-          BidFlow automatically tracks your placement performance across Top of Search, Rest of Search, and Product Pages — so you know exactly where to raise or cut bids to{" "}
-          <strong className="text-white">maximize your ROAS</strong>.
+          BidFlow automatically tracks your placement performance across Top of Search, Rest of Search, and Product Pages.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-          <Button asChild size="lg" className="w-full sm:w-auto px-8 shadow-md">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <Button asChild size="lg" className="w-full sm:w-auto px-8 shadow-md text-white">
             <Link href="/signup">Start Free Trial</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent">
             <Link href="#features">See How It Works</Link>
           </Button>
         </div>
-        <p className="text-sm text-slate-400 mb-12">
-          30-day free trial. No credit card required.
-        </p>
 
         {/* Floating Mini Dashboard Preview */}
         <div className="max-w-2xl mx-auto">
