@@ -583,8 +583,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
     let t = 0;
 
     function tick() {
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = c.width;
+      const h = c.height;
       ctx.fillStyle = "rgba(10, 15, 35, 0.07)";
       ctx.fillRect(0, 0, w, h);
       t += 0.008;
