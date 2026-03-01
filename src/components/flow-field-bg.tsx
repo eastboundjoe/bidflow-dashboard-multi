@@ -34,9 +34,11 @@ export function FlowFieldBg() {
       ) * Math.PI;
     }
 
+    const c = canvas; // capture non-null reference for closures
+
     const particles = Array.from({ length: NUM_PARTICLES }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
       life: Math.random(),
       maxLife: 0.6 + Math.random() * 0.4,
     }));
@@ -44,8 +46,8 @@ export function FlowFieldBg() {
     let t = 0;
 
     function tick() {
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = c.width;
+      const h = c.height;
 
       // Fade previous frame — lower alpha = longer trails
       ctx.fillStyle = "rgba(3, 7, 18, 0.06)";
@@ -90,7 +92,7 @@ export function FlowFieldBg() {
 
     // Initial dark fill
     ctx.fillStyle = "rgb(3, 7, 18)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, c.width, c.height);
     tick();
 
     window.addEventListener("resize", resize);
