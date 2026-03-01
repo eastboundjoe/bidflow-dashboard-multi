@@ -32,6 +32,22 @@ export default async function SettingsPage() {
         </p>
       </div>
 
+      {error && error.code !== "PGRST116" && (
+        <Card className="border-destructive/50 bg-destructive/10">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Error Fetching Settings
+            </CardTitle>
+            <CardDescription>
+              There was an error loading your settings: {error.message}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      <SettingsForm credentials={credentials} />
+
       {/* Amazon connection status card */}
       <Card className={credentials?.status === "active" ? "border-green-500/50" : "border-amber-400/50"}>
         <CardHeader className={credentials?.status === "active" ? "bg-green-50/50 dark:bg-green-900/10 border-b border-green-100 dark:border-green-900/20" : "bg-amber-50/50 dark:bg-amber-900/10 border-b border-amber-100 dark:border-amber-900/20"}>
@@ -64,22 +80,6 @@ export default async function SettingsPage() {
           </Link>
         </CardFooter>
       </Card>
-
-      {error && error.code !== "PGRST116" && (
-        <Card className="border-destructive/50 bg-destructive/10">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Error Fetching Settings
-            </CardTitle>
-            <CardDescription>
-              There was an error loading your settings: {error.message}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
-      <SettingsForm credentials={credentials} />
     </div>
   );
 }
