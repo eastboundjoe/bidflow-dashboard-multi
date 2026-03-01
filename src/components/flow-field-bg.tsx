@@ -57,8 +57,8 @@ export function FlowFieldBg() {
       const w = c.width;
       const h = c.height;
 
-      // Moderate fade — short visible trails, no full laser streaks
-      ctx.fillStyle = "rgba(3, 7, 18, 0.12)";
+      // Gentle fade — leaves short memory of movement without line artifacts
+      ctx.fillStyle = "rgba(3, 7, 18, 0.15)";
       ctx.fillRect(0, 0, w, h);
 
       t += 0.008;
@@ -66,8 +66,6 @@ export function FlowFieldBg() {
       for (const p of particles) {
         const angle = flowAngle(p.x, p.y, t);
 
-        const prevX = p.x;
-        const prevY = p.y;
         p.x += Math.cos(angle) * SPEED;
         p.y += Math.sin(angle) * SPEED;
         p.life -= 0.004;
@@ -82,16 +80,14 @@ export function FlowFieldBg() {
           p.life = p.maxLife;
         }
 
-        const alpha = (p.life / p.maxLife) * 0.75;
+        const alpha = (p.life / p.maxLife) * 0.8;
         // Rainbow cycling: each particle has an offset, hue shifts over time
         const hue = (p.hueOffset + t * 40) % 360;
 
         ctx.beginPath();
-        ctx.moveTo(prevX, prevY);
-        ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = `hsla(${hue}, 90%, 65%, ${alpha})`;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
+        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 90%, 65%, ${alpha})`;
+        ctx.fill();
       }
 
       animId = requestAnimationFrame(tick);
