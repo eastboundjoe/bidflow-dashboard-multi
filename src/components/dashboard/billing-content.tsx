@@ -138,8 +138,7 @@ export function BillingContent({ subscription }: BillingContentProps) {
           <CardContent className="space-y-6 pt-8 flex-grow">
             <ul className="space-y-4">
               {[
-                "90 days historical data",
-                "Up to 5 Amazon Ads accounts",
+                "1 Amazon Ads account",
                 "Weekly automated reports",
                 "Placement analytics dashboard",
                 "Sankey flow visualizations",

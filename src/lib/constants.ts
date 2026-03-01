@@ -41,7 +41,7 @@ export const TIER_LIMITS = {
   },
   [SUBSCRIPTION_TIERS.STARTER]: {
     historicalDays: 90,
-    maxAccounts: 5,
+    maxAccounts: 1,
     reportFrequency: "weekly",
   },
 } as const;
