@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FlowFieldBg } from "@/components/flow-field-bg";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,8 +25,12 @@ import {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-gray-900 dark:to-gray-950 font-sans">
+      {/* Dark hero wrapper with flow field */}
+      <div className="relative bg-[#030712] overflow-hidden">
+        <FlowFieldBg />
+
       {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm dark:bg-gray-950/80 sticky top-0 z-50">
+      <nav className="relative z-10 border-b border-white/10 bg-transparent sticky top-0 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2 group">
@@ -34,22 +39,22 @@ export default function HomePage() {
                   <path d="M9 7h8.5a5.5 5.5 0 0 1 0 11H9V7zm0 18h9.5a5.5 5.5 0 0 0 0-11H9v11z" fill="#10B981" transform="scale(0.85) translate(2.5, 2.5)"/>
                 </svg>
               </div>
-              <span className="text-xl font-bold tracking-tight">BidFlow</span>
+              <span className="text-xl font-bold tracking-tight text-white">BidFlow</span>
             </div>
             <div className="flex items-center gap-4">
               <Link
                 href="#features"
-                className="hidden sm:block text-slate-600 hover:text-primary font-medium transition-colors"
+                className="hidden sm:block text-slate-300 hover:text-white font-medium transition-colors"
               >
                 Features
               </Link>
               <Link
                 href="#pricing"
-                className="hidden sm:block text-slate-600 hover:text-primary font-medium transition-colors"
+                className="hidden sm:block text-slate-300 hover:text-white font-medium transition-colors"
               >
                 Pricing
               </Link>
-              <Button asChild variant="outline" className="border-slate-300 hover:border-primary hover:text-primary font-medium">
+              <Button asChild variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:border-white/40 font-medium bg-transparent">
                 <Link href="/login">Log in</Link>
               </Button>
               <Button asChild>
@@ -61,18 +66,18 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 text-center">
-        <Badge variant="secondary" className="mb-4 bg-blue-50 text-blue-700 border-blue-200 font-medium">
+      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
+        <Badge variant="secondary" className="mb-4 bg-white/10 text-blue-300 border-white/20 font-medium backdrop-blur-sm">
           Built for Amazon PPC Sellers
         </Badge>
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6 leading-tight">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
           Stop Guessing.
           <br />
-          <span className="text-primary">Start Optimizing.</span>
+          <span className="text-blue-400">Start Optimizing.</span>
         </h1>
-        <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="text-xl text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">
           BidFlow automatically tracks your placement performance across Top of Search, Rest of Search, and Product Pages — so you know exactly where to raise or cut bids to{" "}
-          <strong className="text-slate-900 dark:text-slate-100">maximize your ROAS</strong>.
+          <strong className="text-white">maximize your ROAS</strong>.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
           <Button asChild size="lg" className="w-full sm:w-auto px-8 shadow-md">
@@ -82,7 +87,7 @@ export default function HomePage() {
             <Link href="#features">See How It Works</Link>
           </Button>
         </div>
-        <p className="text-sm text-slate-500 mb-12">
+        <p className="text-sm text-slate-400 mb-12">
           30-day free trial. No credit card required.
         </p>
 
@@ -190,6 +195,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      </div>{/* end flow field hero wrapper */}
 
       {/* Stats Strip */}
       <section className="border-y border-slate-100 dark:border-slate-800 bg-white dark:bg-gray-950 py-10">
