@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { AMAZON_CLIENT_ID } from "@/lib/constants";
+import { AMAZON_CLIENT_ID, N8N_WEBHOOKS } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -139,11 +139,23 @@ export async function GET(request: Request) {
 
     if (metaError) throw metaError;
 
+    // Set report_day to today's weekday
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const reportDay = days[new Date().getDay()];
+    await supabase.from('credentials').update({ report_day: reportDay }).eq('tenant_id', user.id);
+
+    // Fire-and-forget: trigger Flow 0.1 to seed first week of data
+    fetch(N8N_WEBHOOKS.SEED, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenant_id: user.id, trigger_source: 'onboarding' }),
+    }).catch(() => {});
+
     // Clear cookies
     cookieStore.delete("amz_auth_state");
     cookieStore.delete("amz_code_verifier");
 
-    return NextResponse.redirect(new URL("/dashboard/connect?success=true", request.url));
+    return NextResponse.redirect(new URL("/dashboard/collecting", request.url));
   } catch (err) {
     console.error("Callback error:", err);
     return NextResponse.redirect(
