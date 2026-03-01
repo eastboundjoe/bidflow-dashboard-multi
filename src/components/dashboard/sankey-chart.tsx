@@ -547,10 +547,11 @@ export function SankeyChart({ data }: SankeyChartProps) {
     if (!ctx) return;
 
     let animId: number;
+    const c = canvas;
 
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      c.width = c.offsetWidth;
+      c.height = c.offsetHeight;
     };
     resize();
 
@@ -558,8 +559,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
     const SPEED = 1.0;
 
     function flowAngle(x: number, y: number, t: number) {
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
+      const cx = c.width / 2;
+      const cy = c.height / 2;
       const dx = x - cx;
       const dy = y - cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -572,8 +573,8 @@ export function SankeyChart({ data }: SankeyChartProps) {
     }
 
     const particles = Array.from({ length: NUM_PARTICLES }, (_, i) => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
       life: Math.random(),
       maxLife: 0.6 + Math.random() * 0.4,
       hueOffset: (i / NUM_PARTICLES) * 360,
@@ -608,7 +609,7 @@ export function SankeyChart({ data }: SankeyChartProps) {
     }
 
     ctx.fillStyle = "rgb(10, 15, 35)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, c.width, c.height);
     tick();
 
     window.addEventListener("resize", resize);
