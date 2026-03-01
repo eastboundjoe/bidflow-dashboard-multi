@@ -82,7 +82,7 @@ export function FlowFieldBg() {
         ctx.shadowBlur = 8;
         ctx.shadowColor = p.isRed ? "rgba(220,60,40,0.6)" : "rgba(60,130,255,0.6)";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
         ctx.shadowBlur = 0;
