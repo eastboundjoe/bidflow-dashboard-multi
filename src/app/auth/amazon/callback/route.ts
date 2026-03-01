@@ -130,7 +130,6 @@ export async function GET(request: Request) {
       .upsert({
         tenant_id: user.id,
         amazon_profile_id: profileId.toString(),
-        profile_id: profileId.toString(), // Backup for legacy column name
         status: "active",
         updated_at: new Date().toISOString(),
       }, {
@@ -158,8 +157,13 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/dashboard/collecting", request.url));
   } catch (err) {
     console.error("Callback error:", err);
+    const message = err instanceof Error
+      ? err.message
+      : typeof err === "object" && err !== null && "message" in err
+        ? String((err as any).message)
+        : JSON.stringify(err);
     return NextResponse.redirect(
-      new URL(`/dashboard/connect?error=${encodeURIComponent(err instanceof Error ? err.message : "Unknown error")}`, request.url)
+      new URL(`/dashboard/connect?error=${encodeURIComponent(message)}`, request.url)
     );
   }
 }
