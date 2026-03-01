@@ -570,29 +570,26 @@ export default function HomePage() {
       >
         <h2 className="text-3xl font-bold text-center mb-3 text-slate-900 dark:text-white">Simple Pricing</h2>
         <p className="text-center text-slate-600 dark:text-slate-400 mb-12">
-          Start free, upgrade when you&apos;re ready.
+          One plan. Everything included.
         </p>
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-          {/* Pro — matched to Enterprise styling */}
-          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg flex flex-col">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge variant="outline" className="bg-white dark:bg-gray-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 shadow-sm px-4">Most Popular</Badge>
-            </div>
+        <div className="flex justify-center">
+          <Card className="border-2 border-blue-300 dark:border-blue-800 relative shadow-xl flex flex-col w-full max-w-sm">
             <CardHeader className="text-center pt-8">
-              <CardTitle className="text-2xl">Pro</CardTitle>
+              <CardTitle className="text-2xl">Starter</CardTitle>
               <div className="mt-4">
-                <span className="text-5xl font-extrabold">$29</span>
+                <span className="text-5xl font-extrabold text-blue-600 dark:text-blue-400">$10</span>
                 <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
               </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">30-day free trial · Credit card required</p>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="space-y-3">
                 {[
                   "90 days historical data",
-                  "Up to 3 Amazon Ads accounts",
+                  "Up to 5 Amazon Ads accounts",
                   "Weekly automated reports",
                   "Placement analytics dashboard",
-                  "CSV export",
+                  "Sankey flow visualizations",
                   "Email support",
                 ].map((feature) => (
                   <li key={feature} className="flex items-center gap-2">
@@ -603,45 +600,8 @@ export default function HomePage() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Button asChild className="w-full" variant="outline" size="lg">
-                <Link href="/signup">Start Free Trial</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-
-          {/* Enterprise — elevated secondary tier */}
-          <Card className="border-2 border-slate-200 dark:border-slate-700 relative shadow-lg flex flex-col">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge variant="outline" className="bg-white dark:bg-gray-900 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 shadow-sm px-4">Scale Up</Badge>
-            </div>
-            <CardHeader className="text-center pt-8">
-              <CardTitle className="text-2xl">Enterprise</CardTitle>
-              <div className="mt-4">
-                <span className="text-5xl font-extrabold">$99</span>
-                <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <ul className="space-y-3">
-                {[
-                  "Unlimited historical data",
-                  "Unlimited Amazon Ads accounts",
-                  "Daily automated reports",
-                  "Advanced Sankey visualizations",
-                  "API access",
-                  "Priority support",
-                  "Custom integrations",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-slate-700 dark:text-slate-300 font-medium">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button asChild className="w-full" variant="outline" size="lg">
-                <Link href="/signup">Start Free Trial</Link>
+              <Button asChild className="w-full btn-gradient font-bold" size="lg">
+                <Link href="/signup">Start 30-Day Free Trial</Link>
               </Button>
             </CardFooter>
           </Card>

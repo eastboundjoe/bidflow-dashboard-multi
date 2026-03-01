@@ -5,8 +5,7 @@ export const APP_DESCRIPTION = "Amazon Placement Optimizer";
 
 // Stripe Price IDs
 export const STRIPE_PRICES = {
-  PRO: process.env.STRIPE_PRO_PRICE_ID || "price_1SilYGCmYUDdt3YtJZUK1EB6",
-  ENTERPRISE: process.env.STRIPE_ENTERPRISE_PRICE_ID || "price_1SilZOCmYUDdt3YteqUqq7zU",
+  STARTER: process.env.STRIPE_STARTER_PRICE_ID || "price_1SilYGCmYUDdt3YtJZUK1EB6",
 } as const;
 
 // n8n Webhooks
@@ -19,8 +18,7 @@ export const N8N_WEBHOOKS = {
 // Subscription Tiers
 export const SUBSCRIPTION_TIERS = {
   FREE: "free",
-  PRO: "pro",
-  ENTERPRISE: "enterprise",
+  STARTER: "starter",
 } as const;
 
 export type SubscriptionTier = typeof SUBSCRIPTION_TIERS[keyof typeof SUBSCRIPTION_TIERS];
@@ -41,15 +39,10 @@ export const TIER_LIMITS = {
     maxAccounts: 1,
     reportFrequency: "manual",
   },
-  [SUBSCRIPTION_TIERS.PRO]: {
+  [SUBSCRIPTION_TIERS.STARTER]: {
     historicalDays: 90,
-    maxAccounts: 3,
+    maxAccounts: 5,
     reportFrequency: "weekly",
-  },
-  [SUBSCRIPTION_TIERS.ENTERPRISE]: {
-    historicalDays: Infinity,
-    maxAccounts: Infinity,
-    reportFrequency: "daily",
   },
 } as const;
 

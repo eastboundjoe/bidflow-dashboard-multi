@@ -4,7 +4,7 @@ import * as React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Loader2, ExternalLink, Zap, Shield, Rocket } from "lucide-react";
+import { Check, Loader2, ExternalLink, Zap, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { SUBSCRIPTION_TIERS, TIER_LIMITS, STRIPE_PRICES } from "@/lib/constants";
@@ -64,7 +64,7 @@ export function BillingContent({ subscription }: BillingContentProps) {
   const currentTier = subscription?.subscription_tier || SUBSCRIPTION_TIERS.FREE;
   const isCanceled = subscription?.subscription_status === "canceled";
   const isTrialing = subscription?.subscription_status === "trialing" || currentTier === SUBSCRIPTION_TIERS.FREE;
-  const tierLabel = isTrialing && currentTier === SUBSCRIPTION_TIERS.FREE ? "Free Trial" : currentTier;
+  const tierLabel = isTrialing && currentTier === SUBSCRIPTION_TIERS.FREE ? "Free Trial" : currentTier === SUBSCRIPTION_TIERS.STARTER ? "Starter" : currentTier;
 
   // Guard against null/epoch trial_ends_at
   const trialEndsAt = subscription?.trial_ends_at
@@ -101,7 +101,7 @@ export function BillingContent({ subscription }: BillingContentProps) {
                   : "You're on a free trial. Upgrade to keep access after your trial ends."}
               </p>
             </div>
-            {currentTier !== SUBSCRIPTION_TIERS.FREE && (
+            {currentTier === SUBSCRIPTION_TIERS.STARTER && (
               <Button 
                 variant="outline" 
                 onClick={handleManageSubscription}
@@ -121,122 +121,51 @@ export function BillingContent({ subscription }: BillingContentProps) {
       </Card>
 
       {/* Pricing Tiers */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Pro Plan */}
-        <Card className={cn("relative flex flex-col h-full card-hover border-blue-300 dark:border-blue-900 shadow-lg", currentTier === SUBSCRIPTION_TIERS.PRO && "border-blue-500 ring-1 ring-blue-500/20")}>
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md z-10">
-            Most Popular
-          </div>
+      <div className="flex justify-center">
+        <Card className={cn("relative flex flex-col w-full max-w-sm card-hover border-blue-300 dark:border-blue-900 shadow-lg", currentTier === SUBSCRIPTION_TIERS.STARTER && "border-blue-500 ring-1 ring-blue-500/20")}>
           <CardHeader className="text-center pb-8 border-b border-blue-50 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/10">
             <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold text-blue-600 dark:text-blue-400">
               <Shield className="h-5 w-5" />
-              Pro
+              Starter
             </CardTitle>
-            <CardDescription className="text-xs">For growing Amazon brands.</CardDescription>
+            <CardDescription className="text-xs">Everything you need to optimize placements.</CardDescription>
             <div className="mt-6">
-              <span className="text-5xl font-extrabold tracking-tighter text-blue-600 dark:text-blue-400">$29</span>
+              <span className="text-5xl font-extrabold tracking-tighter text-blue-600 dark:text-blue-400">$10</span>
               <span className="text-slate-500 text-sm ml-1">/month</span>
             </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">30-day free trial · Credit card required</p>
           </CardHeader>
           <CardContent className="space-y-6 pt-8 flex-grow">
             <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+              {[
+                "90 days historical data",
+                "Up to 5 Amazon Ads accounts",
+                "Weekly automated reports",
+                "Placement analytics dashboard",
+                "Sankey flow visualizations",
+                "Email support",
+              ].map((feature) => (
+                <li key={feature} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
+                  <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
                     <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>{TIER_LIMITS.pro.historicalDays} days historical data</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>{TIER_LIMITS.pro.maxAccounts} Amazon Ads accounts</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Weekly automated reports</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Priority data processing</span>
-              </li>
+                  </div>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
           </CardContent>
           <CardFooter className="pt-2 pb-6 px-6">
-            <Button 
+            <Button
               className="w-full btn-gradient font-bold py-6 text-base"
-              onClick={() => handleUpgrade(SUBSCRIPTION_TIERS.PRO, STRIPE_PRICES.PRO)}
-              disabled={!!loading || currentTier === SUBSCRIPTION_TIERS.PRO}
+              onClick={() => handleUpgrade(SUBSCRIPTION_TIERS.STARTER, STRIPE_PRICES.STARTER)}
+              disabled={!!loading || currentTier === SUBSCRIPTION_TIERS.STARTER}
             >
-              {loading === SUBSCRIPTION_TIERS.PRO ? (
+              {loading === SUBSCRIPTION_TIERS.STARTER ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : currentTier === SUBSCRIPTION_TIERS.PRO ? (
+              ) : currentTier === SUBSCRIPTION_TIERS.STARTER ? (
                 "Current Plan"
               ) : (
-                "Upgrade to Pro"
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Enterprise Plan */}
-        <Card className={cn("flex flex-col h-full card-hover border-slate-200 dark:border-slate-800", currentTier === SUBSCRIPTION_TIERS.ENTERPRISE && "border-blue-500 shadow-md ring-1 ring-blue-500/20")}>
-          <CardHeader className="text-center pb-8 border-b border-slate-50 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-900/10">
-            <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
-              <Rocket className="h-5 w-5 text-blue-400" />
-              Enterprise
-            </CardTitle>
-            <CardDescription className="text-xs">Scale without limits.</CardDescription>
-            <div className="mt-6">
-              <span className="text-5xl font-extrabold tracking-tighter">$99</span>
-              <span className="text-slate-500 text-sm ml-1">/month</span>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-8 flex-grow">
-            <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Unlimited historical data</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Unlimited Amazon Ads accounts</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Daily automated reports</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Dedicated account manager</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter className="pt-2 pb-6 px-6">
-            <Button 
-              className="w-full font-bold"
-              variant={currentTier === SUBSCRIPTION_TIERS.ENTERPRISE ? "outline" : "default"}
-              onClick={() => handleUpgrade(SUBSCRIPTION_TIERS.ENTERPRISE, STRIPE_PRICES.ENTERPRISE)}
-              disabled={!!loading || currentTier === SUBSCRIPTION_TIERS.ENTERPRISE}
-            >
-              {loading === SUBSCRIPTION_TIERS.ENTERPRISE ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : currentTier === SUBSCRIPTION_TIERS.ENTERPRISE ? (
-                "Current Plan"
-              ) : (
-                "Contact Sales"
+                "Start 30-Day Free Trial"
               )}
             </Button>
           </CardFooter>
