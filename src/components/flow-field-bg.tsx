@@ -19,19 +19,17 @@ export function FlowFieldBg() {
     };
     resize();
 
-    const COLS = 50;
-    const ROWS = 35;
-    const NUM_PARTICLES = 280;
-    const SPEED = 1.4;
+    const NUM_PARTICLES = 320;
+    const SPEED = 0.55; // slow = short line segments per frame = no laser beams
 
-    // Smooth pseudo-noise using layered sin/cos
+    // Low-frequency noise so the flow field curves gently
     function flowAngle(x: number, y: number, t: number) {
-      const nx = (x / COLS) * 4;
-      const ny = (y / ROWS) * 4;
+      const nx = x * 0.003;
+      const ny = y * 0.003;
       return (
-        Math.sin(nx + t) * Math.cos(ny + t * 0.6) +
-        Math.sin(nx * 0.5 - t * 0.4) * Math.cos(ny * 0.7 + t * 0.3)
-      ) * Math.PI;
+        Math.sin(nx + t * 0.4) * Math.cos(ny + t * 0.3) +
+        Math.sin(nx * 0.5 - t * 0.2) * 0.5
+      ) * Math.PI * 2;
     }
 
     const c = canvas; // capture non-null reference for closures
@@ -40,7 +38,7 @@ export function FlowFieldBg() {
       x: Math.random() * c.width,
       y: Math.random() * c.height,
       life: Math.random(),
-      maxLife: 0.6 + Math.random() * 0.4,
+      maxLife: 0.5 + Math.random() * 0.5,
     }));
 
     let t = 0;
@@ -49,22 +47,20 @@ export function FlowFieldBg() {
       const w = c.width;
       const h = c.height;
 
-      // Fade previous frame — lower alpha = longer trails
-      ctx.fillStyle = "rgba(3, 7, 18, 0.06)";
+      // Fast fade = short trails, no laser streaks
+      ctx.fillStyle = "rgba(3, 7, 18, 0.18)";
       ctx.fillRect(0, 0, w, h);
 
-      t += 0.0025;
+      t += 0.0015;
 
       for (const p of particles) {
-        const col = Math.floor((p.x / w) * COLS);
-        const row = Math.floor((p.y / h) * ROWS);
-        const angle = flowAngle(col, row, t);
+        const angle = flowAngle(p.x, p.y, t);
 
         const prevX = p.x;
         const prevY = p.y;
         p.x += Math.cos(angle) * SPEED;
         p.y += Math.sin(angle) * SPEED;
-        p.life -= 0.004;
+        p.life -= 0.003;
 
         if (
           p.life <= 0 ||
@@ -76,14 +72,13 @@ export function FlowFieldBg() {
           p.life = p.maxLife;
         }
 
-        const alpha = (p.life / p.maxLife) * 0.55;
-        // Blue-teal gradient per particle
-        const hue = 200 + Math.sin(p.x / w * Math.PI) * 30;
+        const alpha = (p.life / p.maxLife) * 0.4;
+        const hue = 205 + Math.sin(p.x * 0.005) * 20; // gentle blue-teal shift
         ctx.beginPath();
         ctx.moveTo(prevX, prevY);
         ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = `hsla(${hue}, 80%, 65%, ${alpha})`;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = `hsla(${hue}, 75%, 65%, ${alpha})`;
+        ctx.lineWidth = 0.8;
         ctx.stroke();
       }
 
