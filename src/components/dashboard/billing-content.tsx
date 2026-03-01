@@ -90,7 +90,7 @@ export function BillingContent({ subscription }: BillingContentProps) {
                   ? `Your trial ends on ${new Date(subscription.trial_ends_at!).toLocaleDateString()}.`
                   : isCanceled
                   ? "Your subscription has been canceled but you still have access until the end of the period."
-                  : "You are currently on the free plan with limited features."}
+                  : "You're on a free trial. Upgrade to keep access after your trial ends."}
               </p>
             </div>
             {currentTier !== SUBSCRIPTION_TIERS.FREE && (
@@ -113,50 +113,7 @@ export function BillingContent({ subscription }: BillingContentProps) {
       </Card>
 
       {/* Pricing Tiers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Free Plan */}
-        <Card className={cn("flex flex-col h-full card-hover border-slate-200 dark:border-slate-800", currentTier === SUBSCRIPTION_TIERS.FREE && "border-blue-500 shadow-md ring-1 ring-blue-500/20")}>
-          <CardHeader className="text-center pb-8 border-b border-slate-50 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-900/10">
-            <CardTitle className="text-xl font-bold">Free</CardTitle>
-            <CardDescription className="text-xs">Perfect for testing the waters.</CardDescription>
-            <div className="mt-6">
-              <span className="text-5xl font-extrabold tracking-tighter">$0</span>
-              <span className="text-slate-500 text-sm ml-1">/month</span>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-8 flex-grow">
-            <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>{TIER_LIMITS.free.historicalDays} days historical data</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>{TIER_LIMITS.free.maxAccounts} Amazon Ads account</span>
-              </li>
-              <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-                <div className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>Manual data collection</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter className="pt-2 pb-6 px-6">
-            <Button 
-              className="w-full font-bold" 
-              variant={currentTier === SUBSCRIPTION_TIERS.FREE ? "outline" : "default"}
-              disabled={currentTier === SUBSCRIPTION_TIERS.FREE}
-            >
-              {currentTier === SUBSCRIPTION_TIERS.FREE ? "Current Plan" : "Get Started"}
-            </Button>
-          </CardFooter>
-        </Card>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Pro Plan */}
         <Card className={cn("relative flex flex-col h-full card-hover border-blue-300 dark:border-blue-900 shadow-lg", currentTier === SUBSCRIPTION_TIERS.PRO && "border-blue-500 ring-1 ring-blue-500/20")}>
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md z-10">
