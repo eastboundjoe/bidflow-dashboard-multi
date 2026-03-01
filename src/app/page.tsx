@@ -70,7 +70,7 @@ export default function HomePage() {
         <Badge variant="secondary" className="mb-4 bg-white/10 text-blue-300 border-white/20 font-medium backdrop-blur-sm">
           Built for Amazon PPC Sellers
         </Badge>
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.05]" style={{ fontFamily: "var(--font-display)" }}>
           Stop Guessing.
           <br />
           <span className="text-blue-400">Start Optimizing.</span>

@@ -12,33 +12,43 @@ export function FlowFieldBg() {
     if (!ctx) return;
 
     let animId: number;
+    const c = canvas;
 
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      c.width = c.offsetWidth;
+      c.height = c.offsetHeight;
     };
     resize();
 
-    const c = canvas;
-    const NUM_PARTICLES = 350;
-    const SPEED = 1.0;
+    const NUM_PARTICLES = 400;
+    const SPEED = 1.3;
 
+    // Spiral vortex flow: particles orbit the center with organic perturbation
     function flowAngle(x: number, y: number, t: number) {
-      const nx = x * 0.0025;
-      const ny = y * 0.0025;
-      return (
-        Math.sin(nx + t * 0.35) * Math.cos(ny + t * 0.25) +
-        Math.sin(nx * 0.4 - t * 0.15) * 0.6
-      ) * Math.PI * 2;
+      const cx = c.width / 2;
+      const cy = c.height / 2;
+      const dx = x - cx;
+      const dy = y - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Perpendicular to radius = pure spiral
+      const spiral = Math.atan2(dy, dx) + Math.PI / 2;
+
+      // Organic noise layered on top
+      const noise =
+        Math.sin(x * 0.008 + t * 0.5) * 0.6 +
+        Math.sin(y * 0.006 - t * 0.4) * 0.4 +
+        Math.sin(dist * 0.012 + t * 0.3) * 0.5;
+
+      return spiral + noise;
     }
 
-    // Assign color per particle at birth — red or blue
-    const particles = Array.from({ length: NUM_PARTICLES }, () => ({
+    const particles = Array.from({ length: NUM_PARTICLES }, (_, i) => ({
       x: Math.random() * c.width,
       y: Math.random() * c.height,
       life: Math.random(),
       maxLife: 0.6 + Math.random() * 0.4,
-      isRed: Math.random() > 0.5,
+      hueOffset: (i / NUM_PARTICLES) * 360, // spread rainbow across all particles
     }));
 
     let t = 0;
@@ -47,11 +57,11 @@ export function FlowFieldBg() {
       const w = c.width;
       const h = c.height;
 
-      // Moderate fade — trails visible but don't persist as laser beams
-      ctx.fillStyle = "rgba(3, 7, 18, 0.08)";
+      // Moderate fade — short visible trails, no full laser streaks
+      ctx.fillStyle = "rgba(3, 7, 18, 0.12)";
       ctx.fillRect(0, 0, w, h);
 
-      t += 0.002;
+      t += 0.008;
 
       for (const p of particles) {
         const angle = flowAngle(p.x, p.y, t);
@@ -64,28 +74,24 @@ export function FlowFieldBg() {
 
         if (
           p.life <= 0 ||
-          p.x < -2 || p.x > w + 2 ||
-          p.y < -2 || p.y > h + 2
+          p.x < -4 || p.x > w + 4 ||
+          p.y < -4 || p.y > h + 4
         ) {
           p.x = Math.random() * w;
           p.y = Math.random() * h;
           p.life = p.maxLife;
-          p.isRed = Math.random() > 0.5;
         }
 
-        const alpha = (p.life / p.maxLife) * 0.8;
-        const color = p.isRed
-          ? `hsla(5, 90%, 62%, ${alpha})`
-          : `hsla(215, 90%, 67%, ${alpha})`;
+        const alpha = (p.life / p.maxLife) * 0.75;
+        // Rainbow cycling: each particle has an offset, hue shifts over time
+        const hue = (p.hueOffset + t * 40) % 360;
 
-        // Draw a glowing dot instead of a line — eliminates laser beams
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = p.isRed ? "rgba(220,60,40,0.6)" : "rgba(60,130,255,0.6)";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = `hsla(${hue}, 90%, 65%, ${alpha})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
       }
 
       animId = requestAnimationFrame(tick);
