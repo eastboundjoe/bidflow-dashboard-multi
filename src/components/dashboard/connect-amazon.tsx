@@ -101,7 +101,7 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
       const timeout = setTimeout(() => controller.abort(), 8000);
 
       try {
-        const response = await fetch(N8N_WEBHOOKS.BACKFILL, {
+        const response = await fetch(N8N_WEBHOOKS.SEED, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
