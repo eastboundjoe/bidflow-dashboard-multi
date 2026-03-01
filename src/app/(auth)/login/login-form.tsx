@@ -46,6 +46,9 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
+    // Set a cookie so the callback knows this came from login (not signup)
+    document.cookie = "oauth_source=login; path=/; max-age=300; SameSite=Lax";
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
