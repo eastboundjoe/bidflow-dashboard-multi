@@ -73,7 +73,8 @@ export function FlowFieldBg() {
         }
 
         const alpha = (p.life / p.maxLife) * 0.4;
-        const hue = 205 + Math.sin(p.x * 0.005) * 20; // gentle blue-teal shift
+        // Shift between red (0°) and blue (220°) based on x position
+        const hue = p.x / c.width > 0.5 ? 220 : 0;
         ctx.beginPath();
         ctx.moveTo(prevX, prevY);
         ctx.lineTo(p.x, p.y);
