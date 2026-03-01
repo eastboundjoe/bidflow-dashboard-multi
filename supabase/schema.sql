@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6K3LieXXRNGUULuhyqGR4WTAoDBKZCWSaFFPfNv6uYCEetlUfHGc0DsrlSs7Zls
+\restrict iclDli1LJ9wsh7LeSikE8LXOjsOu1kG7rLVGfBqb0D10ptxhR1x4A2RLKZF9Lmz
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -504,38 +504,41 @@ CREATE FUNCTION public.store_tenant_secret(p_tenant_id uuid, p_secret text) RETU
 CREATE FUNCTION public.store_tenant_secret(p_tenant_id uuid, p_secret text, p_secret_type text) RETURNS uuid
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
-DECLARE
-  v_secret_id uuid;
-BEGIN
-  SELECT vault.create_secret(
-    p_secret,
-    p_secret_type || '_token',
-    'Tenant: ' || p_tenant_id::text
-  ) INTO v_secret_id;
+  DECLARE
+    v_secret_id uuid;
+    v_existing_id uuid;
+  BEGIN
+    -- Check if a vault secret already exists for this tenant+type
+    SELECT vault_id_refresh_token INTO v_existing_id
+    FROM public.credentials
+    WHERE tenant_id = p_tenant_id;
 
-  -- Use INSERT ... ON CONFLICT to upsert the credentials row
-  IF p_secret_type = 'refresh' THEN
+    IF v_existing_id IS NOT NULL THEN
+      -- Update the existing vault secret in place
+      UPDATE vault.secrets
+      SET secret = p_secret,
+          updated_at = now()
+      WHERE id = v_existing_id;
+
+      v_secret_id := v_existing_id;
+    ELSE
+      -- Create a new vault secret with a unique name
+      SELECT vault.create_secret(
+        p_secret,
+        p_secret_type || '_token_' || p_tenant_id::text,
+        'Tenant: ' || p_tenant_id::text
+      ) INTO v_secret_id;
+    END IF;
+
+    -- Upsert credentials row with the vault ID
     INSERT INTO public.credentials (tenant_id, vault_id_refresh_token, updated_at)
     VALUES (p_tenant_id, v_secret_id, now())
     ON CONFLICT (tenant_id)
     DO UPDATE SET vault_id_refresh_token = v_secret_id, updated_at = now();
 
-  ELSIF p_secret_type = 'client_id' THEN
-    INSERT INTO public.credentials (tenant_id, vault_id_client_id, updated_at)
-    VALUES (p_tenant_id, v_secret_id, now())
-    ON CONFLICT (tenant_id)
-    DO UPDATE SET vault_id_client_id = v_secret_id, updated_at = now();
-
-  ELSIF p_secret_type = 'client_secret' THEN
-    INSERT INTO public.credentials (tenant_id, vault_id_client_secret, updated_at)
-    VALUES (p_tenant_id, v_secret_id, now())
-    ON CONFLICT (tenant_id)
-    DO UPDATE SET vault_id_client_secret = v_secret_id, updated_at = now();
-  END IF;
-
-  RETURN v_secret_id;
-END;
-$$;
+    RETURN v_secret_id;
+  END;
+  $$;
 
 
 --
@@ -2874,5 +2877,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6K3LieXXRNGUULuhyqGR4WTAoDBKZCWSaFFPfNv6uYCEetlUfHGc0DsrlSs7Zls
+\unrestrict iclDli1LJ9wsh7LeSikE8LXOjsOu1kG7rLVGfBqb0D10ptxhR1x4A2RLKZF9Lmz
 
