@@ -59,5 +59,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Pass pathname to layouts via header
+  supabaseResponse.headers.set("x-pathname", request.nextUrl.pathname);
+
   return supabaseResponse;
 }
