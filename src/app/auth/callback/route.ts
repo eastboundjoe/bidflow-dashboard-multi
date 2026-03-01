@@ -14,21 +14,22 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        // Check Supabase: does this user have a credentials row?
-        // A credentials row is created by the DB trigger on signup.
-        // If no row exists yet, this is a brand new account hitting the login route.
+        // Check if this is a new user by how recently the credentials row was created.
+        // The DB trigger creates a credentials row immediately on every new auth.users insert,
+        // so !credentials is always false. Instead, check if the row is < 60s old.
         const { data: credentials } = await supabase
           .from("credentials")
-          .select("tenant_id")
+          .select("created_at")
           .eq("tenant_id", user.id)
           .maybeSingle();
 
-        if (!credentials) {
-          // New user — sign them out and send to signup
-          await supabase.auth.signOut();
-          return NextResponse.redirect(
-            `${origin}/login?error=No+account+found.+Please+sign+up+first.`
-          );
+        const isNewUser =
+          credentials &&
+          Date.now() - new Date(credentials.created_at).getTime() < 60000;
+
+        if (isNewUser) {
+          // Don't sign out server-side (fails 403). Redirect to client-side sign-out page.
+          return NextResponse.redirect(`${origin}/auth/login-error`);
         }
       }
 
