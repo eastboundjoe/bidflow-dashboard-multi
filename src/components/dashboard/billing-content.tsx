@@ -63,6 +63,14 @@ export function BillingContent({ subscription }: BillingContentProps) {
 
   const currentTier = subscription?.subscription_tier || SUBSCRIPTION_TIERS.FREE;
   const isCanceled = subscription?.subscription_status === "canceled";
+  const isTrialing = subscription?.subscription_status === "trialing" || currentTier === SUBSCRIPTION_TIERS.FREE;
+  const tierLabel = isTrialing && currentTier === SUBSCRIPTION_TIERS.FREE ? "Free Trial" : currentTier;
+
+  // Guard against null/epoch trial_ends_at
+  const trialEndsAt = subscription?.trial_ends_at
+    ? new Date(subscription.trial_ends_at)
+    : null;
+  const trialEndValid = trialEndsAt && trialEndsAt.getFullYear() > 2000;
 
   return (
     <div className="space-y-8">
@@ -74,22 +82,22 @@ export function BillingContent({ subscription }: BillingContentProps) {
             <h3 className="font-bold uppercase tracking-widest text-xs text-slate-600 dark:text-slate-400">Your Current Plan</h3>
           </div>
           <Badge variant="outline" className="bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 uppercase text-[10px] font-bold tracking-tighter">
-            {currentTier}
+            {tierLabel}
           </Badge>
         </div>
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
             <div className="space-y-2">
               <h2 className="text-3xl font-extrabold capitalize tracking-tight text-slate-900 dark:text-white">
-                {currentTier} Plan
+                {tierLabel} Plan
               </h2>
               <p className="text-slate-600 dark:text-slate-400 max-w-xl">
-                {subscription?.subscription_status === "active" 
+                {subscription?.subscription_status === "active"
                   ? "Your subscription is active and will renew automatically."
-                  : subscription?.subscription_status === "trialing"
-                  ? `Your trial ends on ${new Date(subscription.trial_ends_at!).toLocaleDateString()}.`
                   : isCanceled
                   ? "Your subscription has been canceled but you still have access until the end of the period."
+                  : trialEndValid
+                  ? `Your free trial ends on ${trialEndsAt!.toLocaleDateString()}. Upgrade to keep access.`
                   : "You're on a free trial. Upgrade to keep access after your trial ends."}
               </p>
             </div>
