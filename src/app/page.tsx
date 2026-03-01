@@ -662,7 +662,7 @@ export default function HomePage() {
             <Button asChild size="lg" variant="secondary" className="px-10 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all">
               <Link href="/signup">Get Started Free</Link>
             </Button>
-            <p className="text-primary-foreground/70 text-sm mt-4">30-day free trial. No credit card required.</p>
+            <p className="text-primary-foreground/70 text-sm mt-4">30-day free trial.</p>
           </div>
         </div>
       </section>
