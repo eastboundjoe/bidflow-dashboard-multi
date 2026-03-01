@@ -580,7 +580,7 @@ export default function HomePage() {
                 <span className="text-5xl font-extrabold text-blue-600 dark:text-blue-400">$10</span>
                 <span className="text-slate-600 dark:text-slate-400 ml-1">/month</span>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">30-day free trial · Credit card required</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">30-day free trial</p>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="space-y-3">

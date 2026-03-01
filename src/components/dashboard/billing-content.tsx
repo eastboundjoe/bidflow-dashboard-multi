@@ -133,7 +133,7 @@ export function BillingContent({ subscription }: BillingContentProps) {
               <span className="text-5xl font-extrabold tracking-tighter text-blue-600 dark:text-blue-400">$10</span>
               <span className="text-slate-500 text-sm ml-1">/month</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">30-day free trial · Credit card required</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">30-day free trial</p>
           </CardHeader>
           <CardContent className="space-y-6 pt-8 flex-grow">
             <ul className="space-y-4">
