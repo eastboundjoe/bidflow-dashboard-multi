@@ -77,6 +77,7 @@ function Sparkline({ values, isLowerBetter = false }: { values: number[]; isLowe
 interface StatCardProps {
   title: string;
   value: string;
+  subtitle?: string;
   icon?: React.ReactNode;
   sparklineValues?: number[];
   isLowerBetter?: boolean;
