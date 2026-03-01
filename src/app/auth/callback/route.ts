@@ -24,6 +24,8 @@ export async function GET(request: Request) {
           const isNewUser = accountAgeMs < 30000;
 
           if (isNewUser) {
+            // Sign them out so middleware doesn't redirect back to dashboard
+            await supabase.auth.signOut();
             return NextResponse.redirect(`${origin}/login?error=No+account+found.+Please+sign+up+first.`);
           }
         }
