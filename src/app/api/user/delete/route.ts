@@ -39,7 +39,7 @@ export async function POST() {
 
     // 3. Delete Amazon credentials and secrets from Vault
     // Note: This RPC should be defined in your Supabase database
-    const { error: rpcError } = await supabase.rpc("delete_account_data", {
+    const { error: rpcError } = await supabase.rpc("delete_tenant_secrets", {
       p_tenant_id: user.id
     });
 
