@@ -32,7 +32,8 @@ export function LoginForm() {
     });
 
     if (error) {
-      setError(error.message);
+      const isNotFound = error.message.toLowerCase().includes("invalid login credentials") || error.message.toLowerCase().includes("user not found");
+      setError(isNotFound ? "No account found with that email. Please sign up first." : error.message);
       setLoading(false);
       return;
     }
