@@ -1,7 +1,7 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { AMAZON_CLIENT_ID, N8N_WEBHOOKS } from "@/lib/constants";
+import { AMAZON_CLIENT_ID } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -137,18 +137,13 @@ export async function GET(request: Request) {
 
     if (metaError) throw metaError;
 
-    // Fire-and-forget: trigger Flow 0.1 to seed first week of data
-    fetch(N8N_WEBHOOKS.SEED, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tenant_id: user.id, trigger_source: 'onboarding' }),
-    }).catch(() => {});
-
     // Clear cookies
     cookieStore.delete("amz_auth_state");
     cookieStore.delete("amz_code_verifier");
 
-    return NextResponse.redirect(new URL("/dashboard/collecting", request.url));
+    // Redirect to connect page with ?connected=true so the UI shows a
+    // confirmation before firing the seed webhook and moving to /collecting
+    return NextResponse.redirect(new URL("/dashboard/connect?connected=true", request.url));
   } catch (err) {
     console.error("Callback error:", err);
     const message = err instanceof Error

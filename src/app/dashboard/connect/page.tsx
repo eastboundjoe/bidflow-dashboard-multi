@@ -1,8 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { ConnectAmazon } from "@/components/dashboard/connect-amazon";
 
-export default async function ConnectPage() {
+export default async function ConnectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ connected?: string; error?: string }>;
+}) {
   const supabase = await createClient();
+  const params = await searchParams;
 
   const {
     data: { user },
@@ -27,7 +32,7 @@ export default async function ConnectPage() {
         </p>
       </div>
 
-      <ConnectAmazon credentials={credentials} />
+      <ConnectAmazon credentials={credentials} justConnected={params.connected === "true"} />
     </div>
   );
 }

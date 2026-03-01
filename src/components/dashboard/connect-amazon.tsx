@@ -1,21 +1,50 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info, Play, Settings } from "lucide-react";
+import { Loader2, Link2, Unlink, CheckCircle2, AlertCircle, Info, Play, Settings, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { AMAZON_CLIENT_ID, AMAZON_SCOPE } from "@/lib/constants";
+import { AMAZON_CLIENT_ID, AMAZON_SCOPE, N8N_WEBHOOKS } from "@/lib/constants";
 import type { Credentials } from "@/types";
 
 interface ConnectAmazonProps {
   credentials: Credentials | null;
+  justConnected?: boolean;
 }
 
-export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
+export function ConnectAmazon({ credentials, justConnected = false }: ConnectAmazonProps) {
+  const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+  const [countdown, setCountdown] = React.useState(justConnected ? 5 : 0);
+
+  // When arriving via ?connected=true: fire seed webhook then count down to /collecting
+  React.useEffect(() => {
+    if (!justConnected || !credentials) return;
+
+    // Fire seed webhook (best-effort)
+    fetch(N8N_WEBHOOKS.SEED, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tenant_id: credentials.tenant_id, trigger_source: "onboarding" }),
+    }).catch((err) => console.error("Seed webhook error:", err));
+
+    const timer = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(timer);
+          router.push("/dashboard/collecting");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [justConnected, credentials, router]);
 
   const isConnected = 
     credentials?.status === "active" && 
@@ -101,6 +130,22 @@ export function ConnectAmazon({ credentials }: ConnectAmazonProps) {
 
   return (
     <div className="space-y-6">
+      {justConnected && (
+        <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-5 flex items-start gap-4">
+          <div className="bg-green-100 dark:bg-green-900/50 p-2 rounded-full shrink-0">
+            <Rocket className="h-5 w-5 text-green-600 dark:text-green-400" />
+          </div>
+          <div className="space-y-1">
+            <p className="font-bold text-green-900 dark:text-green-300">Amazon account connected!</p>
+            <p className="text-sm text-green-700 dark:text-green-400">
+              We&apos;re kicking off your first week of data collection. Redirecting in{" "}
+              <span className="font-bold">{countdown}s</span>…
+            </p>
+          </div>
+          <Loader2 className="h-5 w-5 text-green-500 animate-spin ml-auto shrink-0 mt-1" />
+        </div>
+      )}
+
       <Card className={cn("overflow-hidden card-hover transition-all duration-300", isConnected ? "border-green-500/50 shadow-md" : "border-slate-200 dark:border-slate-800")}>
         <CardHeader className={cn("border-b", isConnected ? "bg-green-50/50 dark:bg-green-900/10 border-green-100 dark:border-green-900/20" : "bg-slate-50/50 dark:bg-slate-900/20 border-slate-100 dark:border-slate-800")}>
           <div className="flex items-start justify-between">
