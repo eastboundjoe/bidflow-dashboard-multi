@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict iclDli1LJ9wsh7LeSikE8LXOjsOu1kG7rLVGfBqb0D10ptxhR1x4A2RLKZF9Lmz
+\restrict sWZzbWcIdaMfUdC6AOfcga1yd4SuBnh4WDuJmn2JdhlBeMUa6fbmKLxYqDb7f4j
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -222,30 +222,30 @@ CREATE FUNCTION public.handle_new_user() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public'
     AS $$
-BEGIN
-  -- Insert new tenant into credentials table
-  -- tenant_id = user's auth.users.id
-  INSERT INTO public.credentials (
-    tenant_id,
-    status,
-    amazon_profile_id,
-    marketplace_id,
-    created_at,
-    updated_at
-  )
-  VALUES (
-    NEW.id,                    -- Use auth.users.id as tenant_id
-    'inactive',                -- Start as inactive until they add Amazon credentials
-    NULL,                      -- User will add this later
-    'ATVPDKIKX0DER',          -- Default to US marketplace
-    NOW(),
-    NOW()
-  )
-  ON CONFLICT (tenant_id) DO NOTHING; -- Prevent duplicates
+  BEGIN
+    INSERT INTO public.credentials (
+      tenant_id,
+      status,
+      amazon_profile_id,
+      marketplace_id,
+      trial_ends_at,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      NEW.id,
+      'inactive',
+      NULL,
+      'ATVPDKIKX0DER',
+      NOW() + INTERVAL '30 days',
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (tenant_id) DO NOTHING;
 
-  RETURN NEW;
-END;
-$$;
+    RETURN NEW;
+  END;
+  $$;
 
 
 --
@@ -2877,5 +2877,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict iclDli1LJ9wsh7LeSikE8LXOjsOu1kG7rLVGfBqb0D10ptxhR1x4A2RLKZF9Lmz
+\unrestrict sWZzbWcIdaMfUdC6AOfcga1yd4SuBnh4WDuJmn2JdhlBeMUa6fbmKLxYqDb7f4j
 
