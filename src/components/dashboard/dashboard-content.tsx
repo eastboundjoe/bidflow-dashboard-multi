@@ -89,6 +89,42 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
   const [selectedWeek, setSelectedWeek] = React.useState<string>("");
   const [selectedPortfolio, setSelectedPortfolio] = React.useState<string | null>(null);
 
+  // Collection status banner
+  const [collectionStatus, setCollectionStatus] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const supabase = createClient();
+    let interval: ReturnType<typeof setInterval>;
+
+    async function checkCollection() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: snapshot } = await supabase
+        .from("weekly_snapshots")
+        .select("status")
+        .eq("tenant_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const status = snapshot?.status ?? null;
+      setCollectionStatus(status === "completed" ? null : status);
+
+      // Stop polling once completed
+      if (status === "completed") {
+        clearInterval(interval);
+        // Reload dashboard data now that collection is done
+        fetchData();
+      }
+    }
+
+    checkCollection();
+    interval = setInterval(checkCollection, 30_000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Generate week options and portfolios from data
   const weeks = React.useMemo(() => generateWeekOptions(data), [data]);
   const portfolios = React.useMemo(() => extractPortfolios(data), [data]);
@@ -584,6 +620,25 @@ export function DashboardContent({ initialData = [] }: DashboardContentProps) {
           Refresh
         </Button>
       </div>
+
+      {/* Collection in progress banner */}
+      {collectionStatus && (
+        <div className="flex items-center gap-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-5 py-4">
+          <div className="relative shrink-0">
+            <div className="h-3 w-3 rounded-full bg-blue-500 animate-ping absolute inset-0" />
+            <div className="h-3 w-3 rounded-full bg-blue-600 relative" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-blue-900 dark:text-blue-200 text-sm">
+              Data collection in progress
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+              Amazon is generating your placement reports. This can take 1–3 hours. Your dashboard will update automatically when ready.
+            </p>
+          </div>
+          <RefreshCw className="h-4 w-4 text-blue-400 animate-spin shrink-0" />
+        </div>
+      )}
 
       {/* Error State */}
       {error && (
