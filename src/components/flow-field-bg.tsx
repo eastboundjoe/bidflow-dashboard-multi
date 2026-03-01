@@ -73,18 +73,19 @@ export function FlowFieldBg() {
           p.isRed = Math.random() > 0.5;
         }
 
-        const alpha = (p.life / p.maxLife) * 0.7;
-        // Red: hsl(5, 90%, 60%) — Blue: hsl(215, 90%, 65%)
+        const alpha = (p.life / p.maxLife) * 0.8;
         const color = p.isRed
-          ? `hsla(5, 90%, 60%, ${alpha})`
-          : `hsla(215, 90%, 65%, ${alpha})`;
+          ? `hsla(5, 90%, 62%, ${alpha})`
+          : `hsla(215, 90%, 67%, ${alpha})`;
 
+        // Draw a glowing dot instead of a line — eliminates laser beams
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.isRed ? "rgba(220,60,40,0.6)" : "rgba(60,130,255,0.6)";
         ctx.beginPath();
-        ctx.moveTo(prevX, prevY);
-        ctx.lineTo(p.x, p.y);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
+        ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
       }
 
       animId = requestAnimationFrame(tick);
