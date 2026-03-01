@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict VKWk3V6cXB4KGnmZ01atsRHS8rMxAuHQuoadnge8ZFZIrsoAWkrCRzC70SXAVlh
+\restrict MXV3aHhfx2nBudTYqPNhDHeYmc4WgCgwpyuFvcuY7dSbphMjpS3BvWYVei0ERnr
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -2874,5 +2874,5 @@ ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict VKWk3V6cXB4KGnmZ01atsRHS8rMxAuHQuoadnge8ZFZIrsoAWkrCRzC70SXAVlh
+\unrestrict MXV3aHhfx2nBudTYqPNhDHeYmc4WgCgwpyuFvcuY7dSbphMjpS3BvWYVei0ERnr
 
