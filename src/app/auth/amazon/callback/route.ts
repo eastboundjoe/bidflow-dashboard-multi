@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { AMAZON_CLIENT_ID, N8N_WEBHOOKS } from "@/lib/constants";
@@ -107,22 +107,16 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    // Call the same RPCs as the original Edge Function
-    // We might need to use a service role client if the user doesn't have permission to call store_tenant_secret
-    
-    // Store refresh token and metadata
-    // In a real implementation, you'd use the service role key for these RPCs
-    const { error: storeError } = await supabase.rpc("store_tenant_secret", {
+    // Use service role client for vault RPC — anon key is blocked from vault access
+    const serviceSupabase = await createServiceClient();
+
+    const { error: storeError } = await serviceSupabase.rpc("store_tenant_secret", {
       p_tenant_id: user.id,
       p_secret: refresh_token,
       p_secret_type: "refresh",
     });
 
-    if (storeError) {
-      console.error("Vault storage error:", storeError);
-      // If RPC fails, we'll try direct update (falling back to non-Vault if needed, 
-      // though the original plan was Vault-first)
-    }
+    if (storeError) throw new Error(`Vault storage failed: ${storeError.message}`);
 
     // Update metadata in credentials table.
     // Use UPDATE (not upsert) — the signup trigger always creates the row,
