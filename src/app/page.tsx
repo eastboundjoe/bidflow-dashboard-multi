@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FlowFieldBg } from "@/components/flow-field-bg";
+import { HomeSankeyDemo } from "@/components/home-sankey-demo";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -190,6 +191,8 @@ export default function HomePage() {
       </section>
 
       </div>{/* end flow field hero wrapper */}
+
+      <HomeSankeyDemo />
 
       {/* Stats Strip */}
       <section className="border-y border-slate-100 dark:border-slate-800 bg-white dark:bg-gray-950 py-10">

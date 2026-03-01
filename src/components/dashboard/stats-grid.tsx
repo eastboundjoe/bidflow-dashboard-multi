@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PlacementData, StatsSummary } from "@/types";
 import { TrendingUp, TrendingDown, DollarSign, MousePointerClick, Eye, ShoppingCart } from "lucide-react";
+// Icons kept for StatsGridExtended — not used in main StatCard
 
 interface StatsGridProps {
   stats: StatsSummary | null;
@@ -76,25 +77,20 @@ function Sparkline({ values, isLowerBetter = false }: { values: number[]; isLowe
 interface StatCardProps {
   title: string;
   value: string;
-  subtitle?: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   sparklineValues?: number[];
   isLowerBetter?: boolean;
-  weekOverWeekPct?: number | null; // e.g. 5.2 means +5.2%
+  weekOverWeekPct?: number | null;
   loading?: boolean;
 }
 
 function StatCard({
   title,
   value,
-  subtitle,
-  icon,
-  sparklineValues,
   isLowerBetter = false,
   weekOverWeekPct,
   loading,
 }: StatCardProps) {
-  const hasSparkline = sparklineValues && sparklineValues.length >= 2;
   const hasTrend = weekOverWeekPct !== null && weekOverWeekPct !== undefined;
 
   let trendColor = "text-slate-400 dark:text-slate-500";
@@ -110,46 +106,32 @@ function StatCard({
 
   return (
     <Card className="card-hover border-slate-200/50 dark:border-slate-800/50">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="pb-2">
         <CardTitle className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
           {title}
         </CardTitle>
-        <div className="text-slate-400 dark:text-slate-500">{icon}</div>
       </CardHeader>
       <CardContent>
         {loading ? (
           <>
-            <Skeleton className="h-8 w-24 mb-1" />
-            <Skeleton className="h-3 w-16 mb-2" />
-            <Skeleton className="h-5 w-14" />
+            <Skeleton className="h-10 w-28 mb-3" />
+            <Skeleton className="h-4 w-20" />
           </>
         ) : (
           <>
-            <span className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               {value}
-            </span>
-            {subtitle && (
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                {subtitle}
-              </p>
-            )}
-            {(hasSparkline || hasTrend) && (
-              <div className="flex items-center justify-between mt-2 gap-2">
-                {hasSparkline && (
-                  <Sparkline values={sparklineValues!} isLowerBetter={isLowerBetter} />
-                )}
-                {hasTrend && (
-                  <div className={`flex items-center gap-0.5 ml-auto ${trendColor}`}>
-                    {TrendIcon && <TrendIcon className="h-3 w-3 shrink-0" />}
-                    <span className="text-xs font-semibold">
-                      {weekOverWeekPct! > 0 ? "+" : ""}
-                      {weekOverWeekPct!.toFixed(1)}%
-                    </span>
-                    <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500 ml-0.5">
-                      WoW
-                    </span>
-                  </div>
-                )}
+            </div>
+            {hasTrend && (
+              <div className={`flex items-center gap-1 mt-3 ${trendColor}`}>
+                {TrendIcon && <TrendIcon className="h-3.5 w-3.5 shrink-0" />}
+                <span className="text-sm font-semibold">
+                  {weekOverWeekPct! > 0 ? "+" : ""}
+                  {weekOverWeekPct!.toFixed(1)}%
+                </span>
+                <span className="text-xs font-normal text-slate-400 dark:text-slate-500">
+                  vs last week
+                </span>
               </div>
             )}
           </>
@@ -203,14 +185,12 @@ export function StatsGrid({ stats, loading = false, allPlacementData, currentWee
 
   if (!stats && !loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[...Array(3)].map((_, i) => (
           <StatCard
             key={i}
-            title={["Total Spend", "Total Sales", "ACOS", "ROAS"][i]}
-            value="$0"
-            subtitle="No data"
-            icon={<DollarSign className="h-4 w-4" />}
+            title={["Total Spend", "Blended ROAS", "Blended ACOS"][i]}
+            value="—"
             loading={false}
           />
         ))}
@@ -219,45 +199,26 @@ export function StatsGrid({ stats, loading = false, allPlacementData, currentWee
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <StatCard
         title="Total Spend"
         value={loading ? "" : formatCurrency(stats?.totalSpend ?? 0)}
-        subtitle="All placements"
-        icon={<DollarSign className="h-4 w-4" />}
-        sparklineValues={spendSeries}
         isLowerBetter={false}
         weekOverWeekPct={spendWoW}
         loading={loading}
       />
       <StatCard
-        title="Total Sales"
-        value={loading ? "" : formatCurrency(stats?.totalSales ?? 0)}
-        subtitle="From ads"
-        icon={<ShoppingCart className="h-4 w-4" />}
-        sparklineValues={salesSeries}
-        isLowerBetter={false}
-        weekOverWeekPct={salesWoW}
-        loading={loading}
-      />
-      <StatCard
-        title="ACOS"
-        value={loading ? "" : formatPercent(stats?.avgAcos ?? 0)}
-        subtitle="Avg across placements"
-        icon={<TrendingDown className="h-4 w-4" />}
-        sparklineValues={acosSeries}
-        isLowerBetter={true}
-        weekOverWeekPct={acosWoW}
-        loading={loading}
-      />
-      <StatCard
-        title="ROAS"
-        value={loading ? "" : `${(stats?.avgRoas ?? 0).toFixed(2)}x`}
-        subtitle="Return on ad spend"
-        icon={<TrendingUp className="h-4 w-4" />}
-        sparklineValues={roasSeries}
+        title="Blended ROAS"
+        value={loading ? "" : `${(stats?.avgRoas ?? 0).toFixed(1)}x`}
         isLowerBetter={false}
         weekOverWeekPct={roasWoW}
+        loading={loading}
+      />
+      <StatCard
+        title="Blended ACOS"
+        value={loading ? "" : formatPercent(stats?.avgAcos ?? 0)}
+        isLowerBetter={true}
+        weekOverWeekPct={acosWoW}
         loading={loading}
       />
     </div>
