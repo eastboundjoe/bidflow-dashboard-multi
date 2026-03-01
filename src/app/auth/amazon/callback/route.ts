@@ -124,24 +124,24 @@ export async function GET(request: Request) {
       // though the original plan was Vault-first)
     }
 
-    // Update metadata in credentials table
-    const { error: metaError } = await supabase
-      .from("credentials")
-      .upsert({
-        tenant_id: user.id,
-        amazon_profile_id: profileId.toString(),
-        status: "active",
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: "tenant_id",
-      });
-
-    if (metaError) throw metaError;
-
-    // Set report_day to today's weekday
+    // Update metadata in credentials table.
+    // Use UPDATE (not upsert) — the signup trigger always creates the row,
+    // and there is no INSERT RLS policy so upsert would be blocked.
     const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
     const reportDay = days[new Date().getDay()];
-    await supabase.from('credentials').update({ report_day: reportDay }).eq('tenant_id', user.id);
+
+    const { error: metaError } = await supabase
+      .from("credentials")
+      .update({
+        amazon_profile_id: profileId.toString(),
+        marketplace_id: marketplaceId,
+        status: "active",
+        report_day: reportDay,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("tenant_id", user.id);
+
+    if (metaError) throw metaError;
 
     // Fire-and-forget: trigger Flow 0.1 to seed first week of data
     fetch(N8N_WEBHOOKS.SEED, {
