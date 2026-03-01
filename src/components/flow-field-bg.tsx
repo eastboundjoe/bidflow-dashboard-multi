@@ -57,8 +57,8 @@ export function FlowFieldBg() {
       const w = c.width;
       const h = c.height;
 
-      // Gentle fade — leaves short memory of movement without line artifacts
-      ctx.fillStyle = "rgba(3, 7, 18, 0.15)";
+      // Slow fade = longer wispy trails behind each dot
+      ctx.fillStyle = "rgba(3, 7, 18, 0.07)";
       ctx.fillRect(0, 0, w, h);
 
       t += 0.008;
@@ -85,7 +85,7 @@ export function FlowFieldBg() {
         const hue = (p.hueOffset + t * 40) % 360;
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 0.9, 0, Math.PI * 2);
         ctx.fillStyle = `hsla(${hue}, 90%, 65%, ${alpha})`;
         ctx.fill();
       }

@@ -83,7 +83,7 @@ export default function HomePage() {
           <Button asChild size="lg" className="w-full sm:w-auto px-8 shadow-md">
             <Link href="/signup">Start Free Trial</Link>
           </Button>
-          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8">
+          <Button asChild size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent">
             <Link href="#features">See How It Works</Link>
           </Button>
         </div>
