@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 7le1WvBZdS40bZS8BOOsYV04e4DH7GeedppFDeVBYydVuFn7gPZYdXvUgVPVhBg
+\restrict GZ5vgNrqmlykm0cePhjaNaAXhGBifOY3oOIo7O1zohnX6ldce7h3x3ZV1FExYnC
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -730,6 +730,28 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: bid_change_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.bid_change_log (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    target_id text NOT NULL,
+    targeting_text text,
+    match_type text,
+    old_bid numeric(10,2),
+    new_bid numeric(10,2),
+    rule_applied text,
+    applied_at timestamp with time zone DEFAULT now(),
+    notes text,
+    CONSTRAINT bid_change_log_rule_applied_check CHECK ((rule_applied = ANY (ARRAY['bleeders'::text, 'high_acos'::text, 'low_clicks'::text, 'good_acos'::text, 'manual_override'::text])))
+);
+
+
+--
 -- Name: campaign_notes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1052,6 +1074,57 @@ CREATE SEQUENCE public.raw_placement_reports_id_seq
 --
 
 ALTER SEQUENCE public.raw_placement_reports_id_seq OWNED BY public.raw_placement_reports.id;
+
+
+--
+-- Name: raw_targeting_reports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.raw_targeting_reports (
+    id integer NOT NULL,
+    report_id text,
+    tenant_id uuid NOT NULL,
+    data_date date,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    ad_group_id text,
+    ad_group_name text,
+    target_id text,
+    targeting_text text,
+    targeting_type text,
+    match_type text,
+    bid numeric(10,2),
+    impressions integer DEFAULT 0,
+    clicks integer DEFAULT 0,
+    spend numeric(10,2) DEFAULT 0,
+    purchases_30d integer DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    purchases_7d integer DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    acos_30d numeric(5,2),
+    acos_7d numeric(5,2),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: raw_targeting_reports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.raw_targeting_reports_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: raw_targeting_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.raw_targeting_reports_id_seq OWNED BY public.raw_targeting_reports.id;
 
 
 --
@@ -1849,6 +1922,38 @@ CREATE VIEW public.view_weekly_placement_report WITH (security_invoker='on') AS
 
 
 --
+-- Name: weekly_targeting_performance; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_targeting_performance (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    week_id text NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    ad_group_id text,
+    ad_group_name text,
+    target_id text,
+    targeting_text text,
+    targeting_type text,
+    match_type text,
+    bid numeric(10,2),
+    clicks_30d bigint DEFAULT 0,
+    spend_30d numeric(10,2) DEFAULT 0,
+    orders_30d integer DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    acos_30d numeric(5,2),
+    clicks_7d bigint DEFAULT 0,
+    spend_7d numeric(10,2) DEFAULT 0,
+    orders_7d integer DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    acos_7d numeric(5,2),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: raw_campaign_reports id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1863,10 +1968,25 @@ ALTER TABLE ONLY public.raw_placement_reports ALTER COLUMN id SET DEFAULT nextva
 
 
 --
+-- Name: raw_targeting_reports id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_targeting_reports ALTER COLUMN id SET DEFAULT nextval('public.raw_targeting_reports_id_seq'::regclass);
+
+
+--
 -- Name: report_ledger id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.report_ledger ALTER COLUMN id SET DEFAULT nextval('public.report_ledger_id_seq'::regclass);
+
+
+--
+-- Name: bid_change_log bid_change_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bid_change_log
+    ADD CONSTRAINT bid_change_log_pkey PRIMARY KEY (id);
 
 
 --
@@ -1971,6 +2091,14 @@ ALTER TABLE ONLY public.raw_placement_reports
 
 ALTER TABLE ONLY public.raw_placement_reports
     ADD CONSTRAINT raw_placement_reports_unique_record UNIQUE (tenant_id, campaign_id, placement_type, report_type, data_date);
+
+
+--
+-- Name: raw_targeting_reports raw_targeting_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_targeting_reports
+    ADD CONSTRAINT raw_targeting_reports_pkey PRIMARY KEY (id);
 
 
 --
@@ -2110,6 +2238,28 @@ ALTER TABLE ONLY public.weekly_snapshots
 
 
 --
+-- Name: weekly_targeting_performance weekly_targeting_performance_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.weekly_targeting_performance
+    ADD CONSTRAINT weekly_targeting_performance_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_bcl_campaign; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bcl_campaign ON public.bid_change_log USING btree (tenant_id, campaign_id);
+
+
+--
+-- Name: idx_bcl_tenant_week; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bcl_tenant_week ON public.bid_change_log USING btree (tenant_id, week_id);
+
+
+--
 -- Name: idx_campaign_reports_campaign_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2205,6 +2355,27 @@ CREATE INDEX idx_placement_reports_type_date ON public.raw_placement_reports USI
 --
 
 CREATE INDEX idx_placement_tenant_date ON public.raw_placement_reports USING btree (tenant_id, data_date);
+
+
+--
+-- Name: idx_raw_targeting_campaign; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_raw_targeting_campaign ON public.raw_targeting_reports USING btree (tenant_id, campaign_id);
+
+
+--
+-- Name: idx_raw_targeting_target; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_raw_targeting_target ON public.raw_targeting_reports USING btree (tenant_id, target_id);
+
+
+--
+-- Name: idx_raw_targeting_tenant_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_raw_targeting_tenant_date ON public.raw_targeting_reports USING btree (tenant_id, data_date);
 
 
 --
@@ -2362,6 +2533,34 @@ CREATE INDEX idx_weekly_snapshots_tenant_week ON public.weekly_snapshots USING b
 
 
 --
+-- Name: idx_wtp_campaign; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_wtp_campaign ON public.weekly_targeting_performance USING btree (tenant_id, campaign_id);
+
+
+--
+-- Name: idx_wtp_target; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_wtp_target ON public.weekly_targeting_performance USING btree (tenant_id, target_id);
+
+
+--
+-- Name: idx_wtp_tenant_week; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_wtp_tenant_week ON public.weekly_targeting_performance USING btree (tenant_id, week_id);
+
+
+--
+-- Name: idx_wtp_unique_snapshot_target; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_wtp_unique_snapshot_target ON public.weekly_targeting_performance USING btree (snapshot_id, target_id);
+
+
+--
 -- Name: staging_campaign_reports_campaign_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2457,6 +2656,14 @@ CREATE TRIGGER update_placement_reports_updated_at BEFORE UPDATE ON public.raw_p
 --
 
 CREATE TRIGGER update_portfolios_updated_at BEFORE UPDATE ON public.portfolios FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: bid_change_log bcl_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bid_change_log
+    ADD CONSTRAINT bcl_tenant_fk FOREIGN KEY (tenant_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 
 --
@@ -2564,6 +2771,14 @@ ALTER TABLE ONLY public.placement_bids
 
 
 --
+-- Name: raw_targeting_reports raw_targeting_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.raw_targeting_reports
+    ADD CONSTRAINT raw_targeting_tenant_fk FOREIGN KEY (tenant_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: report_ledger report_ledger_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2601,6 +2816,14 @@ ALTER TABLE ONLY public.weekly_placement_performance
 
 ALTER TABLE ONLY public.weekly_portfolios
     ADD CONSTRAINT weekly_portfolios_snapshot_id_fkey FOREIGN KEY (snapshot_id) REFERENCES public.weekly_snapshots(id) ON DELETE CASCADE;
+
+
+--
+-- Name: weekly_targeting_performance wtp_snapshot_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.weekly_targeting_performance
+    ADD CONSTRAINT wtp_snapshot_fk FOREIGN KEY (snapshot_id) REFERENCES public.weekly_snapshots(id) ON DELETE CASCADE;
 
 
 --
@@ -2772,6 +2995,12 @@ CREATE POLICY "Users manage own portfolio goals" ON public.portfolio_goals USING
 
 
 --
+-- Name: bid_change_log; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.bid_change_log ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: campaign_notes; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2814,6 +3043,12 @@ ALTER TABLE public.raw_campaign_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.raw_placement_reports ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: raw_targeting_reports; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.raw_targeting_reports ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: report_ledger; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -2842,6 +3077,27 @@ ALTER TABLE public.staging_placement_reports ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.staging_portfolios ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: bid_change_log tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.bid_change_log USING ((tenant_id = auth.uid()));
+
+
+--
+-- Name: raw_targeting_reports tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.raw_targeting_reports USING ((tenant_id = auth.uid()));
+
+
+--
+-- Name: weekly_targeting_performance tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.weekly_targeting_performance USING ((tenant_id = auth.uid()));
+
 
 --
 -- Name: weekly_campaign_performance; Type: ROW SECURITY; Schema: public; Owner: -
@@ -2874,8 +3130,14 @@ ALTER TABLE public.weekly_portfolios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.weekly_snapshots ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: weekly_targeting_performance; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.weekly_targeting_performance ENABLE ROW LEVEL SECURITY;
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7le1WvBZdS40bZS8BOOsYV04e4DH7GeedppFDeVBYydVuFn7gPZYdXvUgVPVhBg
+\unrestrict GZ5vgNrqmlykm0cePhjaNaAXhGBifOY3oOIo7O1zohnX6ldce7h3x3ZV1FExYnC
 
