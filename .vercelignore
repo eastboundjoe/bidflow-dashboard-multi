@@ -1,19 +1,20 @@
-# Exclude standalone projects from Vercel build
-bidflow-engine-py/
-placement-optimization-functions/
-amazon-ads-api-mcp/
-n8n-mcp/
-google-workspace-mcp/
-tiktok-mcp/
-text-simplifier-mcp/
-mcp-client/
+# Ignore EVERYTHING by default (whitelist approach)
+/*
 
-# Exclude loose Deno/Edge Function files in root
-report-collector-deploy.ts
-report-collector.ts
-report-generator.ts
-report-poller-deploy.ts
-report-processor-deploy.ts
-workflow-executor.ts
-test-ads-api.ts
-gemini-test-function.ts
+# Allow Next.js source and public assets
+!/src
+!/public
+
+# Allow essential config files in root
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+!/next.config.ts
+!/next.config.js
+!/vercel.json
+!/tailwind.config.ts
+!/tailwind.config.js
+!/postcss.config.js
+!/postcss.config.mjs
+!/components.json
+!/.env.production
