@@ -166,8 +166,7 @@ export function BidOptimizerContent() {
             spend_30d, purchases_30d, acos_30d,
             spend_7d, purchases_7d, acos_7d,
             yesterday_spend, day_before_spend,
-            week_id,
-            weekly_placement_bids!inner(portfolio_id)
+            week_id
           `)
           .order("spend_30d", { ascending: false }),
         supabase
