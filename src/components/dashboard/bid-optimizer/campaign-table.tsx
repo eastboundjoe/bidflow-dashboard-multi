@@ -51,6 +51,44 @@ function BudgetCheck({ yesterday, dayBefore, budget }: { yesterday: number; dayB
   return null;
 }
 
+function NumericRuleInput({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value: number | null;
+  placeholder?: string;
+  onChange: (val: number | null) => void;
+}) {
+  const [local, setLocal] = React.useState(value !== null ? String(value) : "");
+
+  // Sync if parent resets the value (e.g. clear all rules)
+  React.useEffect(() => {
+    setLocal(value !== null ? String(value) : "");
+  }, [value]);
+
+  return (
+    <Input
+      type="text"
+      inputMode="numeric"
+      placeholder={placeholder ?? "—"}
+      value={local}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => {
+        const n = parseFloat(local);
+        if (local === "" || isNaN(n)) {
+          setLocal("");
+          onChange(null);
+        } else {
+          setLocal(String(n));
+          onChange(n);
+        }
+      }}
+      className="h-7 text-xs px-1.5"
+    />
+  );
+}
+
 function RuleInputs({
   campaignId,
   rules,
@@ -74,69 +112,45 @@ function RuleInputs({
       {/* High ACOS threshold */}
       <div className="flex flex-col gap-1 w-16">
         <span className="text-[10px] text-slate-400 whitespace-nowrap">High ACOS %</span>
-        <Input
-          type="number"
-          min={0}
-          max={500}
-          placeholder="—"
-          value={rules.high_acos_threshold ?? ""}
-          onChange={(e) => onChange("high_acos_threshold", e.target.value === "" ? null : Number(e.target.value))}
-          className="h-7 text-xs px-1.5"
+        <NumericRuleInput
+          value={rules.high_acos_threshold}
+          onChange={(v) => onChange("high_acos_threshold", v)}
         />
       </div>
 
       {/* Low clicks increase */}
       <div className="flex flex-col gap-1 w-16">
         <span className="text-[10px] text-slate-400 whitespace-nowrap">Low Clicks %</span>
-        <Input
-          type="number"
-          min={0}
-          max={200}
-          placeholder="—"
-          value={rules.low_clicks_increase ?? ""}
-          onChange={(e) => onChange("low_clicks_increase", e.target.value === "" ? null : Number(e.target.value))}
-          className="h-7 text-xs px-1.5"
+        <NumericRuleInput
+          value={rules.low_clicks_increase}
+          onChange={(v) => onChange("low_clicks_increase", v)}
         />
       </div>
 
       {/* Good ACOS increase */}
       <div className="flex flex-col gap-1 w-16">
         <span className="text-[10px] text-slate-400 whitespace-nowrap">Good ACOS %</span>
-        <Input
-          type="number"
-          min={0}
-          max={200}
-          placeholder="—"
-          value={rules.good_acos_increase ?? ""}
-          onChange={(e) => onChange("good_acos_increase", e.target.value === "" ? null : Number(e.target.value))}
-          className="h-7 text-xs px-1.5"
+        <NumericRuleInput
+          value={rules.good_acos_increase}
+          onChange={(v) => onChange("good_acos_increase", v)}
         />
       </div>
 
       {/* Good ACOS max */}
       <div className="flex flex-col gap-1 w-16">
         <span className="text-[10px] text-slate-400 whitespace-nowrap">Max ACOS %</span>
-        <Input
-          type="number"
-          min={0}
-          max={500}
-          placeholder="—"
-          value={rules.good_acos_max ?? ""}
-          onChange={(e) => onChange("good_acos_max", e.target.value === "" ? null : Number(e.target.value))}
-          className="h-7 text-xs px-1.5"
+        <NumericRuleInput
+          value={rules.good_acos_max}
+          onChange={(v) => onChange("good_acos_max", v)}
         />
       </div>
 
       {/* New budget */}
       <div className="flex flex-col gap-1 w-16">
         <span className="text-[10px] text-slate-400 whitespace-nowrap">New Budget</span>
-        <Input
-          type="number"
-          min={0}
-          placeholder="—"
-          value={rules.new_budget ?? ""}
-          onChange={(e) => onChange("new_budget", e.target.value === "" ? null : Number(e.target.value))}
-          className="h-7 text-xs px-1.5"
+        <NumericRuleInput
+          value={rules.new_budget}
+          onChange={(v) => onChange("new_budget", v)}
         />
       </div>
 
