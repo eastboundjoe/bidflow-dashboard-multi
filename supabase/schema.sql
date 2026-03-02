@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict BQC8opqxiVfEXldfaJcgjxbCN0XYF6b9KgFmtt4yhloe2XEHL6iysB0EVHGP6Hr
+\restrict AbJfX5wcK8l2yeDF44kszFnpGqJMLeMQcRxv8GcIC4fq63ExdzaxT3gKHFf9qXc
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -704,74 +704,34 @@ CREATE FUNCTION public.sync_targeting_staging() RETURNS void
     AS $$
   BEGIN
       INSERT INTO public.weekly_targeting_performance (
-          snapshot_id,
-          tenant_id,
-          week_id,
-          campaign_id,
-          campaign_name,
-          ad_group_id,
-          ad_group_name,
-          target_id,
-          targeting_text,
-          targeting_type,
-          match_type,
-          bid,
-          clicks_30d,
-          spend_30d,
-          orders_30d,
-          sales_30d,
-          acos_30d,
-          clicks_7d,
-          spend_7d,
-          orders_7d,
-          sales_7d,
-          acos_7d
+          snapshot_id, tenant_id, week_id,
+          campaign_id, campaign_name, ad_group_id, ad_group_name,
+          target_id, targeting_text, targeting_type, match_type, bid,
+          clicks_30d, spend_30d, orders_30d, sales_30d, acos_30d,
+          clicks_7d, spend_7d, orders_7d, sales_7d, acos_7d
       )
-      SELECT
-          ws.id,
-          str.tenant_id,
-          ws.week_id,
-          str.campaign_id,
-          str.campaign_name,
-          str.ad_group_id,
-          str.ad_group_name,
-          str.target_id,
-          str.targeting_text,
-          str.targeting_type,
-          str.match_type,
-          str.bid,
-          str.clicks,
-          str.spend,
-          str.purchases_30d,
-          str.sales_30d,
+      SELECT DISTINCT ON (str.target_id)
+          ws.id, str.tenant_id, ws.week_id,
+          str.campaign_id, str.campaign_name, str.ad_group_id, str.ad_group_name,
+          str.target_id, str.targeting_text, str.targeting_type, str.match_type, str.bid,
+          str.clicks, str.spend, str.purchases_30d, str.sales_30d,
           CASE WHEN str.sales_30d > 0 THEN ROUND((str.spend / str.sales_30d) * 100, 2) ELSE NULL END,
-          str.clicks,
-          str.spend,
-          str.purchases_7d,
-          str.sales_7d,
+          str.clicks, str.spend, str.purchases_7d, str.sales_7d,
           CASE WHEN str.sales_7d > 0 THEN ROUND((str.spend / str.sales_7d) * 100, 2) ELSE NULL END
       FROM public.staging_targeting_reports str
-      JOIN public.weekly_snapshots ws
-          ON ws.tenant_id = str.tenant_id
+      JOIN public.weekly_snapshots ws ON ws.tenant_id = str.tenant_id
       WHERE ws.id = (
           SELECT id FROM public.weekly_snapshots
           WHERE tenant_id = str.tenant_id
-          ORDER BY created_at DESC
-          LIMIT 1
+          ORDER BY created_at DESC LIMIT 1
       )
       ON CONFLICT (snapshot_id, target_id) DO UPDATE SET
-          bid        = EXCLUDED.bid,
-          clicks_30d = EXCLUDED.clicks_30d,
-          spend_30d  = EXCLUDED.spend_30d,
-          orders_30d = EXCLUDED.orders_30d,
-          sales_30d  = EXCLUDED.sales_30d,
-          acos_30d   = EXCLUDED.acos_30d,
-          clicks_7d  = EXCLUDED.clicks_7d,
-          spend_7d   = EXCLUDED.spend_7d,
-          orders_7d  = EXCLUDED.orders_7d,
-          sales_7d   = EXCLUDED.sales_7d,
-          acos_7d    = EXCLUDED.acos_7d;
-
+          bid = EXCLUDED.bid, clicks_30d = EXCLUDED.clicks_30d,
+          spend_30d = EXCLUDED.spend_30d, orders_30d = EXCLUDED.orders_30d,
+          sales_30d = EXCLUDED.sales_30d, acos_30d = EXCLUDED.acos_30d,
+          clicks_7d = EXCLUDED.clicks_7d, spend_7d = EXCLUDED.spend_7d,
+          orders_7d = EXCLUDED.orders_7d, sales_7d = EXCLUDED.sales_7d,
+          acos_7d = EXCLUDED.acos_7d;
       TRUNCATE TABLE public.staging_targeting_reports;
   END;
   $$;
@@ -2305,6 +2265,14 @@ ALTER TABLE ONLY public.staging_targeting_reports
 
 
 --
+-- Name: staging_targeting_reports staging_targeting_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.staging_targeting_reports
+    ADD CONSTRAINT staging_targeting_unique UNIQUE (tenant_id, target_id);
+
+
+--
 -- Name: weekly_campaign_performance weekly_campaign_perf_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3299,5 +3267,5 @@ ALTER TABLE public.weekly_targeting_performance ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BQC8opqxiVfEXldfaJcgjxbCN0XYF6b9KgFmtt4yhloe2XEHL6iysB0EVHGP6Hr
+\unrestrict AbJfX5wcK8l2yeDF44kszFnpGqJMLeMQcRxv8GcIC4fq63ExdzaxT3gKHFf9qXc
 
