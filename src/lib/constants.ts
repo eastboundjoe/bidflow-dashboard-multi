@@ -13,6 +13,7 @@ export const N8N_WEBHOOKS = {
   COLLECTION: process.env.N8N_COLLECTION_WEBHOOK || "https://n8n.bidflow.app/webhook/d4a5a8ed-0382-44e8-b011-b14e48a89b87",
   SUBMISSION: process.env.N8N_SUBMISSION_WEBHOOK || "https://n8n.bidflow.app/webhook/481801ae-ca24-4b0c-9a85-43fe438dfa1b",
   SEED: process.env.N8N_SEED_WEBHOOK || "https://n8n.bidflow.app/webhook/seed-current-week",
+  BID_OPTIMIZER: process.env.N8N_BID_OPTIMIZER_WEBHOOK || "https://n8n.bidflow.app/webhook/bid-optimizer-apply",
 } as const;
 
 // Subscription Tiers

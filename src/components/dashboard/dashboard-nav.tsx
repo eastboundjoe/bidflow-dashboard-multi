@@ -19,7 +19,7 @@ import {
   AvatarFallback,
 } from "@/components/ui/avatar";
 import { User } from "@supabase/supabase-js";
-import { Settings, CreditCard, Link2, LogOut, ChevronDown } from "lucide-react";
+import { Settings, CreditCard, Link2, LogOut, ChevronDown, Sliders } from "lucide-react";
 
 interface DashboardNavProps {
   user: User;
@@ -62,6 +62,12 @@ export function DashboardNav({ user }: DashboardNavProps) {
               className="text-gray-600 dark:text-gray-400 hover:text-primary font-medium"
             >
               Dashboard
+            </Link>
+            <Link
+              href="/dashboard/bid-optimizer"
+              className="text-gray-600 dark:text-gray-400 hover:text-primary font-medium"
+            >
+              Bid Optimizer
             </Link>
             <Link
               href="/dashboard/settings"
@@ -127,6 +133,12 @@ export function DashboardNav({ user }: DashboardNavProps) {
                   <Link href="/dashboard/billing" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
                     <CreditCard className="h-4 w-4 text-slate-400" />
                     <span className="text-sm font-medium">Billing</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/bid-optimizer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                    <Sliders className="h-4 w-4 text-slate-400" />
+                    <span className="text-sm font-medium">Bid Optimizer</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

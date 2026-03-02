@@ -148,6 +148,73 @@ export interface SankeyData {
   links: SankeyLink[];
 }
 
+// ─── Bid Optimizer (Layer 3) Types ───────────────────────────────────────────
+
+export interface CampaignRow {
+  campaign_id: string;
+  campaign_name: string;
+  portfolio_id: string | null;
+  portfolio_name: string | null;
+  budget: number;
+  spend_30d: number;
+  orders_30d: number;
+  acos_30d: number | null;
+  spend_7d: number;
+  orders_7d: number;
+  acos_7d: number | null;
+  yesterday_spend: number;
+  day_before_spend: number;
+  week_id: string;
+}
+
+export interface CampaignRules {
+  bleeders: boolean;
+  high_acos_threshold: number | null;   // min ACOS % — reduce bids above this
+  low_clicks_increase: number | null;   // % to increase targets with ≤1 click
+  good_acos_increase: number | null;    // % to increase good-ACOS targets
+  good_acos_max: number | null;         // ACOS ceiling defining "good"
+  new_budget: number | null;
+  pause: boolean;
+  notes: string;
+}
+
+export interface TargetingRow {
+  id: string;
+  target_id: string;
+  campaign_id: string;
+  campaign_name: string;
+  ad_group_id: string | null;
+  ad_group_name: string | null;
+  targeting_text: string;
+  targeting_type: string;
+  match_type: string;
+  bid: number;
+  clicks_30d: number;
+  orders_30d: number;
+  acos_30d: number | null;
+  clicks_7d: number;
+  orders_7d: number;
+  acos_7d: number | null;
+  week_id: string;
+}
+
+export type BidChangeRule = "bleeders" | "high_acos" | "low_clicks" | "good_acos" | "manual_override";
+
+export interface BidChange {
+  target_id: string;
+  campaign_id: string;
+  campaign_name: string;
+  targeting_text: string;
+  match_type: string;
+  old_bid: number;
+  new_bid: number;
+  rule_applied: BidChangeRule;
+  overridden: boolean;
+  excluded: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 // API Response Types
 export interface ApiResponse<T> {
   data?: T;
