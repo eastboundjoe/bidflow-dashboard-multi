@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GZ5vgNrqmlykm0cePhjaNaAXhGBifOY3oOIo7O1zohnX6ldce7h3x3ZV1FExYnC
+\restrict BQC8opqxiVfEXldfaJcgjxbCN0XYF6b9KgFmtt4yhloe2XEHL6iysB0EVHGP6Hr
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.8 (Ubuntu 17.8-1.pgdg24.04+1)
@@ -696,6 +696,88 @@ CREATE FUNCTION public.sync_staging_to_raw() RETURNS void
 
 
 --
+-- Name: sync_targeting_staging(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sync_targeting_staging() RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+  BEGIN
+      INSERT INTO public.weekly_targeting_performance (
+          snapshot_id,
+          tenant_id,
+          week_id,
+          campaign_id,
+          campaign_name,
+          ad_group_id,
+          ad_group_name,
+          target_id,
+          targeting_text,
+          targeting_type,
+          match_type,
+          bid,
+          clicks_30d,
+          spend_30d,
+          orders_30d,
+          sales_30d,
+          acos_30d,
+          clicks_7d,
+          spend_7d,
+          orders_7d,
+          sales_7d,
+          acos_7d
+      )
+      SELECT
+          ws.id,
+          str.tenant_id,
+          ws.week_id,
+          str.campaign_id,
+          str.campaign_name,
+          str.ad_group_id,
+          str.ad_group_name,
+          str.target_id,
+          str.targeting_text,
+          str.targeting_type,
+          str.match_type,
+          str.bid,
+          str.clicks,
+          str.spend,
+          str.purchases_30d,
+          str.sales_30d,
+          CASE WHEN str.sales_30d > 0 THEN ROUND((str.spend / str.sales_30d) * 100, 2) ELSE NULL END,
+          str.clicks,
+          str.spend,
+          str.purchases_7d,
+          str.sales_7d,
+          CASE WHEN str.sales_7d > 0 THEN ROUND((str.spend / str.sales_7d) * 100, 2) ELSE NULL END
+      FROM public.staging_targeting_reports str
+      JOIN public.weekly_snapshots ws
+          ON ws.tenant_id = str.tenant_id
+      WHERE ws.id = (
+          SELECT id FROM public.weekly_snapshots
+          WHERE tenant_id = str.tenant_id
+          ORDER BY created_at DESC
+          LIMIT 1
+      )
+      ON CONFLICT (snapshot_id, target_id) DO UPDATE SET
+          bid        = EXCLUDED.bid,
+          clicks_30d = EXCLUDED.clicks_30d,
+          spend_30d  = EXCLUDED.spend_30d,
+          orders_30d = EXCLUDED.orders_30d,
+          sales_30d  = EXCLUDED.sales_30d,
+          acos_30d   = EXCLUDED.acos_30d,
+          clicks_7d  = EXCLUDED.clicks_7d,
+          spend_7d   = EXCLUDED.spend_7d,
+          orders_7d  = EXCLUDED.orders_7d,
+          sales_7d   = EXCLUDED.sales_7d,
+          acos_7d    = EXCLUDED.acos_7d;
+
+      TRUNCATE TABLE public.staging_targeting_reports;
+  END;
+  $$;
+
+
+--
 -- Name: truncate_performance_data(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1304,6 +1386,56 @@ CREATE TABLE public.staging_portfolios (
     portfolio_state text,
     updated_at timestamp with time zone DEFAULT now()
 );
+
+
+--
+-- Name: staging_targeting_reports; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.staging_targeting_reports (
+    id integer NOT NULL,
+    report_id text,
+    report_name text,
+    report_type text,
+    tenant_id uuid NOT NULL,
+    campaign_id text NOT NULL,
+    campaign_name text,
+    ad_group_id text,
+    ad_group_name text,
+    target_id text,
+    targeting_text text,
+    targeting_type text,
+    match_type text,
+    bid numeric(10,2),
+    impressions integer DEFAULT 0,
+    clicks integer DEFAULT 0,
+    spend numeric(10,2) DEFAULT 0,
+    purchases_30d integer DEFAULT 0,
+    sales_30d numeric(10,2) DEFAULT 0,
+    purchases_7d integer DEFAULT 0,
+    sales_7d numeric(10,2) DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: staging_targeting_reports_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.staging_targeting_reports_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: staging_targeting_reports_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.staging_targeting_reports_id_seq OWNED BY public.staging_targeting_reports.id;
 
 
 --
@@ -1982,6 +2114,13 @@ ALTER TABLE ONLY public.report_ledger ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: staging_targeting_reports id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.staging_targeting_reports ALTER COLUMN id SET DEFAULT nextval('public.staging_targeting_reports_id_seq'::regclass);
+
+
+--
 -- Name: bid_change_log bid_change_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2155,6 +2294,14 @@ ALTER TABLE ONLY public.staging_portfolios
 
 ALTER TABLE ONLY public.staging_portfolios
     ADD CONSTRAINT staging_portfolios_tenant_id_portfolio_id_key UNIQUE (tenant_id, portfolio_id);
+
+
+--
+-- Name: staging_targeting_reports staging_targeting_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.staging_targeting_reports
+    ADD CONSTRAINT staging_targeting_reports_pkey PRIMARY KEY (id);
 
 
 --
@@ -3079,6 +3226,12 @@ ALTER TABLE public.staging_placement_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staging_portfolios ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: staging_targeting_reports; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.staging_targeting_reports ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: bid_change_log tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -3090,6 +3243,13 @@ CREATE POLICY tenant_isolation ON public.bid_change_log USING ((tenant_id = auth
 --
 
 CREATE POLICY tenant_isolation ON public.raw_targeting_reports USING ((tenant_id = auth.uid()));
+
+
+--
+-- Name: staging_targeting_reports tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY tenant_isolation ON public.staging_targeting_reports USING ((tenant_id = auth.uid()));
 
 
 --
@@ -3139,5 +3299,5 @@ ALTER TABLE public.weekly_targeting_performance ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GZ5vgNrqmlykm0cePhjaNaAXhGBifOY3oOIo7O1zohnX6ldce7h3x3ZV1FExYnC
+\unrestrict BQC8opqxiVfEXldfaJcgjxbCN0XYF6b9KgFmtt4yhloe2XEHL6iysB0EVHGP6Hr
 
